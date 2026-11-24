@@ -1,0 +1,22 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ item.title }}{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('admin.index') }}">← 목록</a></p>
+<h1>{{ item.title }}</h1>
+<p class="sub">{{ item.org }} · {{ item.board }} · 게시 {{ item.posted_at or '' }} · <a href="{{ item.url }}" target="_blank" rel="noopener">원문 보기</a></p>
+
+<table class="kv">
+  <tr><th>사업구분</th><td>{{ item.biz or '—' }}</td></tr>
+  <tr><th>신청 기간</th><td>{{ (item.start_at or '')|replace('T', ' ') }} ~ {{ (item.end_at or '')|replace('T', ' ') }}</td></tr>
+</table>
+
+<h2>첨부파일 {{ item.attachments|length }}개</h2>
+<ul class="files">
+{% for f in item.attachments %}
+  <li>{% if f.file_path %}<a href="{{ url_for('admin.attachment', ann_id=item.ann_id, seq=f.seq) }}">{{ f.name }}</a>{% else %}{{ f.name }} <span class="sub">(미저장{% if f.download_error %} · {{ f.download_error }}{% endif %})</span>{% endif %} <span class="sub">{{ f.size_text }}</span></li>
+{% else %}<li class="sub">없음</li>{% endfor %}
+</ul>
+
+<h2>본문</h2>
+<div class="body">{{ item.body or '(본문 없음)' }}</div>
+{% endblock %}

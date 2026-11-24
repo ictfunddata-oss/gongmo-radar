@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>상세검색 UI 시안 추가 2종</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0f1c33;--ink2:#3b4a63;--ink3:#66748b;--bg:#f3f6fb;--line:#e4e9f2;--line2:#d3dbe8;--brand:#2f6bff;--brand2:#1d4fd8;--soft:#e9f0ff;--teal:#00b3a4;--coral:#ff4d4f;--amber:#f5a524;--green:#12b76a;--shadow:0 1px 2px rgba(15,28,51,.05),0 8px 24px rgba(15,28,51,.07)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Noto Sans KR",system-ui,sans-serif}
+.page{max-width:1080px;margin:0 auto;padding:28px 16px 64px}
+h1{font-size:22px;margin:0 0 4px;letter-spacing:-.03em}
+.lead{color:var(--ink3);margin:0 0 28px}
+.opt{margin-bottom:44px}
+.opt h2{font-size:16px;margin:0 0 4px;display:flex;gap:10px;align-items:center}
+.opt h2 b{background:var(--ink);color:#fff;border-radius:8px;padding:2px 10px;font-size:13px}
+.opt .why{color:var(--ink3);font-size:13.5px;margin:0 0 12px}
+.stage{background:linear-gradient(135deg,#0a1630,#12295a);border-radius:18px;padding:26px 22px 28px}
+.sample{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sc{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:13.5px;color:var(--ink2);box-shadow:var(--shadow)}
+.sc b{color:var(--ink);display:block;font-size:14px}
+@media(max-width:640px){.sample{grid-template-columns:1fr}.stage{padding:18px 12px}}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.panel{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+
+/* ── D: 타일형 빠른 필터 ── */
+.d{padding:18px 20px}
+.d .lab{font-size:12.5px;font-weight:700;color:var(--ink3);letter-spacing:.02em;margin:0 0 8px}
+.d .sec+.sec{margin-top:16px}
+.d .tiles{display:grid;gap:8px}
+.d .t4{grid-template-columns:repeat(4,1fr)}
+.d .t5{grid-template-columns:repeat(5,1fr)}
+.d .tile{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;text-align:left;display:flex;flex-direction:column;gap:2px;position:relative;overflow:hidden;color:var(--ink)}
+.d .tile .n{font-size:20px;font-weight:700;letter-spacing:-.03em}
+.d .tile .l{font-size:13px;color:var(--ink2)}
+.d .tile::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c,var(--line2))}
+.d .tile:hover{border-color:var(--brand)}
+.d .tile.sel{background:var(--soft);border-color:var(--brand)}
+.d .tile.sel .n{color:var(--brand2)}
+.d .org{display:flex;flex-wrap:wrap;gap:8px}
+.d .org button{display:flex;gap:8px;align-items:center;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:6px 12px 6px 6px}
+.d .org .ic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:12px}
+.d .org small{color:var(--ink3);margin-left:2px}
+.d .org button.sel{border-color:var(--brand);background:var(--soft)}
+.d .foot{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line2);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.d .foot select{height:38px;border:1px solid var(--line2);border-radius:10px;padding:0 10px;background:#fbfcfe;min-width:140px}
+.d .foot .rs{margin-left:auto;border:0;background:none;color:var(--ink3);text-decoration:underline}
+@media(max-width:760px){.d .t4{grid-template-columns:repeat(2,1fr)}.d .foot .rs{margin-left:0}}
+
+/* ── E: 토큰 입력(명령형) ── */
+.e{padding:0}
+.e .box{position:relative}
+.e .frow{position:relative}
+.e .field{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:10px 12px;min-height:54px}
+.e .tok{display:inline-flex;align-items:center;gap:6px;background:var(--soft);color:var(--brand2);border-radius:8px;padding:4px 6px 4px 10px;font-size:14px;font-weight:600}
+.e .tok i{font-style:normal;color:var(--ink3);font-weight:500}
+.e .tok button{border:0;background:rgba(47,107,255,.14);color:var(--brand2);border-radius:6px;width:20px;height:20px;line-height:18px;padding:0}
+.e .tok button:hover{background:var(--brand);color:#fff}
+.e .field input{flex:1;min-width:160px;border:0;outline:0;padding:6px 6px;font-size:15px}
+.e .go{border:0;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;font-weight:600;padding:0 26px;border-radius:0 16px 16px 0;position:absolute;right:0;top:0;bottom:0}
+.e .field{padding-right:100px}
+.e .sug{display:none;border-top:1px solid var(--line);padding:10px 12px 12px}
+.e .box.open .sug{display:block}
+.e .sug h5{margin:6px 4px 6px;font-size:12px;color:var(--ink3);font-weight:700}
+.e .sug .row{display:flex;flex-wrap:wrap;gap:6px}
+.e .sug button{border:1px solid var(--line2);background:#fff;border-radius:8px;padding:5px 10px;font-size:13.5px;color:var(--ink2)}
+.e .sug button:hover{border-color:var(--brand);color:var(--brand2);background:var(--soft)}
+.e .pre{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 14px;border-top:1px solid var(--line);background:#fbfcff;border-radius:0 0 16px 16px;font-size:13px;color:var(--ink3)}
+.e .pre button{border:1px solid var(--line2);background:#fff;border-radius:999px;padding:4px 12px;color:var(--ink2);font-size:13px}
+.e .pre button:hover{border-color:var(--brand);color:var(--brand2)}
+@media(max-width:640px){.e .go{padding:0 14px}.e .field{padding-right:70px}}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>상세검색 UI 시안 추가 2종</h1>
+  <p class="lead">앞선 3종(칩·펼침 패널·문장형)과 방향이 다른 두 가지입니다. 눌러서 동작을 볼 수 있습니다.</p>
+
+  <section class="opt">
+    <h2><b>D</b> 타일형 빠른 필터</h2>
+    <p class="why">선택 상자 대신 건수가 보이는 큰 타일을 누릅니다. "지금 신청 가능 3건", "NIA 2,400건"처럼 어디에 공고가 몰려 있는지 보고 고를 수 있습니다. 자주 쓰는 상태·기관만 타일로 두고, 나머지는 아래 선택 상자로 뺍니다.</p>
+    <div class="stage">
+      <div class="panel d" id="D"></div>
+      <div class="sample"><div class="sc"><b>2026년 AI 융합 실증 지원</b>NIPA · 접수 중</div><div class="sc"><b>청년 SW 인재 양성 공모</b>NIA · D-5</div></div>
+    </div>
+  </section>
+
+  <section class="opt">
+    <h2><b>E</b> 토큰 입력형 (검색어 + 조건을 한 줄에)</h2>
+    <p class="why">검색창에 조건이 "기관 NIA ✕" 같은 토큰으로 쌓입니다. 입력창을 누르면 고를 수 있는 조건이 제안되고, 자주 쓰는 조합은 아래 바로가기로 한 번에 켭니다. 조건이 많아도 한 줄 영역 안에서 끝납니다.</p>
+    <div class="stage">
+      <div class="panel e">
+        <div class="box open" id="E">
+          <div class="frow"><div class="field" id="Efield"></div>
+          <button class="go">검색</button></div>
+          <div class="sug" id="Esug"></div>
+        </div>
+        <div class="pre"><span>바로가기</span><button data-p="open">지금 신청 가능</button><button data-p="ai">AI 분야 접수 중</button><button data-p="big">5억 이상 사업</button><button data-p="clear">전체 보기</button></div>
+      </div>
+      <div class="sample"><div class="sc"><b>2026년 AI 융합 실증 지원</b>NIPA · 접수 중</div><div class="sc"><b>청년 SW 인재 양성 공모</b>NIA · D-5</div></div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* D */
+(function(){
+  const root=document.getElementById("D");
+  const ST=[["접수 중",3,"var(--green)"],["7일 안 마감",0,"var(--coral)"],["곧 시작",1,"var(--amber)"],["상시 모집",134,"var(--brand)"]];
+  const ORG=[["NIA","N","#2f6bff",2410],["NIPA","P","#00a99d",1388],["RAPA","R","#9a5bd6",763],["KCA","K","#e8742b",10]];
+  const s={st:null,org:null};
+  function draw(){
+    root.innerHTML=`
+      <div class="sec"><p class="lab">접수 상태</p><div class="tiles t4">${ST.map(([l,n,c])=>`<button class="tile ${s.st===l?"sel":""}" data-g="st" data-v="${l}" style="--c:${c}"><span class="n">${n.toLocaleString()}<small style="font-size:12px;font-weight:500;color:var(--ink3)"> 건</small></span><span class="l">${l}</span></button>`).join("")}</div></div>
+      <div class="sec"><p class="lab">기관</p><div class="org">${ORG.map(([l,i,c,n])=>`<button class="${s.org===l?"sel":""}" data-g="org" data-v="${l}"><span class="ic" style="background:${c}">${i}</span><b>${l}</b><small>${n.toLocaleString()}</small></button>`).join("")}</div></div>
+      <div class="foot">
+        <select><option>분야 전체</option><option>AI·데이터</option><option>SW·클라우드</option><option>방송·미디어</option></select>
+        <select><option>유형 전체</option><option>사업 모집</option><option>입찰·용역</option></select>
+        <select><option>대상 전체</option><option>기업</option><option>대학·연구소</option><option>개인</option></select>
+        <select><option>지원금 전체</option><option>1억 미만</option><option>1~5억</option><option>5억 이상</option></select>
+        <button class="rs" type="button">초기화</button>
+      </div>`;
+    root.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>{const g=b.dataset.g;s[g]=s[g]===b.dataset.v?null:b.dataset.v;draw();});
+    root.querySelector(".rs").onclick=()=>{s.st=null;s.org=null;draw();};
+  }
+  draw();
+})();
+
+/* E */
+(function(){
+  const box=document.getElementById("E"), field=document.getElementById("Efield"), sug=document.getElementById("Esug");
+  const OPT={"상태":["접수 중","7일 안 마감","곧 시작","상시"],"기관":["NIA","NIPA","RAPA","KCA"],"분야":["AI·데이터","SW·클라우드","방송·미디어","인재양성"],"대상":["기업","대학·연구소","개인"],"지원금":["1억 미만","1~5억","5억 이상"]};
+  let tok=[["상태","접수 중"],["분야","AI·데이터"]];
+  const PRE={open:[["상태","접수 중"]],ai:[["상태","접수 중"],["분야","AI·데이터"]],big:[["지원금","5억 이상"]],clear:[]};
+  function draw(){
+    field.innerHTML=tok.map(([k,v],i)=>`<span class="tok"><i>${k}</i>${v}<button data-i="${i}" aria-label="${k} ${v} 제거">×</button></span>`).join("")+`<input placeholder="${tok.length?"조건 더 추가 또는 검색어 입력":"사업명·키워드를 입력하거나 조건을 고르세요"}">`;
+    field.querySelectorAll(".tok button").forEach(b=>b.onclick=()=>{tok.splice(+b.dataset.i,1);draw();});
+    sug.innerHTML=Object.entries(OPT).map(([k,v])=>`<h5>${k}</h5><div class="row">${v.filter(x=>!tok.some(t=>t[0]===k&&t[1]===x)).map(x=>`<button data-k="${k}" data-v="${x}">${x}</button>`).join("")}</div>`).join("");
+    sug.querySelectorAll("button").forEach(b=>b.onclick=()=>{tok=tok.filter(t=>t[0]!==b.dataset.k);tok.push([b.dataset.k,b.dataset.v]);draw();});
+  }
+  document.querySelectorAll(".e .pre button").forEach(b=>b.onclick=()=>{tok=PRE[b.dataset.p].map(x=>x.slice());draw();});
+  draw();
+})();
+</script>
+</body>
+</html>

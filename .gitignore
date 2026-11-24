@@ -1,0 +1,12 @@
+.env
+data/
+__pycache__/
+*.pyc
+*.part
+.venv/
+venv/
+archive/scratch/
+
+# 내부 기획 문서(저장소에 올리지 않음)와 엑셀·한글 임시 파일
+docs/기획/
+~$*

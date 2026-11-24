@@ -1,0 +1,1723 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NIPA · Crawler Mission Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+/>
+<style>
+  :root {
+    --bg-base: #0a0c10;
+    --bg-surface: #11141a;
+    --bg-elevated: #161a21;
+    --bg-input: #1c2129;
+    --bg-hover: #1d222b;
+    --border: #1f242d;
+    --border-bright: #2a3140;
+    --text-primary: #e8ecef;
+    --text-secondary: #9aa3ad;
+    --text-muted: #5e6772;
+    --text-dim: #3a4250;
+    --accent: #d4ff3a;
+    --accent-soft: #b8e036;
+    --accent-dim: rgba(212, 255, 58, 0.12);
+    --critical: #ff5e58;
+    --critical-dim: rgba(255, 94, 88, 0.12);
+    --warning: #f5b942;
+    --warning-dim: rgba(245, 185, 66, 0.12);
+    --info: #5fb8ff;
+    --info-dim: rgba(95, 184, 255, 0.12);
+    --ok: #5dd97a;
+    --ok-dim: rgba(93, 217, 122, 0.12);
+    --display: "Fraunces", "IBM Plex Sans KR", serif;
+    --sans: "IBM Plex Sans KR", -apple-system, BlinkMacSystemFont, sans-serif;
+    --mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--sans);
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    min-height: 100vh;
+    background-image:
+      radial-gradient(circle at 12% 6%, rgba(212, 255, 58, 0.06), transparent 35%),
+      radial-gradient(circle at 88% 92%, rgba(95, 184, 255, 0.04), transparent 40%),
+      linear-gradient(180deg, #0a0c10 0%, #0a0c10 100%);
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* faint grid texture */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* film grain */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: -50%;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .app {
+    position: relative;
+    z-index: 2;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 32px 64px;
+  }
+
+  /* ─────────────────────── TOP BAR ─────────────────────── */
+  .topbar {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 48px;
+    align-items: center;
+    padding: 24px 0 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 28px;
+  }
+
+  .brand {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .brand-mark {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    background: var(--accent);
+    color: #000;
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: -0.04em;
+    border-radius: 2px;
+    box-shadow: 0 0 0 4px rgba(212, 255, 58, 0.12),
+      0 0 24px -2px rgba(212, 255, 58, 0.6);
+  }
+
+  .brand-name {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 22px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+  }
+
+  .brand-name .italic {
+    font-style: italic;
+    color: var(--accent-soft);
+    font-feature-settings: "ss01";
+  }
+
+  .brand-sub {
+    margin-top: 6px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .topbar-nav {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-surface);
+    padding: 4px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    width: fit-content;
+    margin: 0 auto;
+  }
+
+  .topbar-nav a {
+    padding: 8px 18px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-radius: 999px;
+    transition: all 0.15s ease;
+    cursor: pointer;
+  }
+
+  .topbar-nav a:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+  }
+
+  .topbar-nav a.active {
+    background: var(--bg-elevated);
+    color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--border-bright);
+  }
+
+  .status-cluster {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+  }
+
+  .live-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 12px 7px 11px;
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    background: var(--accent-dim);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .live-pill .dot {
+    width: 7px;
+    height: 7px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--accent), 0 0 16px rgba(212, 255, 58, 0.4);
+    animation: pulse 1.6s infinite ease-out;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.18); opacity: 0.6; }
+  }
+
+  .time {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.03em;
+  }
+
+  .time strong {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  /* ─────────────────────── PAGE HEADER ─────────────────────── */
+  .page-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    gap: 32px;
+  }
+
+  .page-head h1 {
+    font-family: var(--display);
+    font-weight: 300;
+    font-size: clamp(38px, 5vw, 56px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    margin: 0;
+    color: var(--text-primary);
+    font-variation-settings: "opsz" 144, "SOFT" 30, "WONK" 0;
+  }
+
+  .page-head h1 em {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--accent-soft);
+    font-variation-settings: "opsz" 144, "SOFT" 80, "WONK" 1;
+  }
+
+  .page-head .sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-top: 12px;
+    display: flex;
+    gap: 18px;
+  }
+
+  .page-head .sub span::before {
+    content: "▸ ";
+    color: var(--accent);
+    margin-right: 4px;
+  }
+
+  .head-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .btn {
+    padding: 10px 16px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-bright);
+    color: var(--text-primary);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn:hover {
+    background: var(--bg-elevated);
+    border-color: var(--text-muted);
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+
+  .btn-primary:hover {
+    background: #e2ff5e;
+    box-shadow: 0 0 20px rgba(212, 255, 58, 0.4);
+  }
+
+  /* ─────────────────────── KPI GRID ─────────────────────── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  .kpi {
+    position: relative;
+    padding: 24px 22px 22px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+  }
+
+  .kpi:hover {
+    border-color: var(--border-bright);
+    transform: translateY(-1px);
+  }
+
+  .kpi::before,
+  .kpi::after {
+    content: "";
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    pointer-events: none;
+  }
+
+  .kpi::before {
+    top: 6px;
+    left: 6px;
+    border-top: 1px solid var(--accent);
+    border-left: 1px solid var(--accent);
+  }
+
+  .kpi::after {
+    bottom: 6px;
+    right: 6px;
+    border-bottom: 1px solid var(--accent);
+    border-right: 1px solid var(--accent);
+  }
+
+  .kpi.critical::before,
+  .kpi.critical::after {
+    border-color: var(--critical);
+  }
+
+  .kpi-label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+
+  .kpi-number {
+    font-family: var(--display);
+    font-weight: 300;
+    font-size: 56px;
+    line-height: 1;
+    color: var(--text-primary);
+    letter-spacing: -0.03em;
+    font-variation-settings: "opsz" 144, "SOFT" 50, "WONK" 0;
+    font-feature-settings: "tnum" 1;
+  }
+
+  .kpi.critical .kpi-number {
+    color: var(--critical);
+  }
+
+  .kpi-number .unit {
+    font-size: 18px;
+    color: var(--text-muted);
+    margin-left: 6px;
+    letter-spacing: 0;
+  }
+
+  .kpi-meta {
+    margin-top: 14px;
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .kpi-meta .delta {
+    color: var(--accent);
+  }
+
+  .kpi-meta .delta.down {
+    color: var(--critical);
+  }
+
+  .kpi-spark {
+    margin-top: 12px;
+    height: 22px;
+    width: 100%;
+  }
+
+  /* ─────────────────────── PANELS ─────────────────────── */
+  .panel {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    position: relative;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+    gap: 16px;
+  }
+
+  .panel-title {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+
+  .panel-title h2 {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 22px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin: 0;
+    color: var(--text-primary);
+    font-variation-settings: "opsz" 36, "SOFT" 40;
+  }
+
+  .panel-title h2 em {
+    font-style: italic;
+    color: var(--accent-soft);
+  }
+
+  .panel-title .meta {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .panel-actions {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .tab-group {
+    display: inline-flex;
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px;
+  }
+
+  .tab-group .tab {
+    padding: 5px 12px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.15s ease;
+  }
+
+  .tab-group .tab:hover {
+    color: var(--text-secondary);
+  }
+
+  .tab-group .tab.active {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+  }
+
+  /* ─────────────────────── SPLIT ROW ─────────────────────── */
+  .split-row {
+    display: grid;
+    grid-template-columns: 1.55fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  /* Active crawl */
+  .active-crawl .panel-body {
+    padding: 22px;
+  }
+
+  .cmd-line {
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 12px 14px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .cmd-line .prompt {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .cmd-line .arg {
+    color: var(--info);
+  }
+
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+
+  .progress-track {
+    flex: 1;
+    height: 8px;
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    width: 31.5%;
+    background: linear-gradient(90deg, var(--accent-soft), var(--accent));
+    border-radius: 999px;
+    position: relative;
+    box-shadow: 0 0 12px rgba(212, 255, 58, 0.4);
+  }
+
+  .progress-fill::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent
+    );
+    animation: shimmer 1.6s infinite linear;
+    border-radius: 999px;
+  }
+
+  @keyframes shimmer {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(100%); }
+  }
+
+  .progress-pct {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 22px;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+    font-variation-settings: "opsz" 36;
+    font-feature-settings: "tnum" 1;
+    min-width: 62px;
+    text-align: right;
+  }
+
+  .progress-meta {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin-bottom: 20px;
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+  }
+
+  .progress-meta > div {
+    padding: 12px 14px;
+    border-right: 1px solid var(--border);
+  }
+
+  .progress-meta > div:last-child {
+    border-right: none;
+  }
+
+  .progress-meta .pm-label {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+  }
+
+  .progress-meta .pm-value {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 18px;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    font-feature-settings: "tnum" 1;
+    font-variation-settings: "opsz" 36;
+  }
+
+  /* log feed */
+  .log-feed {
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0;
+    max-height: 200px;
+    overflow: hidden;
+    position: relative;
+    mask-image: linear-gradient(180deg, transparent 0%, #000 28px, #000 100%);
+  }
+
+  .log-feed::before {
+    content: "EVENT STREAM ─────────";
+    position: absolute;
+    top: 8px;
+    left: 14px;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.18em;
+    color: var(--text-dim);
+    z-index: 1;
+  }
+
+  .log-list {
+    padding: 30px 14px 14px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    line-height: 1.7;
+  }
+
+  .log-line {
+    display: grid;
+    grid-template-columns: 60px 56px 1fr;
+    gap: 12px;
+    align-items: baseline;
+    color: var(--text-secondary);
+  }
+
+  .log-line .ts {
+    color: var(--text-muted);
+  }
+
+  .log-line .lvl {
+    font-weight: 600;
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    padding: 1px 4px;
+    border-radius: 2px;
+    height: fit-content;
+  }
+
+  .lvl.ok    { color: var(--ok); background: var(--ok-dim); }
+  .lvl.info  { color: var(--info); background: var(--info-dim); }
+  .lvl.warn  { color: var(--warning); background: var(--warning-dim); }
+  .lvl.err   { color: var(--critical); background: var(--critical-dim); }
+  .lvl.dl    { color: var(--accent); background: var(--accent-dim); }
+
+  .log-line .msg em {
+    color: var(--text-primary);
+    font-style: normal;
+  }
+
+  /* Urgent list */
+  .urgent-list .panel-body {
+    padding: 4px 0 4px;
+  }
+
+  .urgent-row {
+    display: grid;
+    grid-template-columns: 64px 1fr 24px;
+    gap: 14px;
+    padding: 14px 22px;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.12s ease;
+  }
+
+  .urgent-row:hover {
+    background: var(--bg-hover);
+  }
+
+  .urgent-row:last-child {
+    border-bottom: none;
+  }
+
+  .dday {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 26px;
+    line-height: 1;
+    text-align: center;
+    color: var(--text-primary);
+    letter-spacing: -0.04em;
+    padding: 8px 0;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: var(--bg-base);
+    font-feature-settings: "tnum" 1;
+    font-variation-settings: "opsz" 36;
+  }
+
+  .dday .label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+    font-weight: 500;
+    font-variation-settings: normal;
+  }
+
+  .dday.critical {
+    color: var(--critical);
+    border-color: var(--critical);
+    background: var(--critical-dim);
+  }
+
+  .dday.critical .label {
+    color: var(--critical);
+    opacity: 0.7;
+  }
+
+  .dday.warn {
+    color: var(--warning);
+    border-color: rgba(245, 185, 66, 0.4);
+    background: var(--warning-dim);
+  }
+
+  .dday.warn .label {
+    color: var(--warning);
+    opacity: 0.7;
+  }
+
+  .urgent-title {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    line-height: 1.35;
+    letter-spacing: -0.005em;
+  }
+
+  .urgent-meta {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+  }
+
+  .urgent-arrow {
+    color: var(--text-dim);
+    font-size: 16px;
+    text-align: right;
+    transition: color 0.15s ease, transform 0.15s ease;
+  }
+
+  .urgent-row:hover .urgent-arrow {
+    color: var(--accent);
+    transform: translate(2px, -2px);
+  }
+
+  /* ─────────────────────── ACTIVITY CHART ─────────────────────── */
+  .chart-panel {
+    margin-bottom: 14px;
+  }
+
+  .chart-body {
+    padding: 28px 22px 22px;
+    position: relative;
+  }
+
+  .chart-svg {
+    width: 100%;
+    height: 200px;
+    display: block;
+  }
+
+  .chart-legend {
+    display: flex;
+    gap: 18px;
+    margin-top: 14px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .legend-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }
+
+  /* ─────────────────────── TABLE ─────────────────────── */
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .filter-bar .search {
+    flex: 1;
+    min-width: 220px;
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 9px 12px 9px 32px;
+    color: var(--text-primary);
+    font-family: var(--sans);
+    font-size: 12.5px;
+    position: relative;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235e6772' stroke-width='2'><circle cx='11' cy='11' r='7'/><path d='m21 21-4.3-4.3'/></svg>");
+    background-repeat: no-repeat;
+    background-position: 10px center;
+    background-size: 14px;
+    outline: none;
+  }
+
+  .filter-bar .search:focus {
+    border-color: var(--accent);
+  }
+
+  .chip {
+    padding: 6px 12px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+  }
+
+  .chip:hover {
+    border-color: var(--text-muted);
+    color: var(--text-primary);
+  }
+
+  .chip.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .chip .count {
+    margin-left: 6px;
+    color: var(--text-dim);
+    font-weight: 400;
+  }
+
+  .chip.active .count {
+    color: var(--accent-soft);
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .data-table thead th {
+    text-align: left;
+    padding: 12px 16px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 500;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-base);
+    white-space: nowrap;
+  }
+
+  .data-table thead th .sort {
+    color: var(--text-dim);
+    margin-left: 4px;
+  }
+
+  .data-table tbody td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-secondary);
+    vertical-align: top;
+  }
+
+  .data-table tbody tr {
+    transition: background 0.12s ease;
+  }
+
+  .data-table tbody tr:hover {
+    background: var(--bg-hover);
+  }
+
+  .data-table .col-num {
+    font-family: var(--mono);
+    color: var(--text-dim);
+    width: 50px;
+    font-size: 11px;
+  }
+
+  .data-table .col-title {
+    color: var(--text-primary);
+    font-weight: 500;
+    min-width: 320px;
+    font-size: 13.5px;
+    letter-spacing: -0.005em;
+  }
+
+  .data-table .col-title .biz {
+    display: block;
+    margin-top: 4px;
+    font-family: var(--mono);
+    font-weight: 400;
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .data-table .col-period {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+
+  .data-table .col-num-right {
+    font-family: var(--mono);
+    font-feature-settings: "tnum" 1;
+    text-align: right;
+    color: var(--text-secondary);
+    font-size: 11.5px;
+  }
+
+  .data-table .attach-bubble {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    background: var(--info-dim);
+    border: 1px solid rgba(95, 184, 255, 0.25);
+    color: var(--info);
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 500;
+  }
+
+  .data-table .attach-bubble.zero {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--text-dim);
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .badge::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
+  .badge.critical { color: var(--critical); background: var(--critical-dim); }
+  .badge.warn { color: var(--warning); background: var(--warning-dim); }
+  .badge.active { color: var(--accent); background: var(--accent-dim); }
+  .badge.ended { color: var(--text-muted); background: var(--bg-base); }
+  .badge.permanent { color: var(--info); background: var(--info-dim); }
+
+  /* ─────────────────────── FOOTER ─────────────────────── */
+  .footer {
+    margin-top: 40px;
+    padding: 20px 0 0;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    gap: 32px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  .footer .kv {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .footer .kv strong {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .footer .arrow {
+    color: var(--accent);
+  }
+
+  /* stagger reveal */
+  .reveal {
+    opacity: 0;
+    transform: translateY(8px);
+    animation: reveal 0.6s ease forwards;
+  }
+
+  @keyframes reveal {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal-1 { animation-delay: 0.05s; }
+  .reveal-2 { animation-delay: 0.12s; }
+  .reveal-3 { animation-delay: 0.19s; }
+  .reveal-4 { animation-delay: 0.26s; }
+  .reveal-5 { animation-delay: 0.34s; }
+  .reveal-6 { animation-delay: 0.42s; }
+  .reveal-7 { animation-delay: 0.50s; }
+
+  @media (max-width: 1100px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .split-row { grid-template-columns: 1fr; }
+    .progress-meta { grid-template-columns: repeat(2, 1fr); }
+    .progress-meta > div:nth-child(2) { border-right: none; }
+    .progress-meta > div:nth-child(1), .progress-meta > div:nth-child(2) {
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar { grid-template-columns: 1fr; gap: 18px; }
+    .topbar-nav { margin: 0; justify-self: start; }
+    .data-table .col-period { white-space: normal; }
+  }
+
+  @media (max-width: 640px) {
+    .app { padding: 0 16px 48px; }
+    .kpi-grid { grid-template-columns: 1fr; }
+    .topbar-nav { flex-wrap: wrap; justify-content: flex-start; }
+    .kpi-number { font-size: 44px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ───── TOP BAR ───── -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">◢◣</div>
+      <div>
+        <div class="brand-name">nipa<span class="italic">/crawler</span></div>
+        <div class="brand-sub">정보통신산업진흥원 · 사업공고 수집 콘솔 · v0.4.1</div>
+      </div>
+    </div>
+
+    <nav class="topbar-nav">
+      <a class="active">Overview</a>
+      <a>Runs</a>
+      <a>Announcements</a>
+      <a>Attachments</a>
+      <a>Schedules</a>
+      <a>Settings</a>
+    </nav>
+
+    <div class="status-cluster">
+      <div class="live-pill">
+        <span class="dot"></span>
+        <span>Live · Crawling</span>
+      </div>
+      <div class="time"><strong>2026.05.20</strong> · 14:37 KST</div>
+    </div>
+  </header>
+
+  <!-- ───── PAGE HEAD ───── -->
+  <section class="page-head reveal reveal-1">
+    <div>
+      <h1>사업공고 <em>수집</em> 현황</h1>
+      <div class="sub">
+        <span>www.nipa.kr/home/2-2</span>
+        <span>nipa_announcements.xlsx</span>
+        <span>last sync 14:36:52</span>
+      </div>
+    </div>
+    <div class="head-actions">
+      <button class="btn">⤓&nbsp; Export xlsx</button>
+      <button class="btn">⏸&nbsp; Pause run</button>
+      <button class="btn btn-primary">▶&nbsp; New crawl</button>
+    </div>
+  </section>
+
+  <!-- ───── KPI GRID ───── -->
+  <section class="kpi-grid">
+    <div class="kpi reveal reveal-2">
+      <div class="kpi-label">전체 수집 공고</div>
+      <div class="kpi-number">1,247</div>
+      <div class="kpi-meta">
+        <span><span class="delta">▲ +8</span>&nbsp; 24h</span>
+        <span>38 pages</span>
+      </div>
+      <svg class="kpi-spark" viewBox="0 0 120 22" preserveAspectRatio="none">
+        <polyline
+          fill="none"
+          stroke="#d4ff3a"
+          stroke-width="1.4"
+          points="0,18 8,16 16,17 24,13 32,15 40,11 48,12 56,8 64,10 72,7 80,9 88,5 96,8 104,4 112,6 120,3"
+        />
+        <polyline
+          fill="rgba(212,255,58,0.08)"
+          stroke="none"
+          points="0,18 8,16 16,17 24,13 32,15 40,11 48,12 56,8 64,10 72,7 80,9 88,5 96,8 104,4 112,6 120,3 120,22 0,22"
+        />
+      </svg>
+    </div>
+
+    <div class="kpi critical reveal reveal-3">
+      <div class="kpi-label">마감 임박 (D-7 이내)</div>
+      <div class="kpi-number">23</div>
+      <div class="kpi-meta">
+        <span><span class="delta down">▼ -2</span>&nbsp; 24h</span>
+        <span>3 critical</span>
+      </div>
+      <svg class="kpi-spark" viewBox="0 0 120 22" preserveAspectRatio="none">
+        <polyline fill="none" stroke="#ff5e58" stroke-width="1.4"
+          points="0,4 8,7 16,5 24,9 32,8 40,11 48,9 56,12 64,10 72,13 80,11 88,14 96,12 104,15 112,13 120,16"/>
+        <polyline fill="rgba(255,94,88,0.08)" stroke="none"
+          points="0,4 8,7 16,5 24,9 32,8 40,11 48,9 56,12 64,10 72,13 80,11 88,14 96,12 104,15 112,13 120,16 120,22 0,22"/>
+      </svg>
+    </div>
+
+    <div class="kpi reveal reveal-4">
+      <div class="kpi-label">오늘 신규</div>
+      <div class="kpi-number">8</div>
+      <div class="kpi-meta">
+        <span><span class="delta">▲ +3</span>&nbsp; 1h</span>
+        <span>peak 11:00</span>
+      </div>
+      <svg class="kpi-spark" viewBox="0 0 120 22" preserveAspectRatio="none">
+        <g fill="#5fb8ff" opacity="0.9">
+          <rect x="0" y="14" width="6" height="8"/>
+          <rect x="10" y="10" width="6" height="12"/>
+          <rect x="20" y="13" width="6" height="9"/>
+          <rect x="30" y="6" width="6" height="16"/>
+          <rect x="40" y="4" width="6" height="18"/>
+          <rect x="50" y="9" width="6" height="13"/>
+          <rect x="60" y="11" width="6" height="11"/>
+          <rect x="70" y="8" width="6" height="14"/>
+          <rect x="80" y="3" width="6" height="19"/>
+          <rect x="90" y="6" width="6" height="16"/>
+          <rect x="100" y="12" width="6" height="10"/>
+          <rect x="110" y="15" width="6" height="7"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="kpi reveal reveal-5">
+      <div class="kpi-label">첨부 보관</div>
+      <div class="kpi-number">412<span class="unit">files</span></div>
+      <div class="kpi-meta">
+        <span>1.24&nbsp;GB</span>
+        <span>hwp · pdf · xlsx · zip</span>
+      </div>
+      <svg class="kpi-spark" viewBox="0 0 120 22" preserveAspectRatio="none">
+        <g>
+          <rect x="0"   y="6" width="56" height="10" fill="#d4ff3a" opacity="0.85"/>
+          <rect x="56"  y="6" width="32" height="10" fill="#5fb8ff" opacity="0.85"/>
+          <rect x="88"  y="6" width="18" height="10" fill="#f5b942" opacity="0.85"/>
+          <rect x="106" y="6" width="14" height="10" fill="#5dd97a" opacity="0.85"/>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ───── SPLIT ROW ───── -->
+  <section class="split-row reveal reveal-6">
+    <!-- Active crawl monitor -->
+    <div class="panel active-crawl">
+      <div class="panel-header">
+        <div class="panel-title">
+          <h2>Active <em>run</em></h2>
+          <span class="meta">job · CR-2026-0520-1432</span>
+        </div>
+        <div class="panel-actions">
+          <span class="badge active">running</span>
+        </div>
+      </div>
+
+      <div class="panel-body" style="padding:22px;">
+        <div class="cmd-line">
+          <span class="prompt">$</span>
+          <span>python</span>
+          <span>nipa_crawler.py</span>
+          <span class="arg">--pages 38</span>
+          <span class="arg">--delay 0.3</span>
+          <span class="arg">--out nipa_announcements.xlsx</span>
+        </div>
+
+        <div class="progress-row">
+          <div class="progress-track">
+            <div class="progress-fill"></div>
+          </div>
+          <div class="progress-pct">31.5%</div>
+        </div>
+
+        <div class="progress-meta">
+          <div>
+            <div class="pm-label">Page</div>
+            <div class="pm-value">12 / 38</div>
+          </div>
+          <div>
+            <div class="pm-label">Elapsed</div>
+            <div class="pm-value">04:27</div>
+          </div>
+          <div>
+            <div class="pm-label">ETA</div>
+            <div class="pm-value">08:13</div>
+          </div>
+          <div>
+            <div class="pm-label">Rows/min</div>
+            <div class="pm-value">47.3</div>
+          </div>
+        </div>
+
+        <div class="log-feed">
+          <div class="log-list">
+            <div class="log-line">
+              <span class="ts">14:36:52</span>
+              <span class="lvl ok">OK</span>
+              <span class="msg">page 12/38 — <em>30 rows</em> collected · 1.18s</span>
+            </div>
+            <div class="log-line">
+              <span class="ts">14:36:51</span>
+              <span class="lvl dl">FETCH</span>
+              <span class="msg">/home/2-2/8412 · <em>해외IT지원센터(호치민) 운영</em></span>
+            </div>
+            <div class="log-line">
+              <span class="ts">14:36:50</span>
+              <span class="lvl info">PARSE</span>
+              <span class="msg">tb05 → 사업구분 · 신청기간 · 첨부 4건 · 본문 2,184자</span>
+            </div>
+            <div class="log-line">
+              <span class="ts">14:36:48</span>
+              <span class="lvl dl">ATTACH</span>
+              <span class="msg">붙임1_사업계획서.hwp <em>(386 KB)</em> · saved</span>
+            </div>
+            <div class="log-line">
+              <span class="ts">14:36:47</span>
+              <span class="lvl warn">WARN</span>
+              <span class="msg">slow response 2.7s · /home/2-2/8408 · retry 1/3</span>
+            </div>
+            <div class="log-line">
+              <span class="ts">14:36:45</span>
+              <span class="lvl ok">OK</span>
+              <span class="msg">page 11/38 — <em>30 rows</em> · 0.94s</span>
+            </div>
+            <div class="log-line">
+              <span class="ts">14:36:43</span>
+              <span class="lvl info">PARSE</span>
+              <span class="msg">td.ggtbInfo → 작성자=이로운, 조회수=537</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Urgent deadlines -->
+    <div class="panel urgent-list">
+      <div class="panel-header">
+        <div class="panel-title">
+          <h2>마감 <em>임박</em></h2>
+          <span class="meta">sorted · d-day asc</span>
+        </div>
+        <div class="panel-actions">
+          <span class="meta">6 / 23</span>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <div class="urgent-row">
+          <div class="dday critical"><span class="label">D-day</span>D-2</div>
+          <div>
+            <div class="urgent-title">2026년 AI 바우처 지원사업 수요기업 모집공고</div>
+            <div class="urgent-meta">2026-05-09 09:00 ~ 2026-05-22 18:00 · 첨부 5</div>
+          </div>
+          <div class="urgent-arrow">↗</div>
+        </div>
+
+        <div class="urgent-row">
+          <div class="dday critical"><span class="label">D-day</span>D-3</div>
+          <div>
+            <div class="urgent-title">ICT 글로벌 진출 지원사업 (유럽권) 2차 모집</div>
+            <div class="urgent-meta">2026-05-02 14:00 ~ 2026-05-23 17:00 · 첨부 8</div>
+          </div>
+          <div class="urgent-arrow">↗</div>
+        </div>
+
+        <div class="urgent-row">
+          <div class="dday warn"><span class="label">D-day</span>D-5</div>
+          <div>
+            <div class="urgent-title">메타버스 콘텐츠 제작지원 사업화 컨설팅</div>
+            <div class="urgent-meta">2026-04-28 ~ 2026-05-25 · 첨부 3</div>
+          </div>
+          <div class="urgent-arrow">↗</div>
+        </div>
+
+        <div class="urgent-row">
+          <div class="dday warn"><span class="label">D-day</span>D-6</div>
+          <div>
+            <div class="urgent-title">디지털 헬스케어 실증 테스트베드 운영기관</div>
+            <div class="urgent-meta">2026-05-06 ~ 2026-05-26 · 첨부 6</div>
+          </div>
+          <div class="urgent-arrow">↗</div>
+        </div>
+
+        <div class="urgent-row">
+          <div class="dday"><span class="label">D-day</span>D-12</div>
+          <div>
+            <div class="urgent-title">해외IT지원센터(호치민) 운영 사업자 공모</div>
+            <div class="urgent-meta">2026-05-18 09:51 ~ 2026-06-12 15:00 · 첨부 4</div>
+          </div>
+          <div class="urgent-arrow">↗</div>
+        </div>
+
+        <div class="urgent-row">
+          <div class="dday"><span class="label">D-day</span>D-14</div>
+          <div>
+            <div class="urgent-title">SW 마이스터고 산학협력 지원 신규공고</div>
+            <div class="urgent-meta">2026-05-10 ~ 2026-06-14 · 첨부 2</div>
+          </div>
+          <div class="urgent-arrow">↗</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───── ACTIVITY CHART ───── -->
+  <section class="panel chart-panel reveal reveal-7">
+    <div class="panel-header">
+      <div class="panel-title">
+        <h2>Crawl <em>activity</em></h2>
+        <span class="meta">수집 페이지 수 · 시간대별</span>
+      </div>
+      <div class="panel-actions">
+        <div class="tab-group">
+          <div class="tab">24h</div>
+          <div class="tab active">14d</div>
+          <div class="tab">30d</div>
+          <div class="tab">90d</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-body">
+      <svg class="chart-svg" viewBox="0 0 800 200" preserveAspectRatio="none">
+        <!-- grid -->
+        <g stroke="#1f242d" stroke-width="1">
+          <line x1="0" y1="50"  x2="800" y2="50"/>
+          <line x1="0" y1="100" x2="800" y2="100"/>
+          <line x1="0" y1="150" x2="800" y2="150"/>
+        </g>
+        <!-- y-axis labels -->
+        <g fill="#5e6772" font-family="JetBrains Mono, monospace" font-size="9" letter-spacing="0.05em">
+          <text x="4" y="48">150</text>
+          <text x="4" y="98">100</text>
+          <text x="4" y="148">50</text>
+          <text x="4" y="190">0</text>
+        </g>
+
+        <!-- bars: 14 days × (page, attachment) stacked -->
+        <g>
+          <!-- d1 -->
+          <rect x="48"  y="120" width="34" height="68" fill="#5fb8ff" opacity="0.55"/>
+          <rect x="48"  y="100" width="34" height="20" fill="#5fb8ff"/>
+
+          <rect x="100" y="105" width="34" height="83" fill="#5fb8ff" opacity="0.55"/>
+          <rect x="100" y="78"  width="34" height="27" fill="#5fb8ff"/>
+
+          <rect x="152" y="115" width="34" height="73" fill="#5fb8ff" opacity="0.55"/>
+          <rect x="152" y="90"  width="34" height="25" fill="#5fb8ff"/>
+
+          <rect x="204" y="88"  width="34" height="100" fill="#5fb8ff" opacity="0.55"/>
+          <rect x="204" y="58"  width="34" height="30" fill="#5fb8ff"/>
+
+          <rect x="256" y="124" width="34" height="64" fill="#5fb8ff" opacity="0.55"/>
+          <rect x="256" y="98"  width="34" height="26" fill="#5fb8ff"/>
+
+          <rect x="308" y="116" width="34" height="72" fill="#5fb8ff" opacity="0.55"/>
+          <rect x="308" y="90"  width="34" height="26" fill="#5fb8ff"/>
+
+          <rect x="360" y="74"  width="34" height="114" fill="#5fb8ff" opacity="0.55"/>
+          <rect x="360" y="42"  width="34" height="32" fill="#5fb8ff"/>
+
+          <rect x="412" y="100" width="34" height="88" fill="#5fb8ff" opacity="0.55"/>
+          <rect x="412" y="72"  width="34" height="28" fill="#5fb8ff"/>
+
+          <rect x="464" y="92"  width="34" height="96" fill="#5fb8ff" opacity="0.55"/>
+          <rect x="464" y="64"  width="34" height="28" fill="#5fb8ff"/>
+
+          <rect x="516" y="110" width="34" height="78" fill="#5fb8ff" opacity="0.55"/>
+          <rect x="516" y="82"  width="34" height="28" fill="#5fb8ff"/>
+
+          <rect x="568" y="58"  width="34" height="130" fill="#5fb8ff" opacity="0.55"/>
+          <rect x="568" y="26"  width="34" height="32" fill="#5fb8ff"/>
+
+          <rect x="620" y="84"  width="34" height="104" fill="#5fb8ff" opacity="0.55"/>
+          <rect x="620" y="54"  width="34" height="30" fill="#5fb8ff"/>
+
+          <rect x="672" y="98"  width="34" height="90" fill="#5fb8ff" opacity="0.55"/>
+          <rect x="672" y="68"  width="34" height="30" fill="#5fb8ff"/>
+
+          <!-- today highlight in phosphor -->
+          <rect x="724" y="76"  width="34" height="112" fill="#d4ff3a" opacity="0.55"/>
+          <rect x="724" y="44"  width="34" height="32" fill="#d4ff3a"/>
+          <line x1="741" y1="20" x2="741" y2="44" stroke="#d4ff3a" stroke-width="1"/>
+          <text x="741" y="14" fill="#d4ff3a" font-family="JetBrains Mono, monospace" font-size="9"
+                text-anchor="middle" letter-spacing="0.08em">TODAY</text>
+        </g>
+
+        <!-- x-axis labels -->
+        <g fill="#5e6772" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle" letter-spacing="0.04em">
+          <text x="65"  y="200">05/07</text>
+          <text x="117" y="200">05/08</text>
+          <text x="169" y="200">05/09</text>
+          <text x="221" y="200">05/10</text>
+          <text x="273" y="200">05/11</text>
+          <text x="325" y="200">05/12</text>
+          <text x="377" y="200">05/13</text>
+          <text x="429" y="200">05/14</text>
+          <text x="481" y="200">05/15</text>
+          <text x="533" y="200">05/16</text>
+          <text x="585" y="200">05/17</text>
+          <text x="637" y="200">05/18</text>
+          <text x="689" y="200">05/19</text>
+          <text x="741" y="200" fill="#d4ff3a">05/20</text>
+        </g>
+      </svg>
+
+      <div class="chart-legend">
+        <span class="legend-item"><span class="legend-swatch" style="background:#5fb8ff"></span>수집 페이지</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#5fb8ff;opacity:0.55"></span>다운로드 첨부</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#d4ff3a"></span>오늘</span>
+        <span class="legend-item" style="margin-left:auto;">14일 합계 · <strong style="color:#e8ecef">1,124 페이지</strong> · <strong style="color:#e8ecef">317 첨부</strong></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───── ANNOUNCEMENTS TABLE ───── -->
+  <section class="panel reveal reveal-7" style="animation-delay:0.55s;">
+    <div class="panel-header">
+      <div class="panel-title">
+        <h2>최신 <em>공고</em></h2>
+        <span class="meta">최근 수집 30건</span>
+      </div>
+      <div class="panel-actions">
+        <button class="btn">⚙ Columns</button>
+        <button class="btn">⤓ CSV</button>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <input class="search" placeholder="공고 제목 · 사업명 · 작성자 검색…" />
+      <span class="chip active">전체<span class="count">·30</span></span>
+      <span class="chip">진행중<span class="count">·17</span></span>
+      <span class="chip">마감임박<span class="count">·6</span></span>
+      <span class="chip">상시<span class="count">·4</span></span>
+      <span class="chip">종료<span class="count">·3</span></span>
+    </div>
+
+    <div style="overflow-x:auto;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>상태</th>
+            <th>공고 제목 <span class="sort">↕</span></th>
+            <th>신청기간</th>
+            <th style="text-align:right;">조회</th>
+            <th style="text-align:right;">첨부</th>
+            <th>작성일 <span class="sort">↓</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="col-num">8412</td>
+            <td><span class="badge active">진행중</span></td>
+            <td class="col-title">
+              해외IT지원센터(호치민) 운영 사업자 모집 공고
+              <span class="biz">해외진출 · 베트남</span>
+            </td>
+            <td class="col-period">2026-05-18 → 2026-06-12</td>
+            <td class="col-num-right">537</td>
+            <td class="col-num-right"><span class="attach-bubble">◇ 4</span></td>
+            <td class="col-period">2026-05-18</td>
+          </tr>
+          <tr>
+            <td class="col-num">8411</td>
+            <td><span class="badge critical">D-2</span></td>
+            <td class="col-title">
+              2026년 AI 바우처 지원사업 수요기업 모집공고
+              <span class="biz">AI · 바우처 · 100억</span>
+            </td>
+            <td class="col-period">2026-05-09 → 2026-05-22</td>
+            <td class="col-num-right">2,148</td>
+            <td class="col-num-right"><span class="attach-bubble">◇ 5</span></td>
+            <td class="col-period">2026-05-09</td>
+          </tr>
+          <tr>
+            <td class="col-num">8410</td>
+            <td><span class="badge critical">D-3</span></td>
+            <td class="col-title">
+              ICT 글로벌 진출 지원사업 (유럽권) 2차 모집공고
+              <span class="biz">해외진출 · EU</span>
+            </td>
+            <td class="col-period">2026-05-02 → 2026-05-23</td>
+            <td class="col-num-right">1,602</td>
+            <td class="col-num-right"><span class="attach-bubble">◇ 8</span></td>
+            <td class="col-period">2026-05-02</td>
+          </tr>
+          <tr>
+            <td class="col-num">8409</td>
+            <td><span class="badge active">진행중</span></td>
+            <td class="col-title">
+              디지털 뉴딜 인재 양성과정 (전공자 트랙) 교육생 모집
+              <span class="biz">인재양성 · K-디지털</span>
+            </td>
+            <td class="col-period">2026-05-15 → 2026-06-30</td>
+            <td class="col-num-right">812</td>
+            <td class="col-num-right"><span class="attach-bubble">◇ 3</span></td>
+            <td class="col-period">2026-05-15</td>
+          </tr>
+          <tr>
+            <td class="col-num">8408</td>
+            <td><span class="badge warn">D-5</span></td>
+            <td class="col-title">
+              메타버스 콘텐츠 제작지원 사업화 컨설팅 사업자 선정
+              <span class="biz">메타버스 · XR</span>
+            </td>
+            <td class="col-period">2026-04-28 → 2026-05-25</td>
+            <td class="col-num-right">964</td>
+            <td class="col-num-right"><span class="attach-bubble">◇ 3</span></td>
+            <td class="col-period">2026-04-28</td>
+          </tr>
+          <tr>
+            <td class="col-num">8407</td>
+            <td><span class="badge permanent">상시</span></td>
+            <td class="col-title">
+              공공 SW 사업 발주관리 자문 지원 (상시 접수)
+              <span class="biz">공공SW · 자문</span>
+            </td>
+            <td class="col-period">상시 모집</td>
+            <td class="col-num-right">3,041</td>
+            <td class="col-num-right"><span class="attach-bubble">◇ 2</span></td>
+            <td class="col-period">2026-04-22</td>
+          </tr>
+          <tr>
+            <td class="col-num">8406</td>
+            <td><span class="badge warn">D-6</span></td>
+            <td class="col-title">
+              디지털 헬스케어 실증 테스트베드 운영기관 공모
+              <span class="biz">디지털헬스 · 실증</span>
+            </td>
+            <td class="col-period">2026-05-06 → 2026-05-26</td>
+            <td class="col-num-right">1,182</td>
+            <td class="col-num-right"><span class="attach-bubble">◇ 6</span></td>
+            <td class="col-period">2026-05-06</td>
+          </tr>
+          <tr>
+            <td class="col-num">8405</td>
+            <td><span class="badge active">진행중</span></td>
+            <td class="col-title">
+              SW 마이스터고 산학협력 지원 신규공고
+              <span class="biz">SW교육 · 마이스터고</span>
+            </td>
+            <td class="col-period">2026-05-10 → 2026-06-14</td>
+            <td class="col-num-right">416</td>
+            <td class="col-num-right"><span class="attach-bubble">◇ 2</span></td>
+            <td class="col-period">2026-05-10</td>
+          </tr>
+          <tr>
+            <td class="col-num">8404</td>
+            <td><span class="badge ended">종료</span></td>
+            <td class="col-title">
+              2026년 ICT R&amp;D 바우처 1차 수행기업 모집공고
+              <span class="biz">R&amp;D · 바우처</span>
+            </td>
+            <td class="col-period">2026-03-21 → 2026-04-18</td>
+            <td class="col-num-right">4,872</td>
+            <td class="col-num-right"><span class="attach-bubble">◇ 7</span></td>
+            <td class="col-period">2026-03-21</td>
+          </tr>
+          <tr>
+            <td class="col-num">8403</td>
+            <td><span class="badge active">진행중</span></td>
+            <td class="col-title">
+              지능형 사이버보안 인프라 구축 시범사업 참여기업 공모
+              <span class="biz">사이버보안 · 인프라</span>
+            </td>
+            <td class="col-period">2026-05-12 → 2026-06-20</td>
+            <td class="col-num-right">528</td>
+            <td class="col-num-right"><span class="attach-bubble">◇ 9</span></td>
+            <td class="col-period">2026-05-12</td>
+          </tr>
+          <tr>
+            <td class="col-num">8402</td>
+            <td><span class="badge permanent">상시</span></td>
+            <td class="col-title">
+              스타트업 ICT 멘토링 매칭 신청 안내
+              <span class="biz">스타트업 · 멘토링</span>
+            </td>
+            <td class="col-period">상시 모집</td>
+            <td class="col-num-right">2,317</td>
+            <td class="col-num-right"><span class="attach-bubble zero">◇ 0</span></td>
+            <td class="col-period">2026-04-15</td>
+          </tr>
+          <tr>
+            <td class="col-num">8401</td>
+            <td><span class="badge ended">종료</span></td>
+            <td class="col-title">
+              2026년 K-디지털 트레이닝 운영기관 선정 공고
+              <span class="biz">인재양성 · K-디지털</span>
+            </td>
+            <td class="col-period">2026-02-19 → 2026-03-25</td>
+            <td class="col-num-right">6,514</td>
+            <td class="col-num-right"><span class="attach-bubble">◇ 11</span></td>
+            <td class="col-period">2026-02-19</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ───── FOOTER ───── -->
+  <footer class="footer">
+    <div class="kv">
+      <strong>SOURCE</strong> www.nipa.kr/home/2-2 <span class="arrow">→</span>
+      <strong>OUT</strong> nipa_announcements.xlsx
+    </div>
+    <div class="kv">
+      delay 0.3s · UA Chrome/120 · parser lxml · pages 1..38
+    </div>
+    <div class="kv">
+      built with <span style="color:var(--accent-soft);font-style:italic;font-family:var(--display)">care</span> · 2026
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>[안2] ICT기금 공모사업 찾기</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap" />
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f4f6f9; --surface: #ffffff; --line: #e3e7ed; --line2: #cfd6df;
+    --t1: #14181f; --t2: #4a5361; --t3: #7a8494;
+    --navy: #1f3864; --navy2: #2b4c86; --brand-soft: #e8eef8;
+    --series-1: #2a78d6;
+    --good: #0ca30c; --warning: #fab219; --serious: #ec835a; --critical: #d03b3b;
+    --sans: "IBM Plex Sans KR", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--t1); font-family: var(--sans); font-size: 14px; line-height: 1.55; }
+  a { color: inherit; }
+  .gnb { background: var(--navy); color: #fff; }
+  .gnb .in { max-width: 1280px; margin: 0 auto; padding: 0 28px; height: 60px; display: flex; align-items: center; gap: 36px; }
+  .logo { font-weight: 700; font-size: 17px; letter-spacing: -.02em; }
+  .logo small { font-weight: 400; opacity: .7; margin-left: 8px; font-size: 13px; }
+  .gnb nav { display: flex; gap: 26px; font-size: 14.5px; }
+  .gnb nav a { text-decoration: none; opacity: .75; padding: 19px 0; }
+  .gnb nav a.on { opacity: 1; font-weight: 600; box-shadow: inset 0 -3px 0 #fff; }
+  .gnb .user { margin-left: auto; font-size: 13px; opacity: .8; }
+
+  .hero { background: linear-gradient(180deg, var(--navy) 0%, var(--navy2) 100%); color: #fff; padding: 34px 0 70px; }
+  .hero .in { max-width: 1280px; margin: 0 auto; padding: 0 28px; }
+  .hero h1 { margin: 0 0 6px; font-size: 30px; font-weight: 600; letter-spacing: -.03em; }
+  .hero p { margin: 0 0 22px; opacity: .8; font-size: 15px; }
+  .sbox { display: flex; background: #fff; border-radius: 8px; overflow: hidden; max-width: 760px; box-shadow: 0 8px 24px rgba(0,0,0,.18); }
+  .sbox input { flex: 1; border: 0; padding: 16px 20px; font: inherit; font-size: 16px; outline: none; }
+  .sbox button { border: 0; background: var(--series-1); color: #fff; font: inherit; font-weight: 600; padding: 0 28px; cursor: pointer; }
+  .qtags { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; font-size: 13px; }
+  .qtags span { opacity: .7; }
+  .qtags button { background: rgba(255,255,255,.12); color: #fff; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+
+  .wrap { max-width: 1280px; margin: -44px auto 0; padding: 0 28px 60px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px 20px; cursor: pointer; display: flex; align-items: center; gap: 14px; }
+  .stat:hover { border-color: var(--series-1); }
+  .stat .ic { width: 40px; height: 40px; border-radius: 8px; display: grid; place-items: center; font-size: 18px; background: var(--brand-soft); }
+  .stat .v { font-size: 26px; font-weight: 600; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .stat .l { font-size: 13px; color: var(--t2); }
+
+  .notice { background: #fff8e6; border: 1px solid #f3dfa6; color: #6b5310; border-radius: 6px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; }
+
+  .layout { display: grid; grid-template-columns: 250px 1fr; gap: 20px; align-items: start; }
+  .side { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 18px 18px; position: sticky; top: 16px; }
+  .side h3 { font-size: 14px; margin: 16px 0 8px; font-weight: 600; }
+  .side label { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--t2); padding: 4px 0; cursor: pointer; }
+  .side label i { font-style: normal; margin-left: auto; color: var(--t3); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .side input { accent-color: var(--series-1); }
+  .side .reset { margin-top: 14px; width: 100%; padding: 8px; border: 1px solid var(--line2); background: #fff; border-radius: 6px; font: inherit; font-size: 13px; cursor: pointer; }
+  .side hr { border: 0; border-top: 1px solid var(--line); margin: 14px 0 0; }
+
+  .bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .bar .cnt { font-size: 15px; } .bar .cnt b { color: var(--series-1); }
+  .bar select { padding: 7px 10px; border: 1px solid var(--line2); border-radius: 6px; font: inherit; font-size: 13px; background: #fff; }
+
+  .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; transition: box-shadow .15s, border-color .15s; }
+  .card:hover { border-color: var(--line2); box-shadow: 0 6px 18px rgba(20,24,31,.07); }
+  .ctop { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .dday { font-weight: 700; font-size: 12.5px; padding: 3px 9px; border-radius: 4px; font-variant-numeric: tabular-nums; }
+  .dday.urgent { background: #fdecec; color: #b42323; } .dday.open { background: #e7f6e7; color: #0a7a0a; }
+  .dday.upcoming { background: var(--brand-soft); color: var(--navy2); } .dday.always { background: var(--brand-soft); color: var(--navy2); }
+  .dday.ended { background: #eef0f3; color: var(--t3); }
+  .kind { font-size: 12px; color: var(--t2); border: 1px solid var(--line2); padding: 2px 8px; border-radius: 4px; }
+  .org { font-size: 12px; color: var(--t3); margin-left: auto; }
+  .card h4 { margin: 0; font-size: 16px; font-weight: 600; line-height: 1.4; letter-spacing: -.015em; }
+  .card h4 a { text-decoration: none; } .card h4 a:hover { color: var(--series-1); }
+  .biz { font-size: 13px; color: var(--t2); }
+  .sum { font-size: 13px; color: var(--t3); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-size: 12px; padding: 2px 9px; border-radius: 999px; background: #f0f3f7; color: var(--t2); }
+  .tag.t { background: #fff; border: 1px solid var(--line2); }
+  .period { font-size: 12.5px; color: var(--t2); font-variant-numeric: tabular-nums; }
+  .ptrack { height: 6px; background: #eef1f5; border-radius: 0 3px 3px 0; margin-top: 6px; position: relative; }
+  .pfill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--series-1); border-radius: 0 3px 3px 0; }
+  .ptrack.urgent .pfill { background: var(--critical); }
+  .cfoot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 10px; margin-top: auto; font-size: 12.5px; color: var(--t3); }
+  .go { text-decoration: none; font-weight: 600; color: var(--series-1); font-size: 13px; }
+  .empty { background: var(--surface); border: 1px dashed var(--line2); border-radius: 10px; padding: 40px; text-align: center; color: var(--t3); grid-column: 1/-1; }
+  .more { display: block; margin: 18px auto 0; padding: 10px 28px; border: 1px solid var(--line2); background: #fff; border-radius: 6px; font: inherit; cursor: pointer; }
+  .viz-tip { position: fixed; left: 0; top: 0; pointer-events: none; opacity: 0; z-index: 99; background: #14181f; color: #fff; padding: 7px 10px; border-radius: 4px; font-size: 12.5px; max-width: 300px; }
+  .draft { position: fixed; right: 16px; bottom: 16px; font-size: 12px; color: #fff; background: var(--navy); padding: 6px 12px; border-radius: 999px; font-weight: 600; }
+  @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } .side { position: static; } .cards, .stats { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<header class="gnb"><div class="in">
+  <div class="logo">ICT기금 사업관리시스템<small>PIMS</small></div>
+  <nav><a href="#">사업관리</a><a href="#">규정·법령 상담</a><a class="on" href="#">공모사업 찾기</a><a href="#">알림</a></nav>
+  <div class="user">공모사업 화면 시안</div>
+</div></header>
+
+<section class="hero"><div class="in">
+  <h1>우리 기관에 맞는 ICT기금 공모사업을 찾아보세요</h1>
+  <p>전담기관 홈페이지에 흩어진 공모 공고를 모아, 지원 분야와 대상별로 정리했습니다.</p>
+  <div class="sbox"><input id="q" placeholder="예: 바우처, GPU, 해외진출, 입주" /><button id="go">검색</button></div>
+  <div class="qtags"><span>많이 찾는 검색어</span><button>바우처</button><button>인공지능</button><button>해외진출</button><button>입주</button><button>SaaS</button></div>
+</div></section>
+
+<main class="wrap">
+  <section class="stats" id="stats"></section>
+  <div class="notice">ⓘ 분야·지원대상 표시는 AI 분류 기능을 만들기 전까지 공고명과 본문의 단어로 붙인 <b>임시 분류</b>입니다. 신청 전에 반드시 원문 공고를 확인하세요.</div>
+  <div class="layout">
+    <aside class="side" id="side"></aside>
+    <section>
+      <div class="bar"><div class="cnt" id="cnt"></div>
+        <select id="sort"><option value="end">마감일이 가까운 순</option><option value="new">최근 게시 순</option><option value="views">조회 많은 순</option></select></div>
+      <div class="cards" id="cards"></div>
+      <button class="more" id="more">더 보기</button>
+    </section>
+  </div>
+</main>
+<div class="draft">UI 디자인 [안2]</div>
+
+<script>window.NIPA_DATA = /*__DATA__*/null;</script>
+<script>
+/*__COMMON__*/
+(() => {
+  const GROUPS = [
+    ["st", "접수 상태", [["urgent", "마감 임박(7일 이내)"], ["open", "접수 중"], ["upcoming", "접수 예정"], ["always", "상시 모집"], ["ended", "접수 마감"]], (x) => [x.st]],
+    ["kind", "공고 유형", ["사업 모집", "입주 모집", "행사·전시 참가", "결과 발표", "설명회·안내", "입찰·용역"].map((k) => [k, k]), (x) => [x.kind]],
+    ["fields", "지원 분야", [...new Set(ITEMS.flatMap((x) => x.fields))].map((k) => [k, k]), (x) => x.fields],
+    ["targets", "지원 대상", [...new Set(ITEMS.flatMap((x) => x.targets))].map((k) => [k, k]), (x) => x.targets],
+  ];
+  const DEFAULT = { st: new Set(["urgent", "open", "upcoming", "always"]), kind: new Set(["사업 모집", "입주 모집", "행사·전시 참가"]), fields: new Set(), targets: new Set() };
+  let sel = { st: new Set(DEFAULT.st), kind: new Set(DEFAULT.kind), fields: new Set(), targets: new Set() };
+  let q = "", sort = "end", lim = 12;
+
+  const pass = (x, skip) => GROUPS.every(([k, , , get]) => k === skip || !sel[k].size || get(x).some((v) => sel[k].has(v))) &&
+    (!q || (x.title + x.biz + x.summary + x.fields.join() + x.targets.join()).toLowerCase().includes(q));
+
+  function side() {
+    $("side").innerHTML = GROUPS.map(([k, title, opts, get]) => `<h3>${title}</h3>` + opts.map(([v, l]) => {
+      const n = ITEMS.filter((x) => pass(x, k) && get(x).includes(v)).length;
+      return `<label><input type="checkbox" data-g="${k}" value="${esc(v)}" ${sel[k].has(v) ? "checked" : ""}/>${esc(l)}<i>${n}</i></label>`;
+    }).join("")).join("") + `<hr/><button class="reset" id="reset">조건 초기화</button>`;
+    $("side").querySelectorAll("input").forEach((c) => c.onchange = () => { c.checked ? sel[c.dataset.g].add(c.value) : sel[c.dataset.g].delete(c.value); lim = 12; render(); });
+    $("reset").onclick = () => { sel = { st: new Set(DEFAULT.st), kind: new Set(DEFAULT.kind), fields: new Set(), targets: new Set() }; q = ""; $("q").value = ""; render(); };
+  }
+
+  function card(x) {
+    let bar = "";
+    if (x.startDate && x.endDate) {
+      const p = Math.min(100, Math.max(0, ((NOW - x.startDate) / (x.endDate - x.startDate)) * 100));
+      bar = `<div><div class="period">신청 ${kdate(x.start)} ${ktime(x.start)} ~ ${kdate(x.end)} ${ktime(x.end)}</div>
+        <div class="ptrack ${x.st}" data-tip="접수 기간 ${x.span}일 중 ${p.toFixed(0)}% 지남"><div class="pfill" style="width:${p}%"></div></div></div>`;
+    } else bar = `<div class="period">신청 기간: 상시 모집(원문 확인)</div>`;
+    const dd = x.st === "urgent" || x.st === "open" ? (x.dleft === 0 ? "오늘 마감" : `D-${x.dleft}`) : STATUS[x.st].label;
+    return `<article class="card">
+      <div class="ctop"><span class="dday ${x.st}">${STATUS[x.st].icon} ${dd}</span><span class="kind">${esc(x.kind)}</span>${x.changed ? `<span class="kind">변경 공고</span>` : ""}<span class="org">정보통신산업진흥원</span></div>
+      <h4><a href="${esc(x.url)}" target="_blank">${esc(x.title)}</a></h4>
+      <div class="biz">사업명 · ${esc(x.biz || "표시 없음")}</div>
+      ${x.body_len >= 50 ? `<div class="sum">${esc(x.summary)}</div>` : `<div class="sum">본문 요약 없음 — 상세 내용은 첨부 파일(${x.files}개)에 있습니다.</div>`}
+      <div class="tags">${x.fields.map((t) => `<span class="tag">#${esc(t)}</span>`).join("")}${x.targets.map((t) => `<span class="tag t">대상 · ${esc(t)}</span>`).join("")}</div>
+      ${bar}
+      <div class="cfoot"><span>게시 ${kdate(x.posted)} · 조회 ${fmt(x.views)} · 첨부 ${x.files}개</span><a class="go" href="${esc(x.url)}" target="_blank">원문 공고 보기 →</a></div>
+    </article>`;
+  }
+
+  function render() {
+    const rows = ITEMS.filter((x) => pass(x)).sort((a, b) =>
+      sort === "new" ? (b.posted || "").localeCompare(a.posted || "") :
+      sort === "views" ? b.views - a.views :
+      ((a.endDate && a.endDate > NOW ? a.endDate : 9e15) - (b.endDate && b.endDate > NOW ? b.endDate : 9e15)) || (b.posted || "").localeCompare(a.posted || ""));
+    $("cnt").innerHTML = `조건에 맞는 공고 <b>${fmt(rows.length)}건</b>`;
+    $("cards").innerHTML = rows.slice(0, lim).map(card).join("") || `<div class="empty">조건에 맞는 공고가 없습니다. 왼쪽 조건을 줄이거나 '접수 마감'을 포함해 보세요.</div>`;
+    $("more").style.display = rows.length > lim ? "" : "none";
+    side();
+  }
+
+  const open = ITEMS.filter(isOpen);
+  const soon = ITEMS.filter((x) => x.st === "urgent").length;
+  const up = ITEMS.filter((x) => x.st === "upcoming").length, alw = ITEMS.filter((x) => x.st === "always").length;
+  const quick = (st) => () => { sel.st = new Set(st); lim = 12; render(); scrollTo({ top: $("cnt").offsetTop - 20, behavior: "smooth" }); };
+  $("stats").innerHTML = [["✅", open.length, "지금 신청할 수 있는 공모"], ["⏰", soon, "7일 안에 마감"], ["🗓", up, "곧 접수 시작"], ["∞", alw, "상시 모집"]]
+    .map(([ic, v, l], i) => `<div class="stat" data-i="${i}"><div class="ic">${ic}</div><div><div class="v">${fmt(v)}건</div><div class="l">${l}</div></div></div>`).join("");
+  const qs = [["urgent", "open"], ["urgent"], ["upcoming"], ["always"]];
+  document.querySelectorAll(".stat").forEach((s) => s.onclick = quick(qs[s.dataset.i]));
+
+  $("q").oninput = (e) => { q = e.target.value.trim().toLowerCase(); lim = 12; render(); };
+  $("go").onclick = () => render();
+  document.querySelectorAll(".qtags button").forEach((b) => b.onclick = () => { $("q").value = b.textContent; q = b.textContent.toLowerCase(); sel.st = new Set(); render(); });
+  $("sort").onchange = (e) => { sort = e.target.value; render(); };
+  $("more").onclick = () => { lim += 12; render(); };
+  render();
+})();
+</script>
+</body>
+</html>

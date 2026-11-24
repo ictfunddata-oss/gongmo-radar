@@ -1,0 +1,49 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ d.title }}{% endblock %}
+{% macro won(n) %}{% if n %}{{ '{:,}'.format(n) }}원{% else %}—{% endif %}{% endmacro %}
+{% block content %}
+<p><a href="{{ back or url_for('admin.raw') }}">← 목록</a></p>
+<h1>{{ d.title }}</h1>
+<p class="sub">{{ d.org }} · {{ d.board_name }} · 게시 {{ d.posted_at or '' }} · <a href="{{ d.url }}" target="_blank" rel="noopener">원문 보기</a></p>
+
+<h2>수집한 원본 정보</h2>
+<table class="kv">
+  <tr><th>게시물 번호</th><td>{{ d.post_no }}{% if d.list_no %} (목록 번호 {{ d.list_no }}){% endif %}</td></tr>
+  <tr><th>사업구분</th><td>{{ d.biz or '—' }}</td></tr>
+  <tr><th>신청 기간</th><td>{{ d.period_raw or '—' }}{% if d.start_at or d.end_at %} <span class="sub">(해석: {{ (d.start_at or '')|replace('T', ' ') }} ~ {{ (d.end_at or '')|replace('T', ' ') }})</span>{% endif %}</td></tr>
+  <tr><th>사이트 상태</th><td>{{ d.site_status or '—' }}</td></tr>
+  <tr><th>작성(부서)</th><td>{{ d.writer or '—' }}</td></tr>
+  <tr><th>목록 날짜 · 게시일 · 조회수</th><td>{{ d.list_date or '—' }} · {{ d.posted_at or '—' }} · {{ d.views if d.views is not none else '—' }}</td></tr>
+  <tr><th>수집 일시</th><td>최초 {{ d.first_seen or '—' }} · 최종 {{ d.last_seen or '—' }}</td></tr>
+</table>
+
+<h2>첨부에서 읽어 구조화한 결과</h2>
+{% if st %}
+<table class="kv">
+  <tr><th>사업명(공고문)</th><td>{{ st.project_name or '—' }}</td></tr>
+  <tr><th>주관·전담기관</th><td>{{ st.org_host or '—' }}</td></tr>
+  <tr><th>접수 기간</th><td>{{ st.period.start or '—' }} ~ {{ st.period.end or '—' }}{% if st.period.end_time %} {{ st.period.end_time }}{% endif %}{% if st.period.note %} <span class="sub">({{ st.period.note }})</span>{% endif %}</td></tr>
+  <tr><th>분야</th><td>{{ st.field or '—' }}</td></tr>
+  <tr><th>유형·모집 방식</th><td>{{ st.kind or '—' }}</td></tr>
+  <tr><th>지원대상</th><td>{{ st.target or '—' }}</td></tr>
+  <tr><th>지원 내용</th><td>{{ st.support_content or '—' }}</td></tr>
+  <tr><th>지원 규모</th><td>건당 {{ won(st.budget_per_won) }} · 총 {{ won(st.budget_total_won) }} · 선정 {{ st.selection_n if st.selection_n else '—' }}건</td></tr>
+  <tr><th>자부담 조건</th><td>{{ st.cost_share or '—' }}</td></tr>
+  <tr><th>주요 일정</th><td>{% for x in st.key_dates %}<div>{{ x.date }}{% if x.time %} {{ x.time }}{% endif %} · {{ x.label }}{% if x.note %} ({{ x.note }}){% endif %}</div>{% else %}—{% endfor %}</td></tr>
+  <tr><th>신청 방법</th><td>{{ st.apply_how or '—' }}</td></tr>
+  <tr><th>담당 부서</th><td>{{ st.contact_dept or '—' }}</td></tr>
+  <tr><th>확인 필요</th><td>{% for u in st.unclear %}<div>· {{ u }}</div>{% else %}—{% endfor %}</td></tr>
+  <tr><th>채움률</th><td>{{ st.fill_rate or '—' }}</td></tr>
+</table>
+{% else %}<p class="sub">이 공고는 아직 첨부를 읽어 구조화하지 않았습니다.</p>{% endif %}
+
+<h2>첨부파일 {{ d.attachments|length }}개</h2>
+<ul class="files">
+{% for f in d.attachments %}
+  <li>{% if f.file_path %}<a href="{{ url_for('admin.attachment', ann_id=d.ann_id, seq=f.seq) }}">{{ f.name }}</a>{% else %}{{ f.name }} <span class="sub">(미저장{% if f.download_error %} · {{ f.download_error }}{% endif %})</span>{% endif %} <span class="sub">{{ f.size_text }}</span></li>
+{% else %}<li class="sub">없음</li>{% endfor %}
+</ul>
+
+<h2>본문 {% if d.body %}<span class="sub">{{ d.body|length }}자</span>{% endif %}</h2>
+<div class="body">{{ d.body or '(사이트에 본문이 없음)' }}</div>
+{% endblock %}

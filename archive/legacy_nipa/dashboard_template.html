@@ -1,0 +1,1543 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NIPA · Crawler Mission Control · live</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+/>
+<style>
+  :root {
+    --bg-base: #0a0c10;
+    --bg-surface: #11141a;
+    --bg-elevated: #161a21;
+    --bg-input: #1c2129;
+    --bg-hover: #1d222b;
+    --border: #1f242d;
+    --border-bright: #2a3140;
+    --text-primary: #e8ecef;
+    --text-secondary: #9aa3ad;
+    --text-muted: #5e6772;
+    --text-dim: #3a4250;
+    --accent: #d4ff3a;
+    --accent-soft: #b8e036;
+    --accent-dim: rgba(212, 255, 58, 0.12);
+    --critical: #ff5e58;
+    --critical-dim: rgba(255, 94, 88, 0.12);
+    --warning: #f5b942;
+    --warning-dim: rgba(245, 185, 66, 0.12);
+    --info: #5fb8ff;
+    --info-dim: rgba(95, 184, 255, 0.12);
+    --ok: #5dd97a;
+    --ok-dim: rgba(93, 217, 122, 0.12);
+    --display: "Fraunces", "IBM Plex Sans KR", serif;
+    --sans: "IBM Plex Sans KR", -apple-system, BlinkMacSystemFont, sans-serif;
+    --mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--sans);
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    min-height: 100vh;
+    background-image:
+      radial-gradient(circle at 12% 6%, rgba(212, 255, 58, 0.06), transparent 35%),
+      radial-gradient(circle at 88% 92%, rgba(95, 184, 255, 0.04), transparent 40%),
+      linear-gradient(180deg, #0a0c10 0%, #0a0c10 100%);
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* faint grid texture */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* film grain */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: -50%;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .app {
+    position: relative;
+    z-index: 2;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 32px 64px;
+  }
+
+  /* ─────────────────────── TOP BAR ─────────────────────── */
+  .topbar {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 48px;
+    align-items: center;
+    padding: 24px 0 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 28px;
+  }
+
+  .brand {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .brand-mark {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    background: var(--accent);
+    color: #000;
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: -0.04em;
+    border-radius: 2px;
+    box-shadow: 0 0 0 4px rgba(212, 255, 58, 0.12),
+      0 0 24px -2px rgba(212, 255, 58, 0.6);
+  }
+
+  .brand-name {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 22px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+  }
+
+  .brand-name .italic {
+    font-style: italic;
+    color: var(--accent-soft);
+    font-feature-settings: "ss01";
+  }
+
+  .brand-sub {
+    margin-top: 6px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .topbar-nav {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-surface);
+    padding: 4px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    width: fit-content;
+    margin: 0 auto;
+  }
+
+  .topbar-nav a {
+    padding: 8px 18px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-radius: 999px;
+    transition: all 0.15s ease;
+    cursor: pointer;
+  }
+
+  .topbar-nav a:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+  }
+
+  .topbar-nav a.active {
+    background: var(--bg-elevated);
+    color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--border-bright);
+  }
+
+  .status-cluster {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+  }
+
+  .live-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 12px 7px 11px;
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    background: var(--accent-dim);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .live-pill .dot {
+    width: 7px;
+    height: 7px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--accent), 0 0 16px rgba(212, 255, 58, 0.4);
+    animation: pulse 1.6s infinite ease-out;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.18); opacity: 0.6; }
+  }
+
+  .time {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.03em;
+  }
+
+  .time strong {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  /* ─────────────────────── PAGE HEADER ─────────────────────── */
+  .page-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    gap: 32px;
+  }
+
+  .page-head h1 {
+    font-family: var(--display);
+    font-weight: 300;
+    font-size: clamp(38px, 5vw, 56px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    margin: 0;
+    color: var(--text-primary);
+    font-variation-settings: "opsz" 144, "SOFT" 30, "WONK" 0;
+  }
+
+  .page-head h1 em {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--accent-soft);
+    font-variation-settings: "opsz" 144, "SOFT" 80, "WONK" 1;
+  }
+
+  .page-head .sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-top: 12px;
+    display: flex;
+    gap: 18px;
+  }
+
+  .page-head .sub span::before {
+    content: "▸ ";
+    color: var(--accent);
+    margin-right: 4px;
+  }
+
+  .head-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .btn {
+    padding: 10px 16px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-bright);
+    color: var(--text-primary);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn:hover {
+    background: var(--bg-elevated);
+    border-color: var(--text-muted);
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+
+  .btn-primary:hover {
+    background: #e2ff5e;
+    box-shadow: 0 0 20px rgba(212, 255, 58, 0.4);
+  }
+
+  /* ─────────────────────── KPI GRID ─────────────────────── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  .kpi {
+    position: relative;
+    padding: 24px 22px 22px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+  }
+
+  .kpi:hover {
+    border-color: var(--border-bright);
+    transform: translateY(-1px);
+  }
+
+  .kpi::before,
+  .kpi::after {
+    content: "";
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    pointer-events: none;
+  }
+
+  .kpi::before {
+    top: 6px;
+    left: 6px;
+    border-top: 1px solid var(--accent);
+    border-left: 1px solid var(--accent);
+  }
+
+  .kpi::after {
+    bottom: 6px;
+    right: 6px;
+    border-bottom: 1px solid var(--accent);
+    border-right: 1px solid var(--accent);
+  }
+
+  .kpi.critical::before,
+  .kpi.critical::after {
+    border-color: var(--critical);
+  }
+
+  .kpi-label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+
+  .kpi-number {
+    font-family: var(--display);
+    font-weight: 300;
+    font-size: 56px;
+    line-height: 1;
+    color: var(--text-primary);
+    letter-spacing: -0.03em;
+    font-variation-settings: "opsz" 144, "SOFT" 50, "WONK" 0;
+    font-feature-settings: "tnum" 1;
+  }
+
+  .kpi.critical .kpi-number {
+    color: var(--critical);
+  }
+
+  .kpi-number .unit {
+    font-size: 18px;
+    color: var(--text-muted);
+    margin-left: 6px;
+    letter-spacing: 0;
+  }
+
+  .kpi-meta {
+    margin-top: 14px;
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .kpi-meta .delta {
+    color: var(--accent);
+  }
+
+  .kpi-meta .delta.down {
+    color: var(--critical);
+  }
+
+  .kpi-spark {
+    margin-top: 12px;
+    height: 22px;
+    width: 100%;
+  }
+
+  /* ─────────────────────── PANELS ─────────────────────── */
+  .panel {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    position: relative;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+    gap: 16px;
+  }
+
+  .panel-title {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+
+  .panel-title h2 {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 22px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin: 0;
+    color: var(--text-primary);
+    font-variation-settings: "opsz" 36, "SOFT" 40;
+  }
+
+  .panel-title h2 em {
+    font-style: italic;
+    color: var(--accent-soft);
+  }
+
+  .panel-title .meta {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .panel-actions {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .tab-group {
+    display: inline-flex;
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px;
+  }
+
+  .tab-group .tab {
+    padding: 5px 12px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.15s ease;
+  }
+
+  .tab-group .tab:hover {
+    color: var(--text-secondary);
+  }
+
+  .tab-group .tab.active {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+  }
+
+  /* ─────────────────────── SPLIT ROW ─────────────────────── */
+  .split-row {
+    display: grid;
+    grid-template-columns: 1.55fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  /* Active crawl */
+  .active-crawl .panel-body {
+    padding: 22px;
+  }
+
+  .cmd-line {
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 12px 14px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .cmd-line .prompt {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .cmd-line .arg {
+    color: var(--info);
+  }
+
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+
+  .progress-track {
+    flex: 1;
+    height: 8px;
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    width: 31.5%;
+    background: linear-gradient(90deg, var(--accent-soft), var(--accent));
+    border-radius: 999px;
+    position: relative;
+    box-shadow: 0 0 12px rgba(212, 255, 58, 0.4);
+  }
+
+  .progress-fill::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent
+    );
+    animation: shimmer 1.6s infinite linear;
+    border-radius: 999px;
+  }
+
+  @keyframes shimmer {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(100%); }
+  }
+
+  .progress-pct {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 22px;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+    font-variation-settings: "opsz" 36;
+    font-feature-settings: "tnum" 1;
+    min-width: 62px;
+    text-align: right;
+  }
+
+  .progress-meta {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin-bottom: 20px;
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+  }
+
+  .progress-meta > div {
+    padding: 12px 14px;
+    border-right: 1px solid var(--border);
+  }
+
+  .progress-meta > div:last-child {
+    border-right: none;
+  }
+
+  .progress-meta .pm-label {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+  }
+
+  .progress-meta .pm-value {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 18px;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    font-feature-settings: "tnum" 1;
+    font-variation-settings: "opsz" 36;
+  }
+
+  /* log feed */
+  .log-feed {
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0;
+    max-height: 200px;
+    overflow: hidden;
+    position: relative;
+    mask-image: linear-gradient(180deg, transparent 0%, #000 28px, #000 100%);
+  }
+
+  .log-feed::before {
+    content: "EVENT STREAM ─────────";
+    position: absolute;
+    top: 8px;
+    left: 14px;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.18em;
+    color: var(--text-dim);
+    z-index: 1;
+  }
+
+  .log-list {
+    padding: 30px 14px 14px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    line-height: 1.7;
+  }
+
+  .log-line {
+    display: grid;
+    grid-template-columns: 60px 56px 1fr;
+    gap: 12px;
+    align-items: baseline;
+    color: var(--text-secondary);
+  }
+
+  .log-line .ts {
+    color: var(--text-muted);
+  }
+
+  .log-line .lvl {
+    font-weight: 600;
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    padding: 1px 4px;
+    border-radius: 2px;
+    height: fit-content;
+  }
+
+  .lvl.ok    { color: var(--ok); background: var(--ok-dim); }
+  .lvl.info  { color: var(--info); background: var(--info-dim); }
+  .lvl.warn  { color: var(--warning); background: var(--warning-dim); }
+  .lvl.err   { color: var(--critical); background: var(--critical-dim); }
+  .lvl.dl    { color: var(--accent); background: var(--accent-dim); }
+
+  .log-line .msg em {
+    color: var(--text-primary);
+    font-style: normal;
+  }
+
+  /* Urgent list */
+  .urgent-list .panel-body {
+    padding: 4px 0 4px;
+  }
+
+  .urgent-row {
+    display: grid;
+    grid-template-columns: 64px 1fr 24px;
+    gap: 14px;
+    padding: 14px 22px;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.12s ease;
+  }
+
+  .urgent-row:hover {
+    background: var(--bg-hover);
+  }
+
+  .urgent-row:last-child {
+    border-bottom: none;
+  }
+
+  .dday {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 26px;
+    line-height: 1;
+    text-align: center;
+    color: var(--text-primary);
+    letter-spacing: -0.04em;
+    padding: 8px 0;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: var(--bg-base);
+    font-feature-settings: "tnum" 1;
+    font-variation-settings: "opsz" 36;
+  }
+
+  .dday .label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+    font-weight: 500;
+    font-variation-settings: normal;
+  }
+
+  .dday.critical {
+    color: var(--critical);
+    border-color: var(--critical);
+    background: var(--critical-dim);
+  }
+
+  .dday.critical .label {
+    color: var(--critical);
+    opacity: 0.7;
+  }
+
+  .dday.warn {
+    color: var(--warning);
+    border-color: rgba(245, 185, 66, 0.4);
+    background: var(--warning-dim);
+  }
+
+  .dday.warn .label {
+    color: var(--warning);
+    opacity: 0.7;
+  }
+
+  .urgent-title {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    line-height: 1.35;
+    letter-spacing: -0.005em;
+  }
+
+  .urgent-meta {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+  }
+
+  .urgent-arrow {
+    color: var(--text-dim);
+    font-size: 16px;
+    text-align: right;
+    transition: color 0.15s ease, transform 0.15s ease;
+  }
+
+  .urgent-row:hover .urgent-arrow {
+    color: var(--accent);
+    transform: translate(2px, -2px);
+  }
+
+  /* ─────────────────────── ACTIVITY CHART ─────────────────────── */
+  .chart-panel {
+    margin-bottom: 14px;
+  }
+
+  .chart-body {
+    padding: 28px 22px 22px;
+    position: relative;
+  }
+
+  .chart-svg {
+    width: 100%;
+    height: 200px;
+    display: block;
+  }
+
+  .chart-legend {
+    display: flex;
+    gap: 18px;
+    margin-top: 14px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .legend-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }
+
+  /* ─────────────────────── TABLE ─────────────────────── */
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .filter-bar .search {
+    flex: 1;
+    min-width: 220px;
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 9px 12px 9px 32px;
+    color: var(--text-primary);
+    font-family: var(--sans);
+    font-size: 12.5px;
+    position: relative;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235e6772' stroke-width='2'><circle cx='11' cy='11' r='7'/><path d='m21 21-4.3-4.3'/></svg>");
+    background-repeat: no-repeat;
+    background-position: 10px center;
+    background-size: 14px;
+    outline: none;
+  }
+
+  .filter-bar .search:focus {
+    border-color: var(--accent);
+  }
+
+  .chip {
+    padding: 6px 12px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+  }
+
+  .chip:hover {
+    border-color: var(--text-muted);
+    color: var(--text-primary);
+  }
+
+  .chip.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .chip .count {
+    margin-left: 6px;
+    color: var(--text-dim);
+    font-weight: 400;
+  }
+
+  .chip.active .count {
+    color: var(--accent-soft);
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .data-table thead th {
+    text-align: left;
+    padding: 12px 16px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 500;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-base);
+    white-space: nowrap;
+  }
+
+  .data-table thead th .sort {
+    color: var(--text-dim);
+    margin-left: 4px;
+  }
+
+  .data-table tbody td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-secondary);
+    vertical-align: top;
+  }
+
+  .data-table tbody tr {
+    transition: background 0.12s ease;
+  }
+
+  .data-table tbody tr:hover {
+    background: var(--bg-hover);
+  }
+
+  .data-table .col-num {
+    font-family: var(--mono);
+    color: var(--text-dim);
+    width: 50px;
+    font-size: 11px;
+  }
+
+  .data-table .col-title {
+    color: var(--text-primary);
+    font-weight: 500;
+    min-width: 320px;
+    font-size: 13.5px;
+    letter-spacing: -0.005em;
+  }
+
+  .data-table .col-title .biz {
+    display: block;
+    margin-top: 4px;
+    font-family: var(--mono);
+    font-weight: 400;
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .data-table .col-period {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+
+  .data-table .col-num-right {
+    font-family: var(--mono);
+    font-feature-settings: "tnum" 1;
+    text-align: right;
+    color: var(--text-secondary);
+    font-size: 11.5px;
+  }
+
+  .data-table .attach-bubble {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    background: var(--info-dim);
+    border: 1px solid rgba(95, 184, 255, 0.25);
+    color: var(--info);
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 500;
+  }
+
+  .data-table .attach-bubble.zero {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--text-dim);
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .badge::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
+  .badge.critical { color: var(--critical); background: var(--critical-dim); }
+  .badge.warn { color: var(--warning); background: var(--warning-dim); }
+  .badge.active { color: var(--accent); background: var(--accent-dim); }
+  .badge.ended { color: var(--text-muted); background: var(--bg-base); }
+  .badge.permanent { color: var(--info); background: var(--info-dim); }
+
+  /* ─────────────────────── FOOTER ─────────────────────── */
+  .footer {
+    margin-top: 40px;
+    padding: 20px 0 0;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    gap: 32px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  .footer .kv {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .footer .kv strong {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .footer .arrow {
+    color: var(--accent);
+  }
+
+  /* stagger reveal */
+  .reveal {
+    opacity: 0;
+    transform: translateY(8px);
+    animation: reveal 0.6s ease forwards;
+  }
+
+  @keyframes reveal {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal-1 { animation-delay: 0.05s; }
+  .reveal-2 { animation-delay: 0.12s; }
+  .reveal-3 { animation-delay: 0.19s; }
+  .reveal-4 { animation-delay: 0.26s; }
+  .reveal-5 { animation-delay: 0.34s; }
+  .reveal-6 { animation-delay: 0.42s; }
+  .reveal-7 { animation-delay: 0.50s; }
+
+  @media (max-width: 1100px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .split-row { grid-template-columns: 1fr; }
+    .progress-meta { grid-template-columns: repeat(2, 1fr); }
+    .progress-meta > div:nth-child(2) { border-right: none; }
+    .progress-meta > div:nth-child(1), .progress-meta > div:nth-child(2) {
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar { grid-template-columns: 1fr; gap: 18px; }
+    .topbar-nav { margin: 0; justify-self: start; }
+    .data-table .col-period { white-space: normal; }
+  }
+
+  @media (max-width: 640px) {
+    .app { padding: 0 16px 48px; }
+    .kpi-grid { grid-template-columns: 1fr; }
+    .topbar-nav { flex-wrap: wrap; justify-content: flex-start; }
+    .kpi-number { font-size: 44px; }
+  }
+</style>
+</head>
+<body>
+<style>
+  /* ── live 버전 추가 스타일 (원본 CSS 위에 덧붙임) ── */
+  .topbar-nav a { text-decoration: none; }
+  .live-pill.stale { border-color: var(--warning); background: var(--warning-dim); color: var(--warning); }
+  .live-pill.stale .dot { background: var(--warning); box-shadow: 0 0 8px var(--warning); }
+  a.btn { text-decoration: none; }
+  .data-table .col-title a { color: inherit; text-decoration: none; }
+  .data-table .col-title a:hover { color: var(--accent); }
+  .urgent-row { text-decoration: none; color: inherit; }
+  .badge.info { color: var(--info); background: var(--info-dim); }
+  .data-table thead th.sortable { cursor: pointer; user-select: none; }
+  .data-table thead th.sortable:hover { color: var(--text-secondary); }
+  .data-table thead th.sorted { color: var(--accent); }
+  .table-foot { display: flex; justify-content: space-between; align-items: center; padding: 14px 22px;
+    font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
+  .empty { padding: 28px 22px; font-family: var(--mono); font-size: 11.5px; color: var(--text-muted); }
+  .chart-tip { font-family: var(--mono); font-size: 10.5px; color: var(--text-secondary); margin-left: auto; }
+  .log-line .lvl.fetch { color: var(--accent); background: var(--accent-dim); }
+</style>
+
+<div class="app">
+
+  <!-- ───── TOP BAR ───── -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">◢◣</div>
+      <div>
+        <div class="brand-name">nipa<span class="italic">/crawler</span></div>
+        <div class="brand-sub">정보통신산업진흥원 · 사업공고 수집 콘솔 · live</div>
+      </div>
+    </div>
+
+    <nav class="topbar-nav">
+      <a class="active" href="#top">Overview</a>
+      <a href="#runs">Runs</a>
+      <a href="#announcements">Announcements</a>
+    </nav>
+
+    <div class="status-cluster">
+      <div class="live-pill" id="syncPill">
+        <span class="dot"></span>
+        <span id="syncPillText">Synced</span>
+      </div>
+      <div class="time" id="clock"></div>
+    </div>
+  </header>
+
+  <!-- ───── PAGE HEAD ───── -->
+  <section class="page-head reveal reveal-1" id="top">
+    <div>
+      <h1>사업공고 <em>수집</em> 현황</h1>
+      <div class="sub">
+        <span>www.nipa.kr/home/2-2</span>
+        <span>nipa_announcements.xlsx</span>
+        <span id="lastSync">last sync —</span>
+      </div>
+    </div>
+    <div class="head-actions">
+      <a class="btn" href="nipa/data/nipa_announcements.xlsx" download>⤓&nbsp; Export xlsx</a>
+      <button class="btn btn-primary" id="csvBtn">⤓&nbsp; CSV (필터 적용)</button>
+    </div>
+  </section>
+
+  <!-- ───── KPI GRID ───── -->
+  <section class="kpi-grid" id="kpis"></section>
+
+  <!-- ───── SPLIT ROW ───── -->
+  <section class="split-row reveal reveal-6">
+    <div class="panel active-crawl" id="runs">
+      <div class="panel-header">
+        <div class="panel-title">
+          <h2>Last <em>run</em></h2>
+          <span class="meta" id="runId">job · —</span>
+        </div>
+        <div class="panel-actions"><span class="badge" id="runBadge">—</span></div>
+      </div>
+      <div class="panel-body" style="padding:22px;">
+        <div class="cmd-line" id="cmdLine"></div>
+        <div class="progress-row">
+          <div class="progress-track"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+          <div class="progress-pct" id="progPct">0%</div>
+        </div>
+        <div class="progress-meta" id="progMeta"></div>
+        <div class="log-feed"><div class="log-list" id="logList"></div></div>
+      </div>
+    </div>
+
+    <div class="panel urgent-list">
+      <div class="panel-header">
+        <div class="panel-title">
+          <h2>마감 <em>임박</em></h2>
+          <span class="meta">sorted · d-day asc</span>
+        </div>
+        <div class="panel-actions"><span class="meta" id="urgentCount"></span></div>
+      </div>
+      <div class="panel-body" id="urgentList"></div>
+    </div>
+  </section>
+
+  <!-- ───── ACTIVITY CHART ───── -->
+  <section class="panel chart-panel reveal reveal-7">
+    <div class="panel-header">
+      <div class="panel-title">
+        <h2>Posting <em>activity</em></h2>
+        <span class="meta">신규 공고 수 · 작성일 기준</span>
+      </div>
+      <div class="panel-actions">
+        <div class="tab-group" id="chartTabs">
+          <div class="tab" data-range="14d">14d</div>
+          <div class="tab" data-range="30d">30d</div>
+          <div class="tab active" data-range="90d">90d</div>
+          <div class="tab" data-range="12m">12m</div>
+        </div>
+      </div>
+    </div>
+    <div class="chart-body">
+      <svg class="chart-svg" id="chart" viewBox="0 0 800 200" preserveAspectRatio="none"></svg>
+      <div class="chart-legend">
+        <span class="legend-item"><span class="legend-swatch" style="background:#5fb8ff"></span>신규 공고</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#d4ff3a"></span>현재 구간</span>
+        <span class="legend-item" style="margin-left:auto;" id="chartSum"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───── ANNOUNCEMENTS TABLE ───── -->
+  <section class="panel reveal reveal-7" style="animation-delay:0.55s;" id="announcements">
+    <div class="panel-header">
+      <div class="panel-title">
+        <h2>전체 <em>공고</em></h2>
+        <span class="meta" id="tableMeta"></span>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <input class="search" id="search" placeholder="공고 제목 · 사업구분 · 작성자 검색…" />
+      <span id="chips"></span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>상태</th>
+            <th class="sortable" data-sort="title">공고 제목 <span class="sort">↕</span></th>
+            <th class="sortable" data-sort="end">신청기간 <span class="sort">↕</span></th>
+            <th class="sortable" data-sort="views" style="text-align:right;">조회 <span class="sort">↕</span></th>
+            <th class="sortable" data-sort="files" style="text-align:right;">첨부 <span class="sort">↕</span></th>
+            <th class="sortable sorted" data-sort="posted">작성일 <span class="sort">↓</span></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="table-foot">
+      <span id="shownCount"></span>
+      <button class="btn" id="moreBtn">더 보기 +30</button>
+    </div>
+  </section>
+
+  <!-- ───── FOOTER ───── -->
+  <footer class="footer">
+    <div class="kv">
+      <strong>SOURCE</strong> www.nipa.kr/home/2-2 <span class="arrow">→</span>
+      <strong>OUT</strong> nipa/data/nipa_announcements.xlsx
+    </div>
+    <div class="kv" id="footRun"></div>
+    <div class="kv" id="footGen"></div>
+  </footer>
+</div>
+
+<script>window.NIPA_DATA = /*__DATA__*/null;</script>
+<script>
+(() => {
+  const D = window.NIPA_DATA;
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const fmt = (n) => Number(n || 0).toLocaleString("ko-KR");
+  const NOW = new Date();
+  const DAY = 86400000;
+  const pad = (n) => String(n).padStart(2, "0");
+  const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const toDate = (s, endOfDay) => {
+    if (!s) return null;
+    if (s.length === 10) return new Date(s + (endOfDay ? "T23:59:59" : "T00:00:00"));
+    return new Date(s);
+  };
+  const bytes = (b) => b >= 1024 ** 3 ? (b / 1024 ** 3).toFixed(2) + " GB"
+                    : b >= 1024 ** 2 ? (b / 1024 ** 2).toFixed(1) + " MB"
+                    : (b / 1024).toFixed(0) + " KB";
+
+  // ── 상태 계산: 파일을 연 시각 기준 ──
+  const items = D.items.map((it) => {
+    const start = toDate(it.start), end = toDate(it.end, true);
+    let st, label, cls, dleft = null;
+    if (!start && !end) { st = "always"; label = "상시"; cls = "permanent"; }
+    else if (start && NOW < start) { st = "upcoming"; label = "예정"; cls = "info"; }
+    else if (end && NOW > end) { st = "ended"; label = "종료"; cls = "ended"; }
+    else if (!end) { st = "always"; label = "상시"; cls = "permanent"; }
+    else {
+      const today = new Date(ymd(NOW) + "T00:00:00");
+      const endDay = new Date(ymd(end) + "T00:00:00");
+      dleft = Math.round((endDay - today) / DAY);
+      if (dleft <= 7) { st = "urgent"; label = dleft === 0 ? "D-day" : "D-" + dleft; cls = dleft <= 3 ? "critical" : "warn"; }
+      else { st = "active"; label = "진행중"; cls = "active"; }
+    }
+    return { ...it, st, label, cls, dleft, endDate: end };
+  });
+
+  // ── 상단 상태 ──
+  const run = D.last_run || {};
+  const lastSync = run.ended_at ? new Date(run.ended_at) : null;
+  const ageH = lastSync ? (NOW - lastSync) / 3600000 : Infinity;
+  $("syncPillText").textContent = lastSync ? (ageH < 1 ? "Synced · " + Math.max(1, Math.round(ageH * 60)) + "m ago" : ageH < 24 ? "Synced · " + Math.round(ageH) + "h ago" : "Stale · " + Math.floor(ageH / 24) + "d ago") : "No run";
+  if (ageH >= 24) $("syncPill").classList.add("stale");
+  $("clock").innerHTML = `<strong>${ymd(NOW).replace(/-/g, ".")}</strong> · ${pad(NOW.getHours())}:${pad(NOW.getMinutes())} KST`;
+  $("lastSync").textContent = lastSync ? "last sync " + run.ended_at.replace("T", " ") : "last sync —";
+
+  // ── KPI ──
+  const spark = (vals, color, type) => {
+    const max = Math.max(1, ...vals), n = vals.length;
+    if (type === "bar") {
+      const w = 120 / n;
+      return `<svg class="kpi-spark" viewBox="0 0 120 22" preserveAspectRatio="none"><g fill="${color}" opacity="0.9">` +
+        vals.map((v, i) => { const h = Math.max(v ? 2 : 0.5, (v / max) * 20); return `<rect x="${(i * w + w * 0.15).toFixed(1)}" y="${(22 - h).toFixed(1)}" width="${(w * 0.7).toFixed(1)}" height="${h.toFixed(1)}"/>`; }).join("") + "</g></svg>";
+    }
+    const pts = vals.map((v, i) => `${(i * 120 / (n - 1)).toFixed(1)},${(20 - (v / max) * 17).toFixed(1)}`).join(" ");
+    return `<svg class="kpi-spark" viewBox="0 0 120 22" preserveAspectRatio="none"><polyline fill="none" stroke="${color}" stroke-width="1.4" points="${pts}"/><polyline fill="${color}" fill-opacity="0.08" stroke="none" points="${pts} 120,22 0,22"/></svg>`;
+  };
+  const postedOn = (d) => items.filter((x) => x.posted === ymd(d)).length;
+  const daysBack = (n) => Array.from({ length: n }, (_, i) => new Date(NOW - (n - 1 - i) * DAY));
+
+  // 누적 공고 수 (최근 16개월, 월말 기준)
+  const months = Array.from({ length: 16 }, (_, i) => new Date(NOW.getFullYear(), NOW.getMonth() - 15 + i + 1, 0));
+  const cumul = months.map((m) => items.filter((x) => x.posted && x.posted <= ymd(m)).length);
+  const urgent = items.filter((x) => x.st === "urgent");
+  const critical = urgent.filter((x) => x.dleft <= 3);
+  const openN = items.filter((x) => x.st === "active" || x.st === "urgent").length;
+  const deadlines = Array.from({ length: 14 }, (_, i) => items.filter((x) => x.endDate && ymd(x.endDate) === ymd(new Date(+NOW + i * DAY))).length);
+  const todayNew = postedOn(NOW);
+  const week = daysBack(7).reduce((s, d) => s + postedOn(d), 0);
+  const latestPosted = items.map((x) => x.posted).filter(Boolean).sort().pop() || "—";
+  const A = D.attach;
+  const exts = Object.entries(A.by_ext).sort((a, b) => b[1] - a[1]);
+  const extColors = ["#d4ff3a", "#5fb8ff", "#f5b942", "#5dd97a", "#9aa3ad"];
+  let x0 = 0;
+  const extBar = `<svg class="kpi-spark" viewBox="0 0 120 22" preserveAspectRatio="none"><g>` +
+    exts.slice(0, 5).map(([, n], i) => { const w = (n / Math.max(1, A.count)) * 120; const r = `<rect x="${x0.toFixed(1)}" y="6" width="${w.toFixed(1)}" height="10" fill="${extColors[i]}" opacity="0.85"/>`; x0 += w; return r; }).join("") + "</g></svg>";
+
+  $("kpis").innerHTML = `
+    <div class="kpi reveal reveal-2">
+      <div class="kpi-label">전체 수집 공고</div>
+      <div class="kpi-number">${fmt(items.length)}</div>
+      <div class="kpi-meta"><span><span class="delta">▲ +${fmt(run.new_rows)}</span>&nbsp; last run</span><span>${fmt(run.pages_total)} pages</span></div>
+      ${spark(cumul, "#d4ff3a")}
+    </div>
+    <div class="kpi critical reveal reveal-3">
+      <div class="kpi-label">마감 임박 (D-7 이내)</div>
+      <div class="kpi-number">${fmt(urgent.length)}</div>
+      <div class="kpi-meta"><span>진행중 ${fmt(openN)}</span><span>${fmt(critical.length)} critical</span></div>
+      ${spark(deadlines, "#ff5e58", "bar")}
+    </div>
+    <div class="kpi reveal reveal-4">
+      <div class="kpi-label">오늘 신규</div>
+      <div class="kpi-number">${fmt(todayNew)}</div>
+      <div class="kpi-meta"><span><span class="delta">▲ +${fmt(week)}</span>&nbsp; 7d</span><span>latest ${latestPosted.slice(5)}</span></div>
+      ${spark(daysBack(12).map(postedOn), "#5fb8ff", "bar")}
+    </div>
+    <div class="kpi reveal reveal-5">
+      <div class="kpi-label">첨부 파일</div>
+      <div class="kpi-number">${fmt(A.count)}<span class="unit">files</span></div>
+      <div class="kpi-meta"><span>${bytes(A.bytes)}</span><span>${exts.slice(0, 4).map((e) => e[0]).join(" · ")}</span></div>
+      ${extBar}
+    </div>`;
+
+  // ── Last run ──
+  $("runId").textContent = "job · " + (run.run_id || "—");
+  const badge = $("runBadge");
+  if (run.errors) { badge.className = "badge critical"; badge.textContent = `errors ${run.errors}`; }
+  else { badge.className = "badge active"; badge.textContent = "completed"; }
+  const modeArg = run.mode === "full" ? "--full" : run.mode && run.mode.startsWith("pages:") ? "--pages " + run.mode.split(":")[1] : "";
+  $("cmdLine").innerHTML = `<span class="prompt">$</span><span>python</span><span>nipa_crawler.py</span>${modeArg ? `<span class="arg">${modeArg}</span>` : ""}<span class="arg">--delay ${D.delay}</span><span class="arg">→ nipa.db · xlsx</span>`;
+  const incr = run.mode === "incremental";
+  const pct = incr ? 100 : run.pages_total ? (run.pages_done / run.pages_total) * 100 : 0;
+  $("progFill").style.width = pct.toFixed(1) + "%";
+  $("progPct").textContent = pct.toFixed(pct === 100 ? 0 : 1) + "%";
+  const secs = run.started_at && run.ended_at ? (new Date(run.ended_at) - new Date(run.started_at)) / 1000 : 0;
+  $("progMeta").innerHTML = [
+    ["Page", incr ? `${fmt(run.pages_done)} <span style="font-size:12px;color:var(--text-muted)">증분 · 사이트 ${fmt(run.pages_total)}p</span>` : `${fmt(run.pages_done)} / ${fmt(run.pages_total)}`],
+    ["Elapsed", `${pad(Math.floor(secs / 60))}:${pad(Math.round(secs % 60))}`],
+    ["Rows", `${fmt(run.rows)} <span style="font-size:12px;color:var(--text-muted)">new ${fmt(run.new_rows)}</span>`],
+    ["Rows/min", secs ? (run.rows / (secs / 60)).toFixed(1) : "—"],
+  ].map(([l, v]) => `<div><div class="pm-label">${l}</div><div class="pm-value">${v}</div></div>`).join("");
+  const lvlCls = { OK: "ok", INFO: "info", WARN: "warn", ERR: "err", FETCH: "fetch" };
+  $("logList").innerHTML = (run.log || []).slice(-7).reverse().map((l) =>
+    `<div class="log-line"><span class="ts">${esc(l.ts)}</span><span class="lvl ${lvlCls[l.lvl] || "info"}">${esc(l.lvl)}</span><span class="msg">${esc(l.msg)}</span></div>`).join("");
+
+  // ── 마감 임박 ──
+  const open = items.filter((x) => x.st === "urgent" || x.st === "active").sort((a, b) => a.endDate - b.endDate);
+  $("urgentCount").textContent = `${Math.min(6, open.length)} / ${open.length}`;
+  const p16 = (s) => (s || "").replace("T", " ");
+  $("urgentList").innerHTML = open.length ? open.slice(0, 6).map((x) => `
+    <a class="urgent-row" href="${esc(x.url)}" target="_blank" rel="noopener">
+      <div class="dday ${x.dleft <= 3 ? "critical" : x.dleft <= 7 ? "warn" : ""}"><span class="label">D-day</span>${x.dleft === 0 ? "D-0" : "D-" + x.dleft}</div>
+      <div>
+        <div class="urgent-title">${esc(x.title)}</div>
+        <div class="urgent-meta">${esc(p16(x.start))} ~ ${esc(p16(x.end))} · 첨부 ${x.files}</div>
+      </div>
+      <div class="urgent-arrow">↗</div>
+    </a>`).join("") : `<div class="empty">현재 접수 중인 공고가 없습니다.</div>`;
+
+  // ── 차트 ──
+  function buckets(range) {
+    const out = [];
+    if (range === "14d" || range === "30d") {
+      const n = range === "14d" ? 14 : 30;
+      daysBack(n).forEach((d) => out.push({ label: `${pad(d.getMonth() + 1)}/${pad(d.getDate())}`, from: ymd(d), to: ymd(d) }));
+    } else if (range === "90d") {
+      const end = new Date(ymd(NOW) + "T00:00:00");
+      for (let i = 12; i >= 0; i--) {
+        const to = new Date(+end - i * 7 * DAY), from = new Date(+to - 6 * DAY);
+        out.push({ label: `${pad(from.getMonth() + 1)}/${pad(from.getDate())}`, from: ymd(from), to: ymd(to) });
+      }
+    } else {
+      for (let i = 11; i >= 0; i--) {
+        const f = new Date(NOW.getFullYear(), NOW.getMonth() - i, 1), t = new Date(f.getFullYear(), f.getMonth() + 1, 0);
+        out.push({ label: `${String(f.getFullYear()).slice(2)}.${pad(f.getMonth() + 1)}`, from: ymd(f), to: ymd(t) });
+      }
+    }
+    out.forEach((b) => {
+      const hit = items.filter((x) => x.posted && x.posted >= b.from && x.posted <= b.to);
+      b.n = hit.length; b.files = hit.reduce((s, x) => s + x.files, 0);
+    });
+    return out;
+  }
+  function drawChart(range) {
+    const bs = buckets(range), max = Math.max(4, ...bs.map((b) => b.n));
+    const nice = Math.ceil(max / 4) * 4, H = 168, top = 20, left = 34, W = 800 - left - 6;
+    const slot = W / bs.length, bw = Math.min(40, slot * 0.66);
+    let s = `<g stroke="#1f242d" stroke-width="1">`;
+    for (let i = 1; i <= 4; i++) { const y = top + (H - top) * (1 - i / 4); s += `<line x1="${left}" y1="${y}" x2="800" y2="${y}"/>`; }
+    s += `</g><g fill="#5e6772" font-family="JetBrains Mono, monospace" font-size="9">`;
+    for (let i = 0; i <= 4; i++) { const y = top + (H - top) * (1 - i / 4); s += `<text x="4" y="${y + 3}">${(nice * i) / 4}</text>`; }
+    s += `</g><g>`;
+    const every = Math.ceil(bs.length / 14);
+    bs.forEach((b, i) => {
+      const h = (b.n / nice) * (H - top), x = left + i * slot + (slot - bw) / 2, y = H - h;
+      const last = i === bs.length - 1, col = last ? "#d4ff3a" : "#5fb8ff";
+      s += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(0, h).toFixed(1)}" fill="${col}" opacity="${last ? 0.95 : 0.8}"><title>${b.from}${b.from !== b.to ? " ~ " + b.to : ""} · 공고 ${b.n} · 첨부 ${b.files}</title></rect>`;
+      if (b.n) s += `<text x="${(x + bw / 2).toFixed(1)}" y="${(y - 4).toFixed(1)}" fill="${last ? "#d4ff3a" : "#9aa3ad"}" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">${b.n}</text>`;
+      if (i % every === 0 || last) s += `<text x="${(x + bw / 2).toFixed(1)}" y="196" fill="${last ? "#d4ff3a" : "#5e6772"}" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">${b.label}</text>`;
+    });
+    s += `</g>`;
+    $("chart").innerHTML = s;
+    const tot = bs.reduce((a, b) => a + b.n, 0), files = bs.reduce((a, b) => a + b.files, 0);
+    $("chartSum").innerHTML = `구간 합계 · <strong style="color:#e8ecef">${fmt(tot)} 공고</strong> · <strong style="color:#e8ecef">${fmt(files)} 첨부</strong>`;
+  }
+  document.querySelectorAll("#chartTabs .tab").forEach((t) => t.addEventListener("click", () => {
+    document.querySelectorAll("#chartTabs .tab").forEach((x) => x.classList.remove("active"));
+    t.classList.add("active"); drawChart(t.dataset.range);
+  }));
+  drawChart("90d");
+
+  // ── 표 ──
+  const FILTERS = [["all", "전체"], ["active", "진행중"], ["urgent", "마감임박"], ["upcoming", "예정"], ["always", "상시"], ["ended", "종료"]];
+  let filter = "all", query = "", sortKey = "posted", sortDir = -1, limit = 30;
+  const count = (k) => k === "all" ? items.length : items.filter((x) => x.st === k).length;
+  function renderChips() {
+    $("chips").innerHTML = FILTERS.filter(([k]) => k === "all" || count(k))
+      .map(([k, l]) => `<span class="chip ${k === filter ? "active" : ""}" data-f="${k}">${l}<span class="count">·${count(k)}</span></span>`).join(" ");
+    $("chips").querySelectorAll(".chip").forEach((c) => c.addEventListener("click", () => { filter = c.dataset.f; limit = 30; renderChips(); renderTable(); }));
+  }
+  function filtered() {
+    const q = query.trim().toLowerCase();
+    return items.filter((x) => (filter === "all" || x.st === filter) &&
+      (!q || [x.title, x.biz, x.writer].some((v) => (v || "").toLowerCase().includes(q))))
+      .sort((a, b) => {
+        const va = sortKey === "end" ? (a.end || "") : a[sortKey] ?? "", vb = sortKey === "end" ? (b.end || "") : b[sortKey] ?? "";
+        return (va > vb ? 1 : va < vb ? -1 : b.id - a.id) * sortDir;
+      });
+  }
+  function renderTable() {
+    const rows = filtered();
+    $("tableMeta").textContent = `수집 ${fmt(items.length)}건 · 표시 ${fmt(rows.length)}건`;
+    $("tbody").innerHTML = rows.slice(0, limit).map((x) => `
+      <tr>
+        <td class="col-num">${x.id}</td>
+        <td><span class="badge ${x.cls}">${x.label}</span></td>
+        <td class="col-title"><a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}</a>
+          <span class="biz">${esc(x.biz || "—")} · ${esc(x.writer || "")}</span></td>
+        <td class="col-period">${x.start ? esc(x.start.slice(0, 10)) + " → " + esc((x.end || "").slice(0, 10)) : "상시 모집"}</td>
+        <td class="col-num-right">${fmt(x.views)}</td>
+        <td class="col-num-right"><span class="attach-bubble ${x.files ? "" : "zero"}">◇ ${x.files}</span></td>
+        <td class="col-period">${esc(x.posted || "")}</td>
+      </tr>`).join("") || `<tr><td colspan="7" class="empty">조건에 맞는 공고가 없습니다.</td></tr>`;
+    $("shownCount").textContent = `${fmt(Math.min(limit, rows.length))} / ${fmt(rows.length)} 표시`;
+    $("moreBtn").style.display = rows.length > limit ? "" : "none";
+  }
+  $("search").addEventListener("input", (e) => { query = e.target.value; limit = 30; renderTable(); });
+  $("moreBtn").addEventListener("click", () => { limit += 30; renderTable(); });
+  document.querySelectorAll("th.sortable").forEach((th) => th.addEventListener("click", () => {
+    const k = th.dataset.sort;
+    sortDir = sortKey === k ? -sortDir : (k === "title" ? 1 : -1); sortKey = k;
+    document.querySelectorAll("th.sortable").forEach((h) => { h.classList.remove("sorted"); h.querySelector(".sort").textContent = "↕"; });
+    th.classList.add("sorted"); th.querySelector(".sort").textContent = sortDir > 0 ? "↑" : "↓";
+    renderTable();
+  }));
+  $("csvBtn").addEventListener("click", () => {
+    const head = ["게시물ID", "상태", "제목", "사업구분", "신청시작", "신청마감", "작성자", "작성일", "조회수", "첨부수", "URL"];
+    const q = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const lines = [head.map(q).join(",")].concat(filtered().map((x) =>
+      [x.id, x.label, x.title, x.biz, x.start, x.end, x.writer, x.posted, x.views, x.files, x.url].map(q).join(",")));
+    const blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+    const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: `nipa_announcements_${ymd(NOW)}.csv` });
+    a.click(); URL.revokeObjectURL(a.href);
+  });
+  renderChips(); renderTable();
+
+  // ── 푸터 ──
+  $("footRun").textContent = `delay ${D.delay}s · UA Chrome/120 · parser lxml · pages 1..${run.pages_total || "?"}`;
+  $("footGen").textContent = `generated ${D.generated_at.replace("T", " ")}`;
+})();
+</script>
+</body>
+</html>

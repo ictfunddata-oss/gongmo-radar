@@ -1,0 +1,27 @@
+{# 막대(+선) 차트 — 외부 라이브러리 없이 SVG로 그린다. rows: [{day, ...}], bar/line: 값을 읽을 키 #}
+{% macro chart(rows, bar, line=None, label="", w=760, h=180) %}
+{% set mx = [rows|map(attribute=bar)|max, (rows|map(attribute=line)|max if line else 0), 1]|max %}
+{% set n = rows|length %}
+{% set bw = (w - 44) / n %}
+{% set ph = h - 34 %}
+<svg viewBox="0 0 {{ w }} {{ h }}" class="chart" role="img" aria-label="{{ label }}">
+  {% for f in (0, 0.5, 1) %}
+  <line x1="40" x2="{{ w }}" y1="{{ '%.1f'|format(h - 16 - ph * f) }}" y2="{{ '%.1f'|format(h - 16 - ph * f) }}" class="grid"/>
+  <text x="34" y="{{ '%.1f'|format(h - 12 - ph * f) }}" class="axis" text-anchor="end">{{ (mx * f)|round|int }}</text>
+  {% endfor %}
+  {% for r in rows %}
+  {% set bh = (r[bar] / mx) * ph %}
+  <rect x="{{ '%.1f'|format(42 + loop.index0 * bw + 1) }}" y="{{ '%.1f'|format(h - 16 - bh) }}" width="{{ '%.1f'|format([bw - 2, 1]|max) }}" height="{{ '%.1f'|format(bh) }}" rx="2" class="bar"><title>{{ r.day }} · {{ r[bar] }}</title></rect>
+  {% endfor %}
+  {% if line %}
+  <polyline class="ln" points="{% for r in rows %}{{ '%.1f'|format(42 + loop.index0 * bw + bw / 2) }},{{ '%.1f'|format(h - 16 - (r[line] / mx) * ph) }} {% endfor %}"/>
+  {% endif %}
+  {% for i in (0, (n // 2), n - 1) %}
+  <text x="{{ '%.1f'|format(42 + i * bw + bw / 2) }}" y="{{ h - 2 }}" class="axis" text-anchor="{{ 'start' if i == 0 else ('end' if i == n - 1 else 'middle') }}">{{ rows[i].day[5:] }}</text>
+  {% endfor %}
+</svg>
+{% endmacro %}
+
+{% macro periods(endpoint, n, choices, extra={}) %}
+<div class="tabs">{% for p in choices %}<a href="{{ url_for(endpoint, days=p, **extra) }}" class="{{ 'on' if p == n }}">최근 {{ p }}일</a>{% endfor %}</div>
+{% endmacro %}

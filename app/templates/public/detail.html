@@ -1,0 +1,103 @@
+{% extends "public/base.html" %}
+{% block title %}{{ x.title }} · ICT기금 공모사업{% endblock %}
+{% macro kdt(s) %}{{ (s or '')[:16]|replace('T', ' ')|replace('-', '.') }}{% endmacro %}
+{% block content %}
+<section class="hero slim"><div class="in">
+  <a class="crumb" href="{{ url_for('public.index') }}">← 공모사업 찾기</a>
+</div></section>
+
+<main class="dwrap">
+  <section class="dhead">
+    <div class="dmain">
+      <div class="ctop">
+        <span class="org" data-c="{{ x.org_c }}">{{ x.org }}</span>
+        {% if x.astruct %}<span class="prep att">첨부 구조화</span>{% endif %}
+      </div>
+      <h1>{{ x.title }}</h1>
+      {% if x.start and x.end %}
+      <div>
+        <div class="period">신청 {{ kdt(x.start) }} ~ {{ kdt(x.end) }}{% if x.span %} (접수 기간 {{ x.span }}일){% endif %}</div>
+        <div class="ptrack {{ x.st }}"><div class="pfill" style="width:{{ x.pct or 0 }}%"></div></div>
+      </div>
+      {% else %}<div class="period">신청 기간: 상시 모집(원문 확인)</div>{% endif %}
+    </div>
+    <div class="dbox {{ x.st }}">
+      <span class="l">{{ '접수 마감까지' if x.st in ('urgent', 'open') else ('접수 시작 전' if x.st == 'upcoming' else ('접수 마감됨' if x.st == 'ended' else '접수 방식')) }}</span>
+      <span class="big">{{ x.label }}</span>
+      <span class="s">{% if x.end %}{{ kdt(x.end) }}{% else %}원문 확인{% endif %}</span>
+    </div>
+  </section>
+
+  <div class="dgrid">
+    <div>
+      <section class="box">
+        <h2>핵심 정보</h2>
+        <dl class="kvgrid">
+          <div class="kv"><dt>전담기관</dt><dd>{{ x.org }}</dd></div>
+          <div class="kv"><dt>사업구분</dt><dd>{{ x.biz or '—' }}</dd></div>
+          <div class="kv"><dt>접수기간</dt><dd>{% if x.start and x.end %}{{ kdt(x.start) }} ~ {{ kdt(x.end) }}{% else %}상시 모집(원문 확인){% endif %}</dd></div>
+          <div class="kv"><dt>게시 · 조회</dt><dd>{{ (x.posted or '')|replace('-', '.') }} · {{ '{:,}'.format(x.views) }}</dd></div>
+        </dl>
+        <p class="muted" style="font-size:12.5px;margin:12px 0 0">사이트에서 수집한 값입니다. 신청 전에 원문 공고를 확인하세요.</p>
+      </section>
+      <section class="box">
+        <h2>공고 요약</h2>
+        {% if x.summary %}<p class="summary">{{ x.summary }}</p>{% else %}<p class="muted">본문 요약 없음 — 상세 내용은 첨부 파일에 있습니다.</p>{% endif %}
+      </section>
+      {% set st = x.astruct_data %}
+      {% if st %}
+      <section class="box">
+        <h2>첨부 공고문에서 읽어 정리한 내용</h2>
+        <table class="facts">
+          <tr><th>사업명(공고문)</th><td>{{ st.project_name or '미정리' }}</td></tr>
+          <tr><th>주관·전담기관</th><td>{{ st.org_host or '미정리' }}</td></tr>
+          <tr><th>접수 기간</th><td>{{ st.period.start or '—' }} ~ {{ st.period.end or '—' }}{% if st.period.end_time %} {{ st.period.end_time }}{% endif %}{% if st.period.note %} <span class="muted">({{ st.period.note }})</span>{% endif %}</td></tr>
+          <tr><th>분야·유형</th><td>{{ st.field or '미정리' }} · {{ st.kind or '미정리' }}</td></tr>
+          <tr><th>지원대상</th><td>{{ st.target or '미정리' }}</td></tr>
+          <tr><th>지원 내용</th><td>{{ st.support_content or '미정리' }}</td></tr>
+          <tr><th>지원 규모</th><td>{% if st.budget_per_won %}건당 {{ '{:,}'.format(st.budget_per_won) }}원{% endif %}{% if st.budget_total_won %}{% if st.budget_per_won %} · {% endif %}총 {{ '{:,}'.format(st.budget_total_won) }}원{% endif %}{% if st.selection_n %} · {{ st.selection_n }}건 선정{% endif %}{% if not (st.budget_per_won or st.budget_total_won or st.selection_n) %}미정리{% endif %}</td></tr>
+          <tr><th>자부담</th><td>{{ st.cost_share or '미정리' }}</td></tr>
+          <tr><th>신청 방법</th><td>{{ st.apply_how or '미정리' }}</td></tr>
+          <tr><th>담당 부서</th><td>{{ st.contact_dept or '미정리' }}</td></tr>
+        </table>
+        {% if st.unclear %}<p class="muted" style="margin:10px 0 0;font-size:13px"><b>확인이 필요한 항목</b></p>
+        <ul class="unclear">{% for u in st.unclear %}<li>{{ u }}</li>{% endfor %}</ul>{% endif %}
+        <p class="muted" style="font-size:12.5px;margin:8px 0 0">첨부 공고문을 읽어 정리한 값입니다. 신청 전에 첨부 원문으로 확인하세요.</p>
+      </section>
+      {% endif %}
+      <section class="box">
+        <details class="body"{% if not x.summary %} open{% endif %}>
+          <summary>공고 본문</summary>
+          <div class="bodytext" style="margin-top:12px">{{ x.body or '(본문 없음)' }}</div>
+        </details>
+      </section>
+    </div>
+    <aside>
+      <section class="box glance">
+        <h2>한눈에 보기</h2>
+        <div><div class="k">접수 마감</div><div>{% if x.end %}{{ kdt(x.end) }}{% else %}상시 모집(원문 확인){% endif %}</div></div>
+        <div><div class="k">게시일</div><div>{{ (x.posted or '')|replace('-', '.') or '—' }}</div></div>
+        <a class="btn primary" style="text-align:center" href="{{ x.url }}" target="_blank" rel="noopener">원문 공고 보기 ↗</a>
+      </section>
+      <section class="box">
+        <h2>첨부파일 {{ x.attachments|length }}개</h2>
+        <ul class="files">
+        {% for f in x.attachments %}
+          <li>{% if f.file_path %}<a href="{{ url_for('public.attachment', ann_id=x.id, seq=f.seq) }}">{{ f.name }}</a>{% else %}<span>{{ f.name }}</span>{% endif %}
+              <span class="muted" style="white-space:nowrap">{{ f.size_text }}</span></li>
+        {% else %}<li class="muted">없음</li>{% endfor %}
+        </ul>
+        {% if x.attachments|rejectattr('file_path')|list %}<p class="muted" style="font-size:12.5px;margin:10px 0 0">링크가 없는 파일은 원문 공고에서 받을 수 있습니다.</p>{% endif %}
+      </section>
+      <section class="box">
+        <h2>공고 정보</h2>
+        <table class="facts">
+          <tr><th>기관</th><td>{{ x.org }}</td></tr>
+          <tr><th>게시일</th><td>{{ (x.posted or '')|replace('-', '.') }}</td></tr>
+          <tr><th>조회수</th><td>{{ '{:,}'.format(x.views) }}</td></tr>
+        </table>
+      </section>
+    </aside>
+  </div>
+</main>
+{% endblock %}

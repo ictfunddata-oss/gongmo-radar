@@ -1,0 +1,16 @@
+/* 로고 — 레이더 아이콘 + Orbitron(SIL OFL) 워드마크. 글꼴 파일은 static/fonts, 라이선스는 LICENSE-Orbitron.txt */
+@font-face { font-family: "Orbitron AIRADAR"; src: url("fonts/Orbitron-ExtraBold-AIRADAR.ttf") format("truetype"); font-weight: 800; font-display: swap; }
+.brand { display: inline-flex; align-items: center; gap: 10px; }
+.brand .radar { flex: none; overflow: visible; }
+.brand .bn { font-weight: 600; font-size: 15px; letter-spacing: -.02em; opacity: .92; padding-right: 12px; border-right: 1px solid rgba(255,255,255,.28); line-height: 1.1; }
+.brand .wm { font-family: "Orbitron AIRADAR", "Orbitron", "Segoe UI", sans-serif; font-weight: 800; font-size: 21px; letter-spacing: .16em; line-height: 1; color: #fff; text-shadow: 0 0 14px rgba(95,224,208,.35); }
+.brand .wm b { font-weight: 800; color: #5fe0d0; }
+.brand .sweep { transform-origin: 20px 20px; animation: radar-sweep 5s linear infinite; }
+.brand .blip { animation: radar-blip 5s ease-out infinite; transform-origin: 27px 13.5px; }
+@keyframes radar-sweep { to { transform: rotate(360deg); } }
+@keyframes radar-blip { 0%, 12% { opacity: 1; transform: scale(1.5); } 40% { opacity: .35; transform: scale(1); } 100% { opacity: .2; } }
+@media (prefers-reduced-motion: reduce) { .brand .sweep, .brand .blip { animation: none; } }
+@media (max-width: 640px) { .brand .bn { display: none; } }
+.brand .sub { font-size: 13px; font-weight: 500; opacity: .75; padding-left: 12px; border-left: 1px solid rgba(255,255,255,.28); line-height: 1.1; letter-spacing: -.01em; }
+.gnb .logo.brand { font-size: 15px; }
+@media (max-width: 640px) { .brand .sub { display: none; } }

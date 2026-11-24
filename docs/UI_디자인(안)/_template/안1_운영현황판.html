@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>[안1] 공모사업 수집 운영 현황판</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap" />
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0a0c10; --surface: #11141a; --elev: #161a21; --hover: #1d222b;
+    --border: #1f242d; --border-b: #2a3140;
+    --t1: #e8ecef; --t2: #a9b1ba; --t3: #6b7480;
+    --accent: #d4ff3a; --accent-dim: rgba(212,255,58,.12);
+    --series-1: #3987e5; --series-hl: #d4ff3a;
+    --good: #0ca30c; --warning: #fab219; --serious: #ec835a; --critical: #d03b3b;
+    --sans: "IBM Plex Sans KR", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--t1); font-family: var(--sans); font-size: 14px; line-height: 1.55;
+    background-image: radial-gradient(circle at 12% 6%, rgba(212,255,58,.05), transparent 35%), radial-gradient(circle at 88% 92%, rgba(57,135,229,.05), transparent 40%); }
+  .num { font-variant-numeric: tabular-nums; }
+  .app { max-width: 1440px; margin: 0 auto; padding: 0 32px 64px; }
+  a { color: inherit; }
+
+  .topbar { display: grid; grid-template-columns: auto 1fr auto; gap: 40px; align-items: center; padding: 22px 0 24px; border-bottom: 1px solid var(--border); margin-bottom: 26px; }
+  .brand { display: flex; gap: 14px; align-items: center; }
+  .brand-mark { width: 44px; height: 44px; display: grid; place-items: center; background: var(--accent); color: #000; font-weight: 700; font-size: 15px; border-radius: 3px; }
+  .brand-name { font-size: 19px; font-weight: 600; letter-spacing: -.02em; }
+  .brand-sub { font-size: 12px; color: var(--t3); margin-top: 2px; }
+  .nav { display: flex; gap: 4px; background: var(--surface); padding: 4px; border: 1px solid var(--border); border-radius: 999px; width: fit-content; margin: 0 auto; }
+  .nav a { padding: 7px 16px; font-size: 13px; color: var(--t2); text-decoration: none; border-radius: 999px; }
+  .nav a:hover { background: var(--hover); color: var(--t1); }
+  .nav a.active { background: var(--elev); color: var(--accent); box-shadow: inset 0 0 0 1px var(--border-b); }
+  .pill { display: inline-flex; gap: 8px; align-items: center; padding: 7px 13px; border: 1px solid var(--good); color: #7fe07f; border-radius: 999px; font-size: 12.5px; background: rgba(12,163,12,.1); }
+  .pill.stale { border-color: var(--warning); color: var(--warning); background: rgba(250,178,25,.1); }
+  .clock { font-size: 12px; color: var(--t3); margin-left: 12px; }
+
+  .head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-bottom: 18px; }
+  h1 { margin: 0; font-size: 34px; font-weight: 600; letter-spacing: -.03em; }
+  h1 em { font-style: normal; color: var(--accent); }
+  .head .sub { color: var(--t3); font-size: 13px; margin-top: 6px; }
+  .btn { padding: 9px 15px; background: var(--surface); border: 1px solid var(--border-b); color: var(--t1); font: inherit; font-size: 13px; border-radius: 4px; cursor: pointer; text-decoration: none; }
+  .btn:hover { background: var(--elev); }
+  .btn.primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+
+  .brief { display: flex; gap: 14px; align-items: flex-start; padding: 16px 20px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 3px; margin-bottom: 18px; font-size: 14.5px; color: var(--t2); }
+  .brief b { color: var(--t1); font-weight: 600; }
+  .brief .ico { font-size: 18px; }
+
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+  .kpi { padding: 20px 22px; background: var(--surface); border: 1px solid var(--border); border-radius: 3px; }
+  .kpi .lbl { font-size: 13px; color: var(--t2); font-weight: 500; }
+  .kpi .big { font-size: 44px; font-weight: 300; letter-spacing: -.03em; line-height: 1.1; margin: 8px 0 6px; font-variant-numeric: tabular-nums; }
+  .kpi .big small { font-size: 16px; color: var(--t3); margin-left: 4px; font-weight: 400; }
+  .kpi .desc { font-size: 12.5px; color: var(--t3); }
+  .kpi .desc b { color: var(--t2); font-weight: 500; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 3px; margin-bottom: 14px; }
+  .ph { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 22px; border-bottom: 1px solid var(--border); }
+  .ph h2 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -.02em; }
+  .ph .hint { font-size: 12.5px; color: var(--t3); }
+  .pb { padding: 18px 22px; }
+  .row2 { display: grid; grid-template-columns: 1.5fr 1fr; gap: 14px; }
+  .row2 > .panel { margin-bottom: 14px; }
+
+  table.t { width: 100%; border-collapse: collapse; }
+  table.t th { text-align: left; font-size: 12px; font-weight: 500; color: var(--t3); padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--bg); white-space: nowrap; }
+  table.t td { padding: 11px 14px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--t2); vertical-align: top; }
+  table.t tr:hover td { background: var(--hover); }
+  table.t td.r, table.t th.r { text-align: right; font-variant-numeric: tabular-nums; }
+  .log { margin-top: 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 3px; padding: 12px 14px; font-size: 12.5px; max-height: 200px; overflow: auto; }
+  .log div { display: grid; grid-template-columns: 64px 46px 1fr; gap: 10px; color: var(--t2); line-height: 1.75; }
+  .log .ts { color: var(--t3); font-variant-numeric: tabular-nums; }
+  .lv { font-size: 11px; text-align: center; border-radius: 2px; height: fit-content; margin-top: 3px; }
+  .lv.완료 { color: #7fe07f; background: rgba(12,163,12,.14); } .lv.수집 { color: var(--accent); background: var(--accent-dim); }
+  .lv.정보 { color: #8fbcf0; background: rgba(57,135,229,.14); } .lv.주의 { color: var(--warning); background: rgba(250,178,25,.14); } .lv.오류 { color: #ff8b8b; background: rgba(208,59,59,.18); }
+
+  .urow { display: grid; grid-template-columns: 74px 1fr; gap: 14px; padding: 13px 22px; border-bottom: 1px solid var(--border); text-decoration: none; align-items: center; }
+  .urow:hover { background: var(--hover); }
+  .dd { text-align: center; padding: 7px 0; border: 1px solid var(--border-b); border-radius: 3px; font-weight: 600; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .dd.c { color: #ff8b8b; border-color: var(--critical); background: rgba(208,59,59,.12); }
+  .dd.w { color: var(--warning); border-color: rgba(250,178,25,.5); background: rgba(250,178,25,.1); }
+  .ut { font-size: 13.5px; font-weight: 500; color: var(--t1); line-height: 1.4; }
+  .um { font-size: 12px; color: var(--t3); margin-top: 3px; }
+
+  .hbars { display: grid; gap: 10px; }
+  .hbar { display: grid; grid-template-columns: 130px 1fr 64px; gap: 12px; align-items: center; font-size: 13px; }
+  .hbar-label { color: var(--t2); }
+  .hbar-track { height: 10px; background: var(--bg); border-radius: 0 4px 4px 0; }
+  .hbar-fill { display: block; height: 100%; background: var(--series-1); border-radius: 0 4px 4px 0; }
+  .hbar-val { text-align: right; color: var(--t1); font-variant-numeric: tabular-nums; }
+  .qnote { margin-top: 14px; font-size: 12.5px; color: var(--t3); line-height: 1.7; }
+  .qnote b { color: var(--t2); font-weight: 500; }
+
+  .orgs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .org { padding: 12px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 3px; }
+  .org .n { font-size: 13px; font-weight: 500; color: var(--t1); }
+  .org .u { font-size: 11.5px; color: var(--t3); margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .org.built { border-color: var(--accent); }
+  .st { display: inline-flex; gap: 4px; align-items: center; font-size: 11.5px; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+  .st.가동 { color: #000; background: var(--accent); font-weight: 600; }
+  .st.가능 { color: #7fe07f; background: rgba(12,163,12,.14); }
+  .st.보완 { color: var(--warning); background: rgba(250,178,25,.12); }
+  .st.불가 { color: #ff8b8b; background: rgba(208,59,59,.15); }
+  .legend { display: flex; gap: 14px; font-size: 12px; color: var(--t3); }
+
+  .tabs { display: inline-flex; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 2px; }
+  .tabs span { padding: 5px 12px; font-size: 12.5px; color: var(--t3); cursor: pointer; border-radius: 3px; }
+  .tabs span.on { background: var(--elev); color: var(--t1); }
+  svg.vbars { width: 100%; height: 210px; display: block; }
+  svg .grid { stroke: var(--border); stroke-width: 1; }
+  svg .axis { fill: var(--t3); font-size: 10px; font-family: var(--sans); }
+  svg .val { fill: var(--t2); font-size: 10px; font-family: var(--sans); }
+  .chart-note { font-size: 12.5px; color: var(--t3); margin-top: 8px; }
+
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; padding: 14px 22px; border-bottom: 1px solid var(--border); align-items: center; }
+  .search { flex: 1; min-width: 240px; background: var(--bg); border: 1px solid var(--border); border-radius: 3px; padding: 9px 12px; color: var(--t1); font: inherit; font-size: 13px; outline: none; }
+  .search:focus { border-color: var(--accent); }
+  .chip { padding: 6px 12px; font-size: 12.5px; color: var(--t2); background: var(--bg); border: 1px solid var(--border); border-radius: 999px; cursor: pointer; }
+  .chip.on { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
+  .chip i { font-style: normal; color: var(--t3); margin-left: 4px; }
+  .badge { display: inline-flex; gap: 5px; align-items: center; font-size: 12px; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+  .badge.urgent { color: #ff8b8b; background: rgba(208,59,59,.15); } .badge.open { color: #7fe07f; background: rgba(12,163,12,.14); }
+  .badge.upcoming { color: #8fbcf0; background: rgba(57,135,229,.14); } .badge.always { color: #8fbcf0; background: rgba(57,135,229,.08); }
+  .badge.ended { color: var(--t3); background: var(--bg); }
+  .kind { font-size: 11.5px; color: var(--t2); border: 1px solid var(--border-b); padding: 2px 7px; border-radius: 3px; white-space: nowrap; }
+  .tt a { color: var(--t1); text-decoration: none; font-weight: 500; } .tt a:hover { color: var(--accent); }
+  .tt .biz { display: block; font-size: 12px; color: var(--t3); margin-top: 3px; }
+  .foot { display: flex; justify-content: space-between; padding: 12px 22px; font-size: 12.5px; color: var(--t3); align-items: center; }
+  details.tv { margin-top: 10px; font-size: 12.5px; color: var(--t3); }
+  details.tv summary { cursor: pointer; }
+  details.tv table { border-collapse: collapse; margin-top: 8px; }
+  details.tv td, details.tv th { padding: 4px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+  .viz-tip { position: fixed; left: 0; top: 0; pointer-events: none; opacity: 0; z-index: 99; background: #1b1f27; border: 1px solid var(--border-b); color: var(--t1); padding: 8px 11px; border-radius: 4px; font-size: 12.5px; line-height: 1.5; max-width: 320px; transition: opacity .1s; }
+  .draft { position: fixed; right: 16px; bottom: 16px; font-size: 12px; color: #000; background: var(--accent); padding: 6px 12px; border-radius: 999px; font-weight: 600; z-index: 50; }
+  @media (max-width: 1100px) { .kpis, .orgs { grid-template-columns: repeat(2, 1fr); } .row2 { grid-template-columns: 1fr; } .topbar { grid-template-columns: 1fr; } .nav { margin: 0; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">공모</div>
+      <div><div class="brand-name">공모사업 수집 운영 현황판</div><div class="brand-sub">ICT기금 공모사업 파이프라인 · 담당자용</div></div>
+    </div>
+    <nav class="nav">
+      <a class="active" href="#top">요약</a><a href="#runs">수집 기록</a><a href="#quality">데이터 품질</a><a href="#orgs">기관 현황</a><a href="#list">전체 공고</a>
+    </nav>
+    <div><span class="pill" id="pill">●</span><span class="clock" id="clock"></span></div>
+  </header>
+
+  <section class="head" id="top">
+    <div><h1>사업공고 <em>수집</em> 현황</h1><div class="sub">수집 대상: 정보통신산업진흥원(NIPA) 사업공고 게시판 · www.nipa.kr/home/2-2</div></div>
+    <div style="display:flex;gap:8px"><a class="btn" href="../nipa/data/nipa_announcements.xlsx" download>엑셀 내려받기</a><button class="btn primary" id="csv">현재 목록 CSV 저장</button></div>
+  </section>
+
+  <div class="brief"><span class="ico">💬</span><div id="brief"></div></div>
+  <section class="kpis" id="kpis"></section>
+
+  <section class="row2" id="runs">
+    <div class="panel">
+      <div class="ph"><h2>수집 기록</h2><span class="hint">수집기를 돌릴 때마다 한 줄씩 쌓입니다</span></div>
+      <div class="pb">
+        <div style="overflow-x:auto"><table class="t" id="runTable"></table></div>
+        <div class="log" id="log"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph"><h2>마감이 가까운 공고</h2><span class="hint" id="ucount"></span></div>
+      <div id="urgent"></div>
+    </div>
+  </section>
+
+  <section class="row2" id="quality">
+    <div class="panel">
+      <div class="ph"><h2>게시 추이</h2>
+        <div class="tabs" id="tabs"><span class="on" data-r="m">최근 12개월</span><span data-r="y">연도별</span></div></div>
+      <div class="pb"><div id="chart"></div><div class="chart-note" id="chartNote"></div><div id="chartTable"></div></div>
+    </div>
+    <div class="panel">
+      <div class="ph"><h2>데이터 품질</h2><span class="hint">항목별로 값이 채워진 공고 비율</span></div>
+      <div class="pb" id="qual"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="orgs">
+    <div class="ph"><h2>수집 대상 기관 현황</h2>
+      <div class="legend"><span class="st 가동">▶ 수집 중</span><span class="st 가능">✓ 바로 가능</span><span class="st 보완">△ 보완 필요</span><span class="st 불가">✕ 현재 불가</span></div></div>
+    <div class="pb"><div class="orgs" id="orgGrid"></div></div>
+  </section>
+
+  <section class="panel" id="list">
+    <div class="ph"><h2>전체 공고</h2><span class="hint" id="tmeta"></span></div>
+    <div class="filters"><input class="search" id="q" placeholder="공고명이나 사업명으로 찾기" /><span id="chips"></span></div>
+    <div style="overflow-x:auto"><table class="t">
+      <thead><tr><th>접수 상태</th><th>공고 유형</th><th>공고명 · 사업명</th><th>신청 기간</th><th class="r">조회수</th><th class="r">첨부</th><th>게시일</th></tr></thead>
+      <tbody id="tbody"></tbody></table></div>
+    <div class="foot"><span id="shown"></span><button class="btn" id="more">30건 더 보기</button></div>
+  </section>
+</div>
+<div class="draft">UI 디자인 [안1]</div>
+
+<script>window.NIPA_DATA = /*__DATA__*/null;</script>
+<script>
+/*__COMMON__*/
+(() => {
+  const runs = D.runs, last = runs[runs.length - 1] || {};
+  const open = ITEMS.filter(isOpen).sort((a, b) => a.endDate - b.endDate);
+  const urgent = open.filter((x) => x.st === "urgent");
+  const thisYear = String(NOW.getFullYear()), prevYear = String(NOW.getFullYear() - 1);
+  const md = ymd(NOW).slice(4);
+  const yN = ITEMS.filter((x) => x.year === thisYear).length;
+  const pAll = ITEMS.filter((x) => x.year === prevYear).length;
+  const pN = ITEMS.filter((x) => x.year === prevYear && x.posted <= prevYear + md).length;
+  const stale = last.ended_at && (NOW - new Date(last.ended_at)) / 3600000 >= 24;
+
+  $("pill").textContent = (stale ? "⚠ 수집 필요 · " : "● 최신 상태 · ") + "마지막 수집 " + ago(last.ended_at);
+  if (stale) $("pill").classList.add("stale");
+  $("clock").textContent = `${kdate(ymd(NOW))} ${pad(NOW.getHours())}:${pad(NOW.getMinutes())} 기준`;
+
+  $("brief").innerHTML = `지금 접수 중인 공고는 <b>${open.length}건</b>이고, 이 중 <b>${urgent.length}건</b>은 7일 안에 마감됩니다. ` +
+    `마지막 수집은 <b>${kdate(last.ended_at)} ${ktime(last.ended_at)}</b>(${ago(last.ended_at)})이며 오류는 <b>${fmt(last.errors)}건</b>입니다.` +
+    (stale ? ` 하루 넘게 수집하지 않았으니 <b>update_nipa_dashboard.bat</b>을 실행해 주세요.` : "");
+
+  const first = ITEMS.map((x) => x.posted).filter(Boolean).sort()[0];
+  $("kpis").innerHTML = [
+    ["전체 수집 공고", fmt(D.total), "건", `${kdate(first)}부터 게시판에 남아 있는 공고 전체`],
+    ["지금 접수 중", fmt(open.length), "건", `7일 안에 마감 <b>${urgent.length}건</b> · 상시 모집 <b>${ITEMS.filter((x) => x.st === "always").length}건</b>`],
+    [`${thisYear}년 게시 공고`, fmt(yN), "건", `${prevYear}년 같은 기간 대비 <b>${pN ? (yN >= pN ? "+" : "") + fmt(yN - pN) + "건" : "—"}</b> (${prevYear}년 전체 ${fmt(pAll)}건)`],
+    ["첨부 파일", fmt(D.attach.count), "개", `총 ${bytes(D.attach.bytes)} · 파일 목록만 저장(원본 저장은 보류)`],
+  ].map(([l, v, u, d]) => `<div class="kpi"><div class="lbl">${l}</div><div class="big">${v}<small>${u}</small></div><div class="desc">${d}</div></div>`).join("");
+
+  // 수집 기록
+  const mode = (m) => (m === "full" ? "전체 수집" : m === "incremental" ? "새 글만" : m);
+  const secs = (r) => Math.round((new Date(r.ended_at) - new Date(r.started_at)) / 1000);
+  $("runTable").innerHTML = `<thead><tr><th>실행 시각</th><th>방식</th><th class="r">확인한 쪽</th><th class="r">처리</th><th class="r">신규</th><th class="r">오류</th><th class="r">소요</th></tr></thead><tbody>` +
+    runs.slice().reverse().map((r) => `<tr><td class="num">${kdate(r.started_at)} ${ktime(r.started_at)}</td><td>${mode(r.mode)}</td><td class="r">${r.pages_done}/${r.pages_total}</td><td class="r">${fmt(r.rows)}</td><td class="r">${fmt(r.new_rows)}</td><td class="r">${r.errors ? `<span style="color:#ff8b8b">✕ ${r.errors}</span>` : "0"}</td><td class="r">${secs(r)}초</td></tr>`).join("") + `</tbody>`;
+  const LV = { OK: "완료", FETCH: "수집", INFO: "정보", WARN: "주의", ERR: "오류" };
+  const kmsg = (m) => m.replace(/^page (\d+)\/(\d+) — (\d+) rows · new (\d+) · ([\d.]+)s/, "$1/$2쪽 — 공고 $3건 확인 · 신규 $4건 · $5초")
+    .replace(/^done · rows (\d+) · new (\d+) · errors (\d+) · (\d+)s/, "수집 종료 — 공고 $1건 · 신규 $2건 · 오류 $3건 · $4초")
+    .replace(/^run (\S+) start · mode=(\w+) · known=(\d+)/, (_, id, m, k) => `수집 시작 (${mode(m)}) · 실행번호 ${id} · 기존 공고 ${k}건`)
+    .replace(/^page (\d+)에 새 글 없음 → 증분 수집 종료/, "$1쪽에 새 글이 없어 수집을 마쳤습니다")
+    .replace(/^slow response ([\d.]+)s · (.*)/, "응답 지연 $1초 · $2")
+    .replace(/^(\w+) · (.*) · retry (\d)\/3/, "접속 오류($1) · $2 · 재시도 $3/3")
+    .replace(/^(\/home\/2-2\/\d+) · /, "상세 읽음: ");
+  $("log").innerHTML = D.last_log.slice(-12).reverse().map((l) => `<div><span class="ts">${esc(l.ts)}</span><span class="lv ${LV[l.lvl] || "정보"}">${LV[l.lvl] || l.lvl}</span><span>${esc(kmsg(l.msg))}</span></div>`).join("") || "기록 없음";
+
+  // 마감 임박
+  $("ucount").textContent = `접수 중 ${open.length}건 · 마감일 순`;
+  $("urgent").innerHTML = open.slice(0, 7).map((x) => `<a class="urow" href="${esc(x.url)}" target="_blank">
+    <div class="dd ${x.dleft <= 3 ? "c" : x.dleft <= 7 ? "w" : ""}">${ddayText(x)}</div>
+    <div><div class="ut">${esc(x.title)}</div><div class="um">${kdate(x.end)} ${ktime(x.end)} 마감 · ${esc(x.kind)} · 첨부 ${x.files}개</div></div></a>`).join("") || `<div class="pb" style="color:var(--t3)">접수 중인 공고가 없습니다.</div>`;
+
+  // 게시 추이
+  function draw(r) {
+    let rows;
+    if (r === "m") {
+      rows = Array.from({ length: 12 }, (_, i) => {
+        const f = new Date(NOW.getFullYear(), NOW.getMonth() - 11 + i, 1), key = `${f.getFullYear()}-${pad(f.getMonth() + 1)}`;
+        const v = ITEMS.filter((x) => (x.posted || "").startsWith(key)).length;
+        return { label: `${String(f.getFullYear()).slice(2)}.${pad(f.getMonth() + 1)}`, v, tip: `<b>${f.getFullYear()}년 ${f.getMonth() + 1}월</b><br>게시 공고 ${v}건`, hl: i === 11 };
+      });
+    } else {
+      const ys = [...new Set(ITEMS.map((x) => x.year).filter(Boolean))].sort();
+      rows = ys.map((y) => { const v = ITEMS.filter((x) => x.year === y).length; return { label: y + "년", v, tip: `<b>${y}년</b><br>게시 공고 ${v}건`, hl: y === thisYear }; });
+    }
+    $("chart").innerHTML = vbars(rows);
+    const peak = rows.reduce((a, b) => (b.v > a.v ? b : a), rows[0]);
+    $("chartNote").textContent = r === "m"
+      ? `가장 많이 올라온 달은 ${peak.label}(${peak.v}건)입니다. 연초(2~3월)에 신규 사업 공고가 몰립니다.`
+      : `연도별로 게시판에 남아 있는 공고 수입니다. 오래된 공고는 사이트에서 일부 삭제됐을 수 있습니다.`;
+    $("chartTable").innerHTML = tableView(["구간", "공고 수"], rows.map((x) => [x.label, x.v + "건"]));
+  }
+  document.querySelectorAll("#tabs span").forEach((t) => t.addEventListener("click", () => {
+    document.querySelectorAll("#tabs span").forEach((x) => x.classList.remove("on")); t.classList.add("on"); draw(t.dataset.r);
+  }));
+  draw("m");
+
+  // 데이터 품질
+  const qd = { "작성일": "상세 페이지 작성일", "사업구분": "사업명 칸", "신청기간": "신청 시작·마감 일시", "본문 50자 이상": "본문 내용이 충분한 공고" };
+  $("qual").innerHTML = hbars(Object.entries(D.quality).map(([k, v]) => [k, Math.round((v / D.total) * 1000) / 10, `${fmt(v)} / ${fmt(D.total)}건 · ${qd[k]}`]), { unit: "%" }) +
+    `<div class="qnote">· <b>신청기간</b>이 비어 있는 공고는 대부분 사이트에 '상시 모집'으로 표시된 경우입니다.<br>· <b>본문이 50자 미만</b>인 공고 ${fmt(D.total - D.quality["본문 50자 이상"])}건은 내용이 첨부 파일에만 있어, AI 선별·분류 정확도가 낮을 수 있습니다.</div>`;
+
+  // 기관 현황
+  $("orgGrid").innerHTML = D.orgs.map((o) => {
+    const best = o.built ? "가동" : o.urls.some((u) => u.verdict === "가능") ? "가능" : o.urls.some((u) => u.verdict === "보완") ? "보완" : "불가";
+    const icon = { 가동: "▶ 수집 중", 가능: "✓ 바로 가능", 보완: "△ 보완 필요", 불가: "✕ 현재 불가" }[best];
+    return `<div class="org ${o.built ? "built" : ""}"><div style="display:flex;justify-content:space-between;gap:8px"><span class="n">${esc(o.name)}</span><span class="st ${best}">${icon}</span></div>
+      <div class="u">${o.urls.map((u) => `<span data-tip="${esc(u.kind)} · ${u.verdict}<br>${esc(u.url)}">${esc(u.kind.replace(/\s*\(.*\)/, ""))}: ${u.verdict}</span>`).join(" · ")}</div></div>`;
+  }).join("");
+
+  // 전체 공고 표
+  const F = [["all", "전체"], ["open", "접수 중"], ["urgent", "마감 임박"], ["upcoming", "접수 예정"], ["always", "상시 모집"], ["ended", "접수 마감"]];
+  let f = "all", q = "", lim = 30;
+  const match = (x) => (f === "all" || x.st === f || (f === "open" && x.st === "urgent")) && (!q || (x.title + x.biz).toLowerCase().includes(q));
+  const cnt = (k) => ITEMS.filter((x) => k === "all" || x.st === k || (k === "open" && x.st === "urgent")).length;
+  function chips() {
+    $("chips").innerHTML = F.filter(([k]) => cnt(k)).map(([k, l]) => `<span class="chip ${k === f ? "on" : ""}" data-k="${k}">${l}<i>${cnt(k)}</i></span>`).join(" ");
+    $("chips").querySelectorAll(".chip").forEach((c) => c.onclick = () => { f = c.dataset.k; lim = 30; chips(); table(); });
+  }
+  function rows() { return ITEMS.filter(match).sort((a, b) => (b.posted || "").localeCompare(a.posted || "") || b.id - a.id); }
+  function table() {
+    const r = rows();
+    $("tmeta").textContent = `전체 ${fmt(ITEMS.length)}건 중 ${fmt(r.length)}건`;
+    $("tbody").innerHTML = r.slice(0, lim).map((x) => `<tr>
+      <td><span class="badge ${x.st}">${STATUS[x.st].icon} ${x.dleft != null ? ddayText(x) : STATUS[x.st].label}</span></td>
+      <td><span class="kind">${esc(x.kind)}</span>${x.changed ? ` <span class="kind" data-tip="제목에 수정·연장·추가모집 등이 있는 공고">변경</span>` : ""}</td>
+      <td class="tt"><a href="${esc(x.url)}" target="_blank">${esc(x.title)}</a><span class="biz">${esc(x.biz || "사업명 없음")}</span></td>
+      <td class="num">${x.start ? kdate(x.start) + " ~ " + kdate(x.end) : "상시"}</td>
+      <td class="r">${fmt(x.views)}</td><td class="r">${x.files}개</td><td class="num">${kdate(x.posted)}</td></tr>`).join("") || `<tr><td colspan="7" style="color:var(--t3)">조건에 맞는 공고가 없습니다.</td></tr>`;
+    $("shown").textContent = `${fmt(Math.min(lim, r.length))}건 표시 / ${fmt(r.length)}건`;
+    $("more").style.display = r.length > lim ? "" : "none";
+  }
+  $("q").oninput = (e) => { q = e.target.value.trim().toLowerCase(); lim = 30; table(); };
+  $("more").onclick = () => { lim += 30; table(); };
+  $("csv").onclick = () => {
+    const h = ["게시물번호", "접수상태", "공고유형", "공고명", "사업명", "신청시작", "신청마감", "게시일", "조회수", "첨부수", "원문주소"];
+    const qq = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const lines = [h.map(qq).join(",")].concat(rows().map((x) => [x.id, STATUS[x.st].label, x.kind, x.title, x.biz, x.start, x.end, x.posted, x.views, x.files, x.url].map(qq).join(",")));
+    const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv" })), download: `공모사업_목록_${ymd(NOW)}.csv` });
+    a.click();
+  };
+  chips(); table();
+})();
+</script>
+</body>
+</html>

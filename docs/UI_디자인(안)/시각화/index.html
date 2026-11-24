@@ -1,0 +1,34 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>시각화 시안 목록</title><style>
+:root { color-scheme: light; --bg:#f4f6f9; --surface:#fff; --line:#e3e7ed; --line2:#cfd6df; --t1:#14181f; --t2:#4a5361; --t3:#7a8494;
+  --navy:#1f3864; --navy2:#2b4c86; --brand-soft:#e8eef8; --series-1:#2a78d6; --crit:#d03b3b;
+  --sans:"IBM Plex Sans KR","Malgun Gothic","Noto Sans KR",sans-serif; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--t1); font-family:var(--sans); font-size:14px; line-height:1.55; }
+a { color:inherit; }
+.gnb { background:var(--navy); color:#fff; } .gnb .in { max-width:1280px; margin:0 auto; padding:0 28px; height:56px; display:flex; align-items:center; gap:26px; }
+.logo { font-weight:700; font-size:16px; } .logo small { font-weight:400; opacity:.7; margin-left:8px; font-size:12.5px; }
+.gnb nav { display:flex; gap:20px; font-size:13.5px; flex-wrap:wrap; } .gnb nav a { text-decoration:none; opacity:.7; padding:17px 0; }
+.gnb nav a.on { opacity:1; font-weight:600; box-shadow:inset 0 -3px 0 #fff; }
+.wrap { max-width:1280px; margin:0 auto; padding:24px 28px 56px; }
+h1 { margin:0 0 4px; font-size:24px; letter-spacing:-.02em; } .sub { margin:0 0 18px; color:var(--t2); }
+.panel { background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:16px 18px; }
+.tools { display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
+.chips { display:flex; gap:6px; flex-wrap:wrap; align-items:center; } .chips b { font-size:12.5px; color:var(--t3); font-weight:500; margin-right:2px; }
+.chip { border:1px solid var(--line2); background:#fff; border-radius:999px; padding:4px 12px; font:inherit; font-size:13px; color:var(--t2); cursor:pointer; }
+.chip.on { background:var(--navy); border-color:var(--navy); color:#fff; }
+select { font:inherit; font-size:13px; padding:5px 8px; border:1px solid var(--line2); border-radius:6px; background:#fff; }
+.org { font-size:11.5px; font-weight:600; padding:1px 7px; border-radius:4px; white-space:nowrap; background:#eef0f3; color:var(--t2); }
+.org[data-c="0"] { background:#e8eef8; color:#1f3864; } .org[data-c="1"] { background:#e6f5f0; color:#0b6b52; }
+.org[data-c="2"] { background:#fdf0e3; color:#9a5300; } .org[data-c="3"] { background:#f1e9fb; color:#5b2b9a; }
+.legend { display:flex; gap:12px; flex-wrap:wrap; font-size:12.5px; color:var(--t2); margin-top:10px; } .legend i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; vertical-align:-1px; }
+.note { font-size:12.5px; color:var(--t3); margin-top:10px; }
+.list { display:flex; flex-direction:column; gap:6px; max-height:560px; overflow:auto; }
+.li { display:flex; gap:8px; align-items:baseline; padding:7px 9px; border:1px solid var(--line); border-radius:8px; text-decoration:none; background:#fff; }
+.li:hover { border-color:var(--series-1); } .li .t { font-weight:500; flex:1; } .li .m { font-size:12px; color:var(--t3); white-space:nowrap; }
+.empty { color:var(--t3); padding:24px; text-align:center; }
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}.card{display:block;background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px;text-decoration:none}
+.card:hover{border-color:var(--series-1)}.card b{color:var(--series-1);font-size:13px}.card h3{margin:4px 0 6px;font-size:18px}.card p{margin:0;color:var(--t2)}</style></head><body>
+<header class="gnb"><div class="in"><span class="logo">공모사업 AI RADAR<small>시각화 시안</small></span></div></header>
+<main class="wrap"><h1>시각화 시안 5종</h1><p class="sub">수요자 화면에 붙일 시각적 서비스 후보. 실제 DB의 노출·검토 공고 283건으로 그린 시안이며 앱에는 적용하지 않았습니다.</p><div class="grid"><a class="card" href="안1_일정타임라인.html"><b>안1</b><h3>접수 일정 타임라인</h3><p>사업마다 접수 시작~마감을 가로 막대로 겹쳐 보여 주는 간트형 화면</p></a><a class="card" href="안2_월간달력.html"><b>안2</b><h3>월간 마감 달력</h3><p>날짜 칸에 마감·시작 공고를 표시하고 날짜를 누르면 목록을 보여 주는 달력</p></a><a class="card" href="안3_분야트리맵.html"><b>안3</b><h3>분야별 트리맵</h3><p>분야마다 공고 수에 비례한 사각형으로 어느 분야에 사업이 몰리는지 보여 줌</p></a><a class="card" href="안4_월별추이.html"><b>안4</b><h3>월별 공고 추이</h3><p>월별 게시 건수를 기관별·분야별로 쌓은 막대 차트</p></a><a class="card" href="안5_분야대상히트맵.html"><b>안5</b><h3>분야 × 대상 히트맵</h3><p>분야와 지원 대상의 교차 건수를 색 농도로 보여 주는 표</p></a></div></main></body></html>

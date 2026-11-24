@@ -1,0 +1,33 @@
+{% extends "public/base.html" %}
+{% block content %}
+<section class="hero"><div class="in">
+  <h1>우리 기관에 맞는 ICT기금 공모사업을 찾아보세요</h1>
+  <p>전담기관 홈페이지에 흩어진 공모 공고를 한곳에 모아 보여 드립니다.</p>
+  <div class="sbox"><input id="q" placeholder="공고명, 사업명, 기관명으로 검색" aria-label="공고 검색"><button type="button" id="fopen" class="ftg" aria-expanded="false" aria-controls="side">상세검색<span class="fn" id="fn" hidden></span></button><button id="go">검색</button></div>
+  <div class="fpanel" id="side" role="search" aria-label="공고 조건 선택" hidden></div>
+  {% if popular %}<div class="qtags"><span>많이 찾는 검색어</span>{% for term, n in popular %}<button type="button" title="최근 {{ config.PUBLIC_POPULAR_DAYS }}일 동안 {{ n }}회 검색">{{ term }}</button>{% endfor %}</div>{% endif %}
+</div></section>
+
+<main class="wrap">
+  <section class="stats" id="stats"></section>
+  {% if items %}
+  <div class="notice info">ⓘ 공고내용은 해당 기관에서 수정·변경될 수 있으니 원문공고를 꼭 확인하세요.</div>
+  {% endif %}
+  <section class="soon" id="soon" hidden><h3 id="soonh"></h3><div class="soonrow" id="soonrow"></div></section>
+  <div class="layout">
+    <section>
+      <div class="bar"><div class="cnt" id="cnt"></div>
+        <button type="button" class="favchip" id="favchip"></button>
+        <select id="sort" aria-label="정렬"><option value="end">마감일이 가까운 순</option><option value="new">최근 게시 순</option><option value="views">조회 많은 순</option></select></div>
+      <nav class="pager top" aria-label="쪽 이동(위)"></nav>
+      <div class="cards" id="cards"></div>
+      <nav class="pager" aria-label="쪽 이동(아래)"></nav>
+    </section>
+  </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script type="application/json" id="data">{{ data_json }}</script>
+<script src="{{ url_for('static', filename='public.js') }}"></script>
+{% endblock %}

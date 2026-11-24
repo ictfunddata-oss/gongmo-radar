@@ -1,0 +1,37 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<section class="stats">
+  <div><b>{{ stats.announcements }}</b><span>수집 공고</span></div>
+  <div><b>{{ stats.attachments_saved }}/{{ stats.attachments }}</b><span>첨부 저장/목록</span></div>
+  <div><b>{{ stats.last_run.ended_at[:16].replace('T', ' ') if stats.last_run else '—' }}</b><span>마지막 수집{% if stats.last_run %} ({{ stats.last_run.status }}){% endif %}</span></div>
+</section>
+
+<form class="filters" method="get">
+  <input name="q" value="{{ q }}" placeholder="공고명·사업명 검색">
+  <button>검색</button>
+</form>
+
+<p class="count">조건에 맞는 공고 {{ total }}건</p>
+<table class="list">
+  <thead><tr><th>게시일</th><th>공고명 · 사업명</th><th>신청 기간</th><th>첨부</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td class="nowrap">{{ r.posted_at or '' }}</td>
+      <td><a href="{{ url_for('admin.detail', ann_id=r.ann_id) }}">{{ r.title }}</a><div class="sub">{{ r.org }} · {{ r.biz or '사업명 없음' }}</div></td>
+      <td class="nowrap">{{ (r.start_at or '')[:10] }}{% if r.end_at %} ~ {{ r.end_at[:10] }}{% endif %}</td>
+      <td class="nowrap">{{ r.attach_count }}개</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="4" class="empty">공고가 없습니다. <code>flask --app run crawl</code> 또는 <code>migrate-legacy</code>로 데이터를 채우세요.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% if pages > 1 %}
+<nav class="pager">
+  {% if page > 1 %}<a href="?q={{ q }}&page={{ page - 1 }}">← 이전</a>{% endif %}
+  <span>{{ page }} / {{ pages }}</span>
+  {% if page < pages %}<a href="?q={{ q }}&page={{ page + 1 }}">다음 →</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

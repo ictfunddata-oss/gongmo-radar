@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>공모사업 크롤링·AI 기능 설계(안)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" />
+<style>
+  :root {
+    --bg: #f5f6f8; --surface: #fff; --line: #e2e5ea; --line2: #cdd2da;
+    --t1: #151a22; --t2: #4b5563; --t3: #7b8492;
+    --navy: #1f3864; --accent: #2a78d6; --accent-soft: #e8f0fb;
+    --good: #0a7a0a; --good-bg: #e6f4e6; --warn: #8a5a00; --warn-bg: #fff3d6;
+    --crit: #b42323; --crit-bg: #fdecec; --info: #184f95; --info-bg: #e8f0fb; --mute-bg: #eef0f3;
+    --sans: "IBM Plex Sans KR", "Malgun Gothic", "Noto Sans KR", sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--t1); font-family: var(--sans); font-size: 14.5px; line-height: 1.7; }
+  a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
+  .shell { display: grid; grid-template-columns: 280px minmax(0, 1fr); min-height: 100vh; }
+
+  aside { background: var(--navy); color: #dfe6f3; padding: 22px 0 40px; position: sticky; top: 0; height: 100vh; overflow: auto; }
+  .brand { padding: 0 22px 18px; border-bottom: 1px solid rgba(255,255,255,.12); }
+  .brand b { display: block; font-size: 16px; color: #fff; letter-spacing: -.02em; }
+  .brand span { font-size: 12.5px; opacity: .7; }
+  .search { margin: 16px 22px 6px; width: calc(100% - 44px); padding: 8px 11px; border-radius: 6px; border: 0; font: inherit; font-size: 13px; }
+  .nav-group { margin-top: 14px; }
+  .nav-group h4 { margin: 0; padding: 4px 22px; font-size: 11.5px; letter-spacing: .06em; color: #9fb0cc; font-weight: 600; }
+  .nav a { display: flex; justify-content: space-between; gap: 8px; padding: 6px 22px; color: #dfe6f3; font-size: 13.5px; text-decoration: none; }
+  .nav a:hover { background: rgba(255,255,255,.07); }
+  .nav a.on { background: rgba(255,255,255,.14); color: #fff; font-weight: 600; box-shadow: inset 3px 0 0 #fff; }
+  .nav a i { font-style: normal; font-size: 11px; opacity: .65; white-space: nowrap; }
+  .nav a.hidden { display: none; }
+
+  main { padding: 30px 40px 80px; max-width: 1180px; }
+  .crumb { font-size: 12.5px; color: var(--t3); margin-bottom: 6px; }
+  .meta-line { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: 12.5px; color: var(--t3); margin: 4px 0 22px; }
+
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 18px 0 24px; }
+  .tile { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px 18px; }
+  .tile .l { font-size: 13px; color: var(--t2); }
+  .tile .v { font-size: 30px; font-weight: 600; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.25; }
+  .tile .s { font-size: 12.5px; color: var(--t3); }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 18px 22px; margin-bottom: 18px; }
+  .card h3 { margin: 0 0 10px; font-size: 16px; }
+  .card .hd { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+  .card .hd h3 { margin: 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .stack { display: flex; height: 12px; border-radius: 0 4px 4px 0; overflow: hidden; margin: 6px 0 8px; gap: 2px; }
+  .stack span { display: block; height: 100%; }
+  .legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12.5px; color: var(--t2); }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { border: 1px solid var(--line2); background: #fff; border-radius: 999px; padding: 3px 11px; font: inherit; font-size: 12.5px; cursor: pointer; color: var(--t2); }
+  .chip.on { background: var(--t1); color: #fff; border-color: var(--t1); }
+  .warnbox { background: var(--warn-bg); border: 1px solid #f0d58f; color: var(--warn); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 18px; }
+
+  .badge { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 1px 8px; border-radius: 4px; white-space: nowrap; line-height: 1.7; }
+  .b-구현, .b-확정, .b-결정, .b-해결 { background: var(--good-bg); color: var(--good); }
+  .b-부분, .b-검토, .b-제안 { background: var(--warn-bg); color: var(--warn); }
+  .b-시안, .b-초안 { background: var(--info-bg); color: var(--info); }
+  .b-신규, .b-미결 { background: #fff; color: var(--crit); box-shadow: inset 0 0 0 1px #f0b4b4; }
+  .b-보류, .b-대체됨 { background: var(--mute-bg); color: var(--t3); }
+  .b-폐기 { background: var(--mute-bg); color: var(--t3); text-decoration: line-through; }
+  .b-상 { background: var(--crit-bg); color: var(--crit); } .b-중 { background: var(--warn-bg); color: var(--warn); } .b-하 { background: var(--mute-bg); color: var(--t3); }
+
+  table { border-collapse: collapse; width: 100%; margin: 10px 0 18px; font-size: 13.5px; background: var(--surface); }
+  th, td { border: 1px solid var(--line); padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: #f0f2f6; font-weight: 600; color: var(--t2); white-space: nowrap; }
+  tr:hover td { background: #fafbfc; }
+  td code { white-space: nowrap; }
+  .tbl-wrap { overflow-x: auto; }
+
+  .doc h1 { font-size: 28px; letter-spacing: -.03em; margin: 0 0 4px; }
+  .doc h2 { font-size: 20px; margin: 34px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--line); letter-spacing: -.02em; }
+  .doc h3 { font-size: 16.5px; margin: 24px 0 8px; }
+  .doc p { margin: 8px 0; }
+  .doc ul, .doc ol { margin: 6px 0 12px; padding-left: 22px; }
+  .doc li { margin: 2px 0; }
+  .doc code { font-family: var(--mono); font-size: 12.5px; background: #eef1f5; padding: 1px 5px; border-radius: 3px; }
+  .doc pre { background: #11151c; color: #dfe6ee; padding: 14px 16px; border-radius: 6px; overflow: auto; font-size: 12.5px; line-height: 1.6; }
+  .doc pre code { background: none; padding: 0; color: inherit; }
+  .doc hr { border: 0; border-top: 1px solid var(--line); margin: 24px 0; }
+  .callout { border-left: 4px solid var(--accent); background: var(--accent-soft); padding: 10px 14px; border-radius: 0 6px 6px 0; margin: 12px 0; }
+  .callout .ct { font-weight: 700; font-size: 13px; margin-bottom: 2px; }
+  .callout.warning { border-color: #d39b00; background: var(--warn-bg); }
+  .callout.tip { border-color: var(--good); background: var(--good-bg); }
+  .callout.quote { border-color: var(--t3); background: #f1f2f4; }
+  .callout.important { border-color: var(--crit); background: var(--crit-bg); }
+  .callout p { margin: 2px 0; }
+  .ref { font-weight: 600; white-space: nowrap; }
+
+  .flow { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin: 14px 0 18px; }
+  .flow .step { background: var(--surface); border: 1px solid var(--line2); border-radius: 8px; padding: 12px 10px; position: relative; display: flex; flex-direction: column; gap: 4px; }
+  .flow .step:not(:last-child)::after { content: "→"; position: absolute; right: -14px; top: 50%; transform: translateY(-50%); color: var(--t3); font-weight: 700; }
+  .flow b { font-size: 14px; } .flow span { font-size: 12.5px; color: var(--t2); line-height: 1.5; } .flow em { font-style: normal; font-size: 11.5px; color: var(--accent); font-weight: 600; }
+
+  .foot { margin-top: 40px; font-size: 12px; color: var(--t3); border-top: 1px solid var(--line); padding-top: 12px; }
+  mark { background: #fff1a8; padding: 0 1px; }
+  @media (max-width: 1000px) { .shell { grid-template-columns: 1fr; } aside { position: static; height: auto; } .tiles, .grid2 { grid-template-columns: 1fr 1fr; } .flow { grid-template-columns: 1fr 1fr; } .flow .step::after { display: none; } main { padding: 20px; } }
+  @media print { aside { display: none; } .shell { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside>
+    <div class="brand"><b>공모사업 크롤링·AI 기능 설계(안)</b><span>ICT기금 공모사업 파이프라인</span></div>
+    <input class="search" id="q" placeholder="문서·기능 검색 (예: 내역사업)" />
+    <nav class="nav" id="nav"></nav>
+  </aside>
+  <main id="main"></main>
+</div>
+
+<script>window.DESIGN = /*__DATA__*/null;</script>
+<script>
+(() => {
+  const D = window.DESIGN;
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const STATUS = ["구현", "부분", "시안", "신규", "검토", "보류", "폐기"];
+  const SCOL = { 구현: "#0ca30c", 부분: "#eda100", 시안: "#2a78d6", 신규: "#e34948", 검토: "#ec835a", 보류: "#b9bdc4", 폐기: "#dfe1e5" };
+  const BADGE = new Set([...STATUS, "초안", "확정", "결정", "제안", "대체됨", "미결", "해결", "상", "중", "하"]);
+  const docById = Object.fromEntries(D.docs.map((d) => [d.meta.doc_id, d]));
+  const area = (id) => ({ CRW: "수집", SEL: "선별", CLS: "분류·추출", SVC: "서비스" }[id.split("-")[1]] || id.split("-")[1]);
+  const fnDoc = { CRW: "FS-CRW", SEL: "FS-SEL", CLS: "FS-CLS", SVC: "FS-SVC" };
+  const badge = (s) => `<span class="badge b-${esc(s)}">${esc(s)}</span>`;
+
+  // ── 인라인: 굵게·코드·링크·문서/기능 ID 링크 ──
+  function inline(s) {
+    const codes = [];
+    s = s.replace(/`([^`]+)`/g, (_, c) => { codes.push(c); return `\u0000${codes.length - 1}\u0000`; });
+    s = esc(s);
+    s = s.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+    s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+    s = s.replace(/(^|[^\w-])(D-\d{2}|FS-[A-Z]{3})(?![\w-])/g, (m, p, id) => docById[id] ? `${p}<a class="ref" href="#doc/${id}">${id}</a>` : m);
+    s = s.replace(/(^|[^\w-])(F-([A-Z]{3})-\d{2})(?![\w-])/g, (m, p, id, a) => fnDoc[a] ? `${p}<a class="ref" href="#doc/${fnDoc[a]}">${id}</a>` : m);
+    s = s.replace(/(^|[^\w-])((ADR-\d{3})|(I-\d{2}))(?![\w-])/g, (m, p, id) => `${p}<a class="ref" href="#doc/${id.startsWith("ADR") ? "D-40" : "D-41"}">${id}</a>`);
+    return s.replace(/\u0000(\d+)\u0000/g, (_, i) => `<code>${esc(codes[i])}</code>`);
+  }
+  const cell = (c) => (BADGE.has(c.trim()) ? badge(c.trim()) : inline(c));
+  const splitRow = (l) => l.trim().replace(/^\||\|$/g, "").split(/(?<!\\)\|/).map((c) => c.trim().replace(/\\\|/g, "|"));
+
+  // ── 블록: 제목·문단·목록·표·코드·인용(콜아웃)·HTML ──
+  function md(src) {
+    const L = src.replace(/\r/g, "").split("\n"); let i = 0, out = "";
+    while (i < L.length) {
+      const l = L[i];
+      if (!l.trim()) { i++; continue; }
+      if (l.startsWith("```")) { const buf = []; i++; while (i < L.length && !L[i].startsWith("```")) buf.push(L[i++]); i++; out += `<pre><code>${esc(buf.join("\n"))}</code></pre>`; continue; }
+      const h = l.match(/^(#{1,4})\s+(.*)/); if (h) { out += `<h${h[1].length}>${inline(h[2])}</h${h[1].length}>`; i++; continue; }
+      if (/^-{3,}\s*$/.test(l)) { out += "<hr>"; i++; continue; }
+      if (l.startsWith("<")) { const buf = []; while (i < L.length && L[i].trim()) buf.push(L[i++]); out += buf.join("\n"); continue; }
+      if (l.startsWith("|") && L[i + 1] && /^\|\s*:?-{3,}/.test(L[i + 1])) {
+        const head = splitRow(l); i += 2; let rows = "";
+        while (i < L.length && L[i].startsWith("|")) { rows += "<tr>" + splitRow(L[i]).map((c) => `<td>${cell(c)}</td>`).join("") + "</tr>"; i++; }
+        out += `<div class="tbl-wrap"><table><thead><tr>${head.map((c) => `<th>${inline(c)}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table></div>`; continue;
+      }
+      if (l.startsWith(">")) {
+        const buf = []; while (i < L.length && L[i].startsWith(">")) buf.push(L[i++].replace(/^>\s?/, ""));
+        const m = buf[0].match(/^\[!(\w+)\]\s*(.*)/); let kind = "note", title = "";
+        if (m) { kind = m[1].toLowerCase(); title = m[2]; buf.shift(); }
+        out += `<div class="callout ${kind}">${title ? `<div class="ct">${inline(title)}</div>` : ""}${buf.map((b) => `<p>${inline(b)}</p>`).join("")}</div>`; continue;
+      }
+      if (/^\s*([-*]|\d+\.)\s+/.test(l)) {
+        const ordered = /^\s*\d+\./.test(l); let html = "";
+        while (i < L.length && /^\s*([-*]|\d+\.)\s+/.test(L[i])) {
+          const sub = /^\s{2,}/.test(L[i]); const t = L[i].replace(/^\s*([-*]|\d+\.)\s+/, "");
+          html += sub ? `<ul><li>${inline(t)}</li></ul>` : `<li>${inline(t)}</li>`; i++;
+        }
+        out += ordered ? `<ol>${html}</ol>` : `<ul>${html}</ul>`; continue;
+      }
+      const buf = []; while (i < L.length && L[i].trim() && !/^(#|\||>|```|<|\s*[-*]\s|\s*\d+\.\s)/.test(L[i])) buf.push(L[i++]);
+      if (!buf.length) buf.push(L[i++]);
+      out += `<p>${inline(buf.join(" "))}</p>`;
+    }
+    return out;
+  }
+
+  // ── 사이드바 ──
+  function nav(active) {
+    let h = `<div class="nav-group"><a href="#home" class="${active === "home" ? "on" : ""}">설계 현황 요약<i></i></a></div>`;
+    D.groups.forEach((g) => {
+      const ds = D.docs.filter((d) => d.meta.group === g);
+      if (!ds.length) return;
+      h += `<div class="nav-group"><h4>${esc(g)}</h4>` + ds.map((d) => `<a href="#doc/${esc(d.meta.doc_id)}" data-id="${esc(d.meta.doc_id)}" class="${active === d.meta.doc_id ? "on" : ""}">${esc(d.meta.title.replace(/^기능정의서 — /, ""))}<i>v${esc(d.meta.version)} · ${esc(d.meta.status)}</i></a>`).join("") + `</div>`;
+    });
+    $("nav").innerHTML = h;
+    filterNav();
+  }
+  function filterNav() {
+    const q = $("q").value.trim().toLowerCase();
+    document.querySelectorAll("#nav a[data-id]").forEach((a) => {
+      const d = docById[a.dataset.id];
+      a.classList.toggle("hidden", !!q && !(d.meta.title + d.body).toLowerCase().includes(q));
+    });
+  }
+
+  // ── 요약 화면 ──
+  let fArea = "전체", fStatus = "전체";
+  function home() {
+    const F = D.functions, cnt = (s) => F.filter((f) => f["상태"] === s).length;
+    const openI = D.issues.filter((x) => x["상태"] !== "해결");
+    const last = D.changes[0];
+    const docsDone = D.docs.filter((d) => d.meta.status === "확정").length;
+    let h = `<div class="crumb">공모사업 파이프라인 · 설계 문서</div><h1 style="margin:0;font-size:28px;letter-spacing:-.03em">설계 현황 요약</h1>
+      <div class="meta-line">문서 ${D.docs.length}개 · 생성 ${esc(D.generated_at.replace("T", " "))} · 원본 <code>설계(안)/docs/*.md</code></div>`;
+    if (D.warnings.length) h += `<div class="warnbox"><b>⚠ 문서 점검 경고 ${D.warnings.length}건</b><br>${D.warnings.map(esc).join("<br>")}</div>`;
+    h += `<section class="tiles">
+      <div class="tile"><div class="l">정의된 기능</div><div class="v">${F.length}</div><div class="s">구현 ${cnt("구현")} · 부분 ${cnt("부분")} · 신규 ${cnt("신규")}</div></div>
+      <div class="tile"><div class="l">미결 사항</div><div class="v">${openI.length}</div><div class="s">전체 ${D.issues.length}건 중 미해결</div></div>
+      <div class="tile"><div class="l">설계 결정</div><div class="v">${D.decisions.length}</div><div class="s">결정 ${D.decisions.filter((x) => x["상태"] === "결정").length} · 제안 ${D.decisions.filter((x) => x["상태"] === "제안").length} · 보류 ${D.decisions.filter((x) => x["상태"] === "보류").length}</div></div>
+      <div class="tile"><div class="l">확정 문서</div><div class="v">${docsDone}/${D.docs.length}</div><div class="s">최근 개정 ${last ? esc(last["일자"]) : "—"}</div></div>
+    </section>`;
+
+    // 영역별 구현 현황 (가로 누적 막대, 상태 = 범주)
+    const areas = [...new Set(F.map((f) => area(f.ID)))];
+    h += `<div class="card"><div class="hd"><h3>영역별 기능 현황</h3><div class="legend">${STATUS.filter(cnt).map((s) => `<span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${SCOL[s]};margin-right:5px"></span>${s} ${cnt(s)}</span>`).join("")}</div></div>` +
+      areas.map((a) => {
+        const fs = F.filter((f) => area(f.ID) === a);
+        return `<div style="display:grid;grid-template-columns:90px 1fr 60px;gap:12px;align-items:center;font-size:13px"><span>${esc(a)}</span>
+          <div class="stack">${STATUS.map((s) => { const n = fs.filter((f) => f["상태"] === s).length; return n ? `<span style="flex:${n};background:${SCOL[s]}" title="${a} · ${s} ${n}건"></span>` : ""; }).join("")}</div>
+          <span style="text-align:right;color:var(--t2)">${fs.length}개</span></div>`;
+      }).join("") + `</div>`;
+
+    // 기능 목록
+    h += `<div class="card"><div class="hd"><h3>전체 기능 목록</h3>
+      <div class="chips" id="fa">${["전체", ...areas].map((a) => `<button class="chip ${a === fArea ? "on" : ""}" data-v="${a}">${a}</button>`).join("")}</div></div>
+      <div class="chips" id="fs" style="margin-bottom:6px">${["전체", ...STATUS.filter(cnt)].map((s) => `<button class="chip ${s === fStatus ? "on" : ""}" data-v="${s}">${s}${s === "전체" ? "" : " " + cnt(s)}</button>`).join("")}</div>
+      <div class="tbl-wrap"><table><thead><tr><th>ID</th><th>영역</th><th>기능명</th><th>설명</th><th>우선순위</th><th>상태</th><th>비고</th></tr></thead><tbody id="ftb"></tbody></table></div></div>`;
+
+    h += `<div class="grid2"><div class="card"><h3>미결 사항</h3><div class="tbl-wrap"><table><thead><tr><th>번호</th><th>쟁점</th><th>상태</th></tr></thead><tbody>` +
+      D.issues.map((x) => `<tr><td><a class="ref" href="#doc/D-41">${esc(x["번호"])}</a></td><td>${inline(x["쟁점"])}</td><td>${badge(x["상태"])}</td></tr>`).join("") + `</tbody></table></div></div>
+      <div class="card"><h3>최근 개정</h3><div class="tbl-wrap"><table><thead><tr><th>일자</th><th>문서</th><th>버전</th><th>내용</th></tr></thead><tbody>` +
+      D.changes.slice(0, 8).map((c) => `<tr><td style="white-space:nowrap">${esc(c["일자"])}</td><td>${inline(c["문서"])}</td><td>${esc(c["버전"])}</td><td>${inline(c["내용"])}</td></tr>`).join("") + `</tbody></table></div>
+      <a href="#doc/D-90">전체 개정 이력 →</a></div></div>`;
+
+    h += `<div class="card"><h3>문서 목록</h3><div class="tbl-wrap"><table><thead><tr><th>문서번호</th><th>문서</th><th>분류</th><th>버전</th><th>상태</th><th>최종 개정</th></tr></thead><tbody>` +
+      D.docs.map((d) => `<tr><td><a class="ref" href="#doc/${esc(d.meta.doc_id)}">${esc(d.meta.doc_id)}</a></td><td>${esc(d.meta.title)}</td><td>${esc(d.meta.group)}</td><td>${esc(d.meta.version)}</td><td>${badge(d.meta.status)}</td><td>${esc(d.meta.updated)}</td></tr>`).join("") + `</tbody></table></div></div>`;
+    $("main").innerHTML = h + foot();
+    const bind = (id, set) => document.querySelectorAll(`#${id} .chip`).forEach((b) => b.onclick = () => { set(b.dataset.v); document.querySelectorAll(`#${id} .chip`).forEach((x) => x.classList.toggle("on", x === b)); ftable(); });
+    bind("fa", (v) => fArea = v); bind("fs", (v) => fStatus = v);
+    ftable();
+  }
+  function ftable() {
+    const q = $("q").value.trim().toLowerCase();
+    const rows = D.functions.filter((f) => (fArea === "전체" || area(f.ID) === fArea) && (fStatus === "전체" || f["상태"] === fStatus) &&
+      (!q || Object.values(f).join(" ").toLowerCase().includes(q)));
+    const el = $("ftb"); if (!el) return;
+    el.innerHTML = rows.map((f) => `<tr><td style="white-space:nowrap"><a class="ref" href="#doc/${fnDoc[f.ID.split("-")[1]]}">${esc(f.ID)}</a></td><td style="white-space:nowrap">${esc(area(f.ID))}</td><td style="white-space:nowrap">${inline(f["기능명"] || "")}</td><td>${inline(f["설명"] || "")}</td><td>${badge(f["우선순위"] || "")}</td><td>${badge(f["상태"] || "")}</td><td>${inline(f["비고"] || "")}</td></tr>`).join("") ||
+      `<tr><td colspan="7" style="color:var(--t3)">조건에 맞는 기능이 없습니다.</td></tr>`;
+  }
+
+  // ── 문서 화면 ──
+  function doc(id) {
+    const d = docById[id]; if (!d) return home();
+    const q = $("q").value.trim();
+    let body = md(d.body.replace(/^\s*#\s+.*\n/, ""));
+    if (q) body = body.replace(new RegExp(`(>[^<]*?)(${q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi"), "$1<mark>$2</mark>");
+    const hist = D.changes.filter((c) => c["문서"] === id);
+    $("main").innerHTML = `<div class="crumb">${esc(d.meta.group)} · ${esc(d.meta.doc_id)}</div><div class="doc"><h1>${esc(d.meta.title)}</h1>
+      <div class="meta-line">${badge(d.meta.status)} 버전 ${esc(d.meta.version)} · 최종 개정 ${esc(d.meta.updated)} · 원본 <code>docs/${esc(d.file)}</code></div>${body}
+      <h2>이 문서의 개정 이력</h2><div class="tbl-wrap"><table><thead><tr><th>일자</th><th>버전</th><th>내용</th><th>작성</th></tr></thead><tbody>${hist.map((c) => `<tr><td>${esc(c["일자"])}</td><td>${esc(c["버전"])}</td><td>${inline(c["내용"])}</td><td>${esc(c["작성"])}</td></tr>`).join("") || `<tr><td colspan="4">기록 없음</td></tr>`}</tbody></table></div></div>` + foot();
+    scrollTo(0, 0);
+  }
+  const foot = () => `<div class="foot">이 페이지는 <code>python build_index.py</code>로 생성됩니다. 문서를 고칠 때는 md 원본을 수정하고 버전·개정 이력을 함께 갱신하세요(D-00 §5).</div>`;
+
+  function route() {
+    const h = location.hash.slice(1);
+    if (h.startsWith("doc/")) { nav(h.slice(4)); doc(h.slice(4)); } else { nav("home"); home(); }
+  }
+  $("q").addEventListener("input", () => { filterNav(); const h = location.hash.slice(1); if (h.startsWith("doc/")) doc(h.slice(4)); else ftable(); });
+  addEventListener("hashchange", route);
+  route();
+})();
+</script>
+</body>
+</html>

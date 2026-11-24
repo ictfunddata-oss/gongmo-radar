@@ -1,0 +1,1543 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NIPA · Crawler Mission Control · live</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+/>
+<style>
+  :root {
+    --bg-base: #0a0c10;
+    --bg-surface: #11141a;
+    --bg-elevated: #161a21;
+    --bg-input: #1c2129;
+    --bg-hover: #1d222b;
+    --border: #1f242d;
+    --border-bright: #2a3140;
+    --text-primary: #e8ecef;
+    --text-secondary: #9aa3ad;
+    --text-muted: #5e6772;
+    --text-dim: #3a4250;
+    --accent: #d4ff3a;
+    --accent-soft: #b8e036;
+    --accent-dim: rgba(212, 255, 58, 0.12);
+    --critical: #ff5e58;
+    --critical-dim: rgba(255, 94, 88, 0.12);
+    --warning: #f5b942;
+    --warning-dim: rgba(245, 185, 66, 0.12);
+    --info: #5fb8ff;
+    --info-dim: rgba(95, 184, 255, 0.12);
+    --ok: #5dd97a;
+    --ok-dim: rgba(93, 217, 122, 0.12);
+    --display: "Fraunces", "IBM Plex Sans KR", serif;
+    --sans: "IBM Plex Sans KR", -apple-system, BlinkMacSystemFont, sans-serif;
+    --mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--sans);
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    min-height: 100vh;
+    background-image:
+      radial-gradient(circle at 12% 6%, rgba(212, 255, 58, 0.06), transparent 35%),
+      radial-gradient(circle at 88% 92%, rgba(95, 184, 255, 0.04), transparent 40%),
+      linear-gradient(180deg, #0a0c10 0%, #0a0c10 100%);
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* faint grid texture */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* film grain */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: -50%;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .app {
+    position: relative;
+    z-index: 2;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 32px 64px;
+  }
+
+  /* ─────────────────────── TOP BAR ─────────────────────── */
+  .topbar {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 48px;
+    align-items: center;
+    padding: 24px 0 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 28px;
+  }
+
+  .brand {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .brand-mark {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    background: var(--accent);
+    color: #000;
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: -0.04em;
+    border-radius: 2px;
+    box-shadow: 0 0 0 4px rgba(212, 255, 58, 0.12),
+      0 0 24px -2px rgba(212, 255, 58, 0.6);
+  }
+
+  .brand-name {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 22px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+  }
+
+  .brand-name .italic {
+    font-style: italic;
+    color: var(--accent-soft);
+    font-feature-settings: "ss01";
+  }
+
+  .brand-sub {
+    margin-top: 6px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .topbar-nav {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-surface);
+    padding: 4px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    width: fit-content;
+    margin: 0 auto;
+  }
+
+  .topbar-nav a {
+    padding: 8px 18px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-radius: 999px;
+    transition: all 0.15s ease;
+    cursor: pointer;
+  }
+
+  .topbar-nav a:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+  }
+
+  .topbar-nav a.active {
+    background: var(--bg-elevated);
+    color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--border-bright);
+  }
+
+  .status-cluster {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+  }
+
+  .live-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 12px 7px 11px;
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    background: var(--accent-dim);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .live-pill .dot {
+    width: 7px;
+    height: 7px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--accent), 0 0 16px rgba(212, 255, 58, 0.4);
+    animation: pulse 1.6s infinite ease-out;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.18); opacity: 0.6; }
+  }
+
+  .time {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.03em;
+  }
+
+  .time strong {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  /* ─────────────────────── PAGE HEADER ─────────────────────── */
+  .page-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    gap: 32px;
+  }
+
+  .page-head h1 {
+    font-family: var(--display);
+    font-weight: 300;
+    font-size: clamp(38px, 5vw, 56px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    margin: 0;
+    color: var(--text-primary);
+    font-variation-settings: "opsz" 144, "SOFT" 30, "WONK" 0;
+  }
+
+  .page-head h1 em {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--accent-soft);
+    font-variation-settings: "opsz" 144, "SOFT" 80, "WONK" 1;
+  }
+
+  .page-head .sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-top: 12px;
+    display: flex;
+    gap: 18px;
+  }
+
+  .page-head .sub span::before {
+    content: "▸ ";
+    color: var(--accent);
+    margin-right: 4px;
+  }
+
+  .head-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .btn {
+    padding: 10px 16px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-bright);
+    color: var(--text-primary);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn:hover {
+    background: var(--bg-elevated);
+    border-color: var(--text-muted);
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+
+  .btn-primary:hover {
+    background: #e2ff5e;
+    box-shadow: 0 0 20px rgba(212, 255, 58, 0.4);
+  }
+
+  /* ─────────────────────── KPI GRID ─────────────────────── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  .kpi {
+    position: relative;
+    padding: 24px 22px 22px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+  }
+
+  .kpi:hover {
+    border-color: var(--border-bright);
+    transform: translateY(-1px);
+  }
+
+  .kpi::before,
+  .kpi::after {
+    content: "";
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    pointer-events: none;
+  }
+
+  .kpi::before {
+    top: 6px;
+    left: 6px;
+    border-top: 1px solid var(--accent);
+    border-left: 1px solid var(--accent);
+  }
+
+  .kpi::after {
+    bottom: 6px;
+    right: 6px;
+    border-bottom: 1px solid var(--accent);
+    border-right: 1px solid var(--accent);
+  }
+
+  .kpi.critical::before,
+  .kpi.critical::after {
+    border-color: var(--critical);
+  }
+
+  .kpi-label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+
+  .kpi-number {
+    font-family: var(--display);
+    font-weight: 300;
+    font-size: 56px;
+    line-height: 1;
+    color: var(--text-primary);
+    letter-spacing: -0.03em;
+    font-variation-settings: "opsz" 144, "SOFT" 50, "WONK" 0;
+    font-feature-settings: "tnum" 1;
+  }
+
+  .kpi.critical .kpi-number {
+    color: var(--critical);
+  }
+
+  .kpi-number .unit {
+    font-size: 18px;
+    color: var(--text-muted);
+    margin-left: 6px;
+    letter-spacing: 0;
+  }
+
+  .kpi-meta {
+    margin-top: 14px;
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .kpi-meta .delta {
+    color: var(--accent);
+  }
+
+  .kpi-meta .delta.down {
+    color: var(--critical);
+  }
+
+  .kpi-spark {
+    margin-top: 12px;
+    height: 22px;
+    width: 100%;
+  }
+
+  /* ─────────────────────── PANELS ─────────────────────── */
+  .panel {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    position: relative;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+    gap: 16px;
+  }
+
+  .panel-title {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+
+  .panel-title h2 {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 22px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin: 0;
+    color: var(--text-primary);
+    font-variation-settings: "opsz" 36, "SOFT" 40;
+  }
+
+  .panel-title h2 em {
+    font-style: italic;
+    color: var(--accent-soft);
+  }
+
+  .panel-title .meta {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .panel-actions {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .tab-group {
+    display: inline-flex;
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px;
+  }
+
+  .tab-group .tab {
+    padding: 5px 12px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.15s ease;
+  }
+
+  .tab-group .tab:hover {
+    color: var(--text-secondary);
+  }
+
+  .tab-group .tab.active {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+  }
+
+  /* ─────────────────────── SPLIT ROW ─────────────────────── */
+  .split-row {
+    display: grid;
+    grid-template-columns: 1.55fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  /* Active crawl */
+  .active-crawl .panel-body {
+    padding: 22px;
+  }
+
+  .cmd-line {
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 12px 14px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .cmd-line .prompt {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .cmd-line .arg {
+    color: var(--info);
+  }
+
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+
+  .progress-track {
+    flex: 1;
+    height: 8px;
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    width: 31.5%;
+    background: linear-gradient(90deg, var(--accent-soft), var(--accent));
+    border-radius: 999px;
+    position: relative;
+    box-shadow: 0 0 12px rgba(212, 255, 58, 0.4);
+  }
+
+  .progress-fill::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent
+    );
+    animation: shimmer 1.6s infinite linear;
+    border-radius: 999px;
+  }
+
+  @keyframes shimmer {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(100%); }
+  }
+
+  .progress-pct {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 22px;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+    font-variation-settings: "opsz" 36;
+    font-feature-settings: "tnum" 1;
+    min-width: 62px;
+    text-align: right;
+  }
+
+  .progress-meta {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin-bottom: 20px;
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+  }
+
+  .progress-meta > div {
+    padding: 12px 14px;
+    border-right: 1px solid var(--border);
+  }
+
+  .progress-meta > div:last-child {
+    border-right: none;
+  }
+
+  .progress-meta .pm-label {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+  }
+
+  .progress-meta .pm-value {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 18px;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    font-feature-settings: "tnum" 1;
+    font-variation-settings: "opsz" 36;
+  }
+
+  /* log feed */
+  .log-feed {
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0;
+    max-height: 200px;
+    overflow: hidden;
+    position: relative;
+    mask-image: linear-gradient(180deg, transparent 0%, #000 28px, #000 100%);
+  }
+
+  .log-feed::before {
+    content: "EVENT STREAM ─────────";
+    position: absolute;
+    top: 8px;
+    left: 14px;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.18em;
+    color: var(--text-dim);
+    z-index: 1;
+  }
+
+  .log-list {
+    padding: 30px 14px 14px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    line-height: 1.7;
+  }
+
+  .log-line {
+    display: grid;
+    grid-template-columns: 60px 56px 1fr;
+    gap: 12px;
+    align-items: baseline;
+    color: var(--text-secondary);
+  }
+
+  .log-line .ts {
+    color: var(--text-muted);
+  }
+
+  .log-line .lvl {
+    font-weight: 600;
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    padding: 1px 4px;
+    border-radius: 2px;
+    height: fit-content;
+  }
+
+  .lvl.ok    { color: var(--ok); background: var(--ok-dim); }
+  .lvl.info  { color: var(--info); background: var(--info-dim); }
+  .lvl.warn  { color: var(--warning); background: var(--warning-dim); }
+  .lvl.err   { color: var(--critical); background: var(--critical-dim); }
+  .lvl.dl    { color: var(--accent); background: var(--accent-dim); }
+
+  .log-line .msg em {
+    color: var(--text-primary);
+    font-style: normal;
+  }
+
+  /* Urgent list */
+  .urgent-list .panel-body {
+    padding: 4px 0 4px;
+  }
+
+  .urgent-row {
+    display: grid;
+    grid-template-columns: 64px 1fr 24px;
+    gap: 14px;
+    padding: 14px 22px;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.12s ease;
+  }
+
+  .urgent-row:hover {
+    background: var(--bg-hover);
+  }
+
+  .urgent-row:last-child {
+    border-bottom: none;
+  }
+
+  .dday {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 26px;
+    line-height: 1;
+    text-align: center;
+    color: var(--text-primary);
+    letter-spacing: -0.04em;
+    padding: 8px 0;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: var(--bg-base);
+    font-feature-settings: "tnum" 1;
+    font-variation-settings: "opsz" 36;
+  }
+
+  .dday .label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+    font-weight: 500;
+    font-variation-settings: normal;
+  }
+
+  .dday.critical {
+    color: var(--critical);
+    border-color: var(--critical);
+    background: var(--critical-dim);
+  }
+
+  .dday.critical .label {
+    color: var(--critical);
+    opacity: 0.7;
+  }
+
+  .dday.warn {
+    color: var(--warning);
+    border-color: rgba(245, 185, 66, 0.4);
+    background: var(--warning-dim);
+  }
+
+  .dday.warn .label {
+    color: var(--warning);
+    opacity: 0.7;
+  }
+
+  .urgent-title {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    line-height: 1.35;
+    letter-spacing: -0.005em;
+  }
+
+  .urgent-meta {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+  }
+
+  .urgent-arrow {
+    color: var(--text-dim);
+    font-size: 16px;
+    text-align: right;
+    transition: color 0.15s ease, transform 0.15s ease;
+  }
+
+  .urgent-row:hover .urgent-arrow {
+    color: var(--accent);
+    transform: translate(2px, -2px);
+  }
+
+  /* ─────────────────────── ACTIVITY CHART ─────────────────────── */
+  .chart-panel {
+    margin-bottom: 14px;
+  }
+
+  .chart-body {
+    padding: 28px 22px 22px;
+    position: relative;
+  }
+
+  .chart-svg {
+    width: 100%;
+    height: 200px;
+    display: block;
+  }
+
+  .chart-legend {
+    display: flex;
+    gap: 18px;
+    margin-top: 14px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .legend-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }
+
+  /* ─────────────────────── TABLE ─────────────────────── */
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .filter-bar .search {
+    flex: 1;
+    min-width: 220px;
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 9px 12px 9px 32px;
+    color: var(--text-primary);
+    font-family: var(--sans);
+    font-size: 12.5px;
+    position: relative;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235e6772' stroke-width='2'><circle cx='11' cy='11' r='7'/><path d='m21 21-4.3-4.3'/></svg>");
+    background-repeat: no-repeat;
+    background-position: 10px center;
+    background-size: 14px;
+    outline: none;
+  }
+
+  .filter-bar .search:focus {
+    border-color: var(--accent);
+  }
+
+  .chip {
+    padding: 6px 12px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+  }
+
+  .chip:hover {
+    border-color: var(--text-muted);
+    color: var(--text-primary);
+  }
+
+  .chip.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .chip .count {
+    margin-left: 6px;
+    color: var(--text-dim);
+    font-weight: 400;
+  }
+
+  .chip.active .count {
+    color: var(--accent-soft);
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .data-table thead th {
+    text-align: left;
+    padding: 12px 16px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 500;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-base);
+    white-space: nowrap;
+  }
+
+  .data-table thead th .sort {
+    color: var(--text-dim);
+    margin-left: 4px;
+  }
+
+  .data-table tbody td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-secondary);
+    vertical-align: top;
+  }
+
+  .data-table tbody tr {
+    transition: background 0.12s ease;
+  }
+
+  .data-table tbody tr:hover {
+    background: var(--bg-hover);
+  }
+
+  .data-table .col-num {
+    font-family: var(--mono);
+    color: var(--text-dim);
+    width: 50px;
+    font-size: 11px;
+  }
+
+  .data-table .col-title {
+    color: var(--text-primary);
+    font-weight: 500;
+    min-width: 320px;
+    font-size: 13.5px;
+    letter-spacing: -0.005em;
+  }
+
+  .data-table .col-title .biz {
+    display: block;
+    margin-top: 4px;
+    font-family: var(--mono);
+    font-weight: 400;
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .data-table .col-period {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+
+  .data-table .col-num-right {
+    font-family: var(--mono);
+    font-feature-settings: "tnum" 1;
+    text-align: right;
+    color: var(--text-secondary);
+    font-size: 11.5px;
+  }
+
+  .data-table .attach-bubble {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    background: var(--info-dim);
+    border: 1px solid rgba(95, 184, 255, 0.25);
+    color: var(--info);
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 500;
+  }
+
+  .data-table .attach-bubble.zero {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--text-dim);
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .badge::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
+  .badge.critical { color: var(--critical); background: var(--critical-dim); }
+  .badge.warn { color: var(--warning); background: var(--warning-dim); }
+  .badge.active { color: var(--accent); background: var(--accent-dim); }
+  .badge.ended { color: var(--text-muted); background: var(--bg-base); }
+  .badge.permanent { color: var(--info); background: var(--info-dim); }
+
+  /* ─────────────────────── FOOTER ─────────────────────── */
+  .footer {
+    margin-top: 40px;
+    padding: 20px 0 0;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    gap: 32px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  .footer .kv {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .footer .kv strong {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .footer .arrow {
+    color: var(--accent);
+  }
+
+  /* stagger reveal */
+  .reveal {
+    opacity: 0;
+    transform: translateY(8px);
+    animation: reveal 0.6s ease forwards;
+  }
+
+  @keyframes reveal {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal-1 { animation-delay: 0.05s; }
+  .reveal-2 { animation-delay: 0.12s; }
+  .reveal-3 { animation-delay: 0.19s; }
+  .reveal-4 { animation-delay: 0.26s; }
+  .reveal-5 { animation-delay: 0.34s; }
+  .reveal-6 { animation-delay: 0.42s; }
+  .reveal-7 { animation-delay: 0.50s; }
+
+  @media (max-width: 1100px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .split-row { grid-template-columns: 1fr; }
+    .progress-meta { grid-template-columns: repeat(2, 1fr); }
+    .progress-meta > div:nth-child(2) { border-right: none; }
+    .progress-meta > div:nth-child(1), .progress-meta > div:nth-child(2) {
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar { grid-template-columns: 1fr; gap: 18px; }
+    .topbar-nav { margin: 0; justify-self: start; }
+    .data-table .col-period { white-space: normal; }
+  }
+
+  @media (max-width: 640px) {
+    .app { padding: 0 16px 48px; }
+    .kpi-grid { grid-template-columns: 1fr; }
+    .topbar-nav { flex-wrap: wrap; justify-content: flex-start; }
+    .kpi-number { font-size: 44px; }
+  }
+</style>
+</head>
+<body>
+<style>
+  /* ── live 버전 추가 스타일 (원본 CSS 위에 덧붙임) ── */
+  .topbar-nav a { text-decoration: none; }
+  .live-pill.stale { border-color: var(--warning); background: var(--warning-dim); color: var(--warning); }
+  .live-pill.stale .dot { background: var(--warning); box-shadow: 0 0 8px var(--warning); }
+  a.btn { text-decoration: none; }
+  .data-table .col-title a { color: inherit; text-decoration: none; }
+  .data-table .col-title a:hover { color: var(--accent); }
+  .urgent-row { text-decoration: none; color: inherit; }
+  .badge.info { color: var(--info); background: var(--info-dim); }
+  .data-table thead th.sortable { cursor: pointer; user-select: none; }
+  .data-table thead th.sortable:hover { color: var(--text-secondary); }
+  .data-table thead th.sorted { color: var(--accent); }
+  .table-foot { display: flex; justify-content: space-between; align-items: center; padding: 14px 22px;
+    font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
+  .empty { padding: 28px 22px; font-family: var(--mono); font-size: 11.5px; color: var(--text-muted); }
+  .chart-tip { font-family: var(--mono); font-size: 10.5px; color: var(--text-secondary); margin-left: auto; }
+  .log-line .lvl.fetch { color: var(--accent); background: var(--accent-dim); }
+</style>
+
+<div class="app">
+
+  <!-- ───── TOP BAR ───── -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">◢◣</div>
+      <div>
+        <div class="brand-name">nipa<span class="italic">/crawler</span></div>
+        <div class="brand-sub">정보통신산업진흥원 · 사업공고 수집 콘솔 · live</div>
+      </div>
+    </div>
+
+    <nav class="topbar-nav">
+      <a class="active" href="#top">Overview</a>
+      <a href="#runs">Runs</a>
+      <a href="#announcements">Announcements</a>
+    </nav>
+
+    <div class="status-cluster">
+      <div class="live-pill" id="syncPill">
+        <span class="dot"></span>
+        <span id="syncPillText">Synced</span>
+      </div>
+      <div class="time" id="clock"></div>
+    </div>
+  </header>
+
+  <!-- ───── PAGE HEAD ───── -->
+  <section class="page-head reveal reveal-1" id="top">
+    <div>
+      <h1>사업공고 <em>수집</em> 현황</h1>
+      <div class="sub">
+        <span>www.nipa.kr/home/2-2</span>
+        <span>nipa_announcements.xlsx</span>
+        <span id="lastSync">last sync —</span>
+      </div>
+    </div>
+    <div class="head-actions">
+      <a class="btn" href="nipa/data/nipa_announcements.xlsx" download>⤓&nbsp; Export xlsx</a>
+      <button class="btn btn-primary" id="csvBtn">⤓&nbsp; CSV (필터 적용)</button>
+    </div>
+  </section>
+
+  <!-- ───── KPI GRID ───── -->
+  <section class="kpi-grid" id="kpis"></section>
+
+  <!-- ───── SPLIT ROW ───── -->
+  <section class="split-row reveal reveal-6">
+    <div class="panel active-crawl" id="runs">
+      <div class="panel-header">
+        <div class="panel-title">
+          <h2>Last <em>run</em></h2>
+          <span class="meta" id="runId">job · —</span>
+        </div>
+        <div class="panel-actions"><span class="badge" id="runBadge">—</span></div>
+      </div>
+      <div class="panel-body" style="padding:22px;">
+        <div class="cmd-line" id="cmdLine"></div>
+        <div class="progress-row">
+          <div class="progress-track"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+          <div class="progress-pct" id="progPct">0%</div>
+        </div>
+        <div class="progress-meta" id="progMeta"></div>
+        <div class="log-feed"><div class="log-list" id="logList"></div></div>
+      </div>
+    </div>
+
+    <div class="panel urgent-list">
+      <div class="panel-header">
+        <div class="panel-title">
+          <h2>마감 <em>임박</em></h2>
+          <span class="meta">sorted · d-day asc</span>
+        </div>
+        <div class="panel-actions"><span class="meta" id="urgentCount"></span></div>
+      </div>
+      <div class="panel-body" id="urgentList"></div>
+    </div>
+  </section>
+
+  <!-- ───── ACTIVITY CHART ───── -->
+  <section class="panel chart-panel reveal reveal-7">
+    <div class="panel-header">
+      <div class="panel-title">
+        <h2>Posting <em>activity</em></h2>
+        <span class="meta">신규 공고 수 · 작성일 기준</span>
+      </div>
+      <div class="panel-actions">
+        <div class="tab-group" id="chartTabs">
+          <div class="tab" data-range="14d">14d</div>
+          <div class="tab" data-range="30d">30d</div>
+          <div class="tab active" data-range="90d">90d</div>
+          <div class="tab" data-range="12m">12m</div>
+        </div>
+      </div>
+    </div>
+    <div class="chart-body">
+      <svg class="chart-svg" id="chart" viewBox="0 0 800 200" preserveAspectRatio="none"></svg>
+      <div class="chart-legend">
+        <span class="legend-item"><span class="legend-swatch" style="background:#5fb8ff"></span>신규 공고</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#d4ff3a"></span>현재 구간</span>
+        <span class="legend-item" style="margin-left:auto;" id="chartSum"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───── ANNOUNCEMENTS TABLE ───── -->
+  <section class="panel reveal reveal-7" style="animation-delay:0.55s;" id="announcements">
+    <div class="panel-header">
+      <div class="panel-title">
+        <h2>전체 <em>공고</em></h2>
+        <span class="meta" id="tableMeta"></span>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <input class="search" id="search" placeholder="공고 제목 · 사업구분 · 작성자 검색…" />
+      <span id="chips"></span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>상태</th>
+            <th class="sortable" data-sort="title">공고 제목 <span class="sort">↕</span></th>
+            <th class="sortable" data-sort="end">신청기간 <span class="sort">↕</span></th>
+            <th class="sortable" data-sort="views" style="text-align:right;">조회 <span class="sort">↕</span></th>
+            <th class="sortable" data-sort="files" style="text-align:right;">첨부 <span class="sort">↕</span></th>
+            <th class="sortable sorted" data-sort="posted">작성일 <span class="sort">↓</span></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="table-foot">
+      <span id="shownCount"></span>
+      <button class="btn" id="moreBtn">더 보기 +30</button>
+    </div>
+  </section>
+
+  <!-- ───── FOOTER ───── -->
+  <footer class="footer">
+    <div class="kv">
+      <strong>SOURCE</strong> www.nipa.kr/home/2-2 <span class="arrow">→</span>
+      <strong>OUT</strong> nipa/data/nipa_announcements.xlsx
+    </div>
+    <div class="kv" id="footRun"></div>
+    <div class="kv" id="footGen"></div>
+  </footer>
+</div>
+
+<script>window.NIPA_DATA = {"generated_at": "2026-10-01T17:51:39", "delay": 0.3, "items": [{"id": 16953, "title": "2026년도 한-베트남 AI 디지털 포럼 전시 및 비즈니스 매칭 부스 참가기업 모집", "biz": "해외IT지원센터(하노이) 운영", "start": "2026-09-29T09:00", "end": "2026-10-10T23:00", "writer": "김지환", "posted": "2026-09-29", "views": 2086, "files": 2, "url": "https://www.nipa.kr/home/2-2/16953", "first_seen": "2026-10-01T17:40:18"}, {"id": 16952, "title": "2026년도 고용노동부(안전보건공단) 연계 스마트 안전장비지원 품목 등록 시행계획 공고 2차", "biz": "디지털 안전 선도모델 개발", "start": "2026-10-01T09:00", "end": "2026-10-30T13:00", "writer": "한상진", "posted": "2026-09-28", "views": 676, "files": 5, "url": "https://www.nipa.kr/home/2-2/16952", "first_seen": "2026-10-01T17:40:18"}, {"id": 16934, "title": "2026년 3차 ICT 비즈니스 파트너십(중동) 모집 안내", "biz": "국제협력 인프라강화, 융합서비스 글로벌 마케팅 강화", "start": "2026-09-15T13:00", "end": "2026-10-12T14:00", "writer": "박소희", "posted": "2026-09-15", "views": 8408, "files": 4, "url": "https://www.nipa.kr/home/2-2/16934", "first_seen": "2026-10-01T17:40:19"}, {"id": 16931, "title": "2026 인도 BTS(Bengaluru Tech Summit) 전시회 참가 기업 모집", "biz": "한인도SW상생협력센터 운영", "start": "2026-09-11T16:52", "end": "2026-09-30T23:00", "writer": "홍지명", "posted": "2026-09-11", "views": 9559, "files": 3, "url": "https://www.nipa.kr/home/2-2/16931", "first_seen": "2026-10-01T17:40:19"}, {"id": 16922, "title": "2026년도 한-베트남 AI·디지털 포럼 운영 대행 용역 입찰공고", "biz": "해외IT지원센터(하노이) 운영", "start": "2026-09-04T10:00", "end": "2026-09-15T14:00", "writer": "김지환", "posted": "2026-09-04", "views": 9153, "files": 2, "url": "https://www.nipa.kr/home/2-2/16922", "first_seen": "2026-10-01T17:40:19"}, {"id": 16921, "title": "2026년 아태 AI 특화지구(AHAP) 조성 사업 공고", "biz": "AI 특화지구 조성(AHAP)", "start": "2026-09-03T15:00", "end": "2026-09-23T15:00", "writer": "박진홍", "posted": "2026-09-03", "views": 14955, "files": 6, "url": "https://www.nipa.kr/home/2-2/16921", "first_seen": "2026-10-01T17:40:20"}, {"id": 16900, "title": "2026년 KoVAC XR 쇼룸 입주기업 2차 모집", "biz": "KoVAC XR쇼룸 상설전시관 운영", "start": "2026-08-18T14:00", "end": "2026-09-17T15:00", "writer": "이종석", "posted": "2026-08-18", "views": 15668, "files": 4, "url": "https://www.nipa.kr/home/2-2/16900", "first_seen": "2026-10-01T17:40:20"}, {"id": 16899, "title": "2026년도 소프트웨어 산업발전 유공자 포상계획 재연장 공고", "biz": "중소SW기업경쟁력강화", "start": "2026-08-13T09:00", "end": "2026-08-24T23:59", "writer": "이호연", "posted": "2026-08-13", "views": 15883, "files": 2, "url": "https://www.nipa.kr/home/2-2/16899", "first_seen": "2026-10-01T17:40:21"}, {"id": 16897, "title": "2026년「디지털콘텐츠 융합기업 글로벌 마켓 참가사업」지원기업 모집 공고", "biz": "디지털콘텐츠 융합기업 글로벌 마켓 참가", "start": "2026-08-10T14:00", "end": "2026-09-08T14:00", "writer": "임혜순", "posted": "2026-08-10", "views": 21755, "files": 4, "url": "https://www.nipa.kr/home/2-2/16897", "first_seen": "2026-10-01T17:40:21"}, {"id": 16887, "title": "2026년 누리꿈스퀘어 XR기업성장지원센터 입주 기업 모집(2차)", "biz": "KoVAC XR기업성장지원센터 운영", "start": "2026-08-03T14:00", "end": "2026-08-31T15:00", "writer": "이종석", "posted": "2026-08-03", "views": 17171, "files": 3, "url": "https://www.nipa.kr/home/2-2/16887", "first_seen": "2026-10-01T17:40:22"}, {"id": 16883, "title": "전 국민 AI 서비스 보편적 활용 지원 (모두의 AI) 사업 수정 공고", "biz": "전 국민 AI 서비스 보편적 활용 지원(모두의 AI) 사업", "start": "2026-07-13T17:00", "end": "2026-08-18T17:00", "writer": "송근호", "posted": "2026-07-29", "views": 31725, "files": 6, "url": "https://www.nipa.kr/home/2-2/16883", "first_seen": "2026-10-01T17:40:40"}, {"id": 16882, "title": "특화 인공지능 파운데이션 모델 개발(사이버 보안 분야) 사업 수정 공고", "biz": "특화 인공지능 파운데이션 모델 개발(사이버 보안 분야) 사업", "start": "2026-08-07T14:00", "end": "2026-08-26T14:00", "writer": "박정호", "posted": "2026-07-29", "views": 23217, "files": 6, "url": "https://www.nipa.kr/home/2-2/16882", "first_seen": "2026-10-01T17:40:41"}, {"id": 16874, "title": "2026년도 소프트웨어 산업발전 유공자 포상계획 연장 공고", "biz": "중소SW기업경쟁력강화", "start": "2026-07-29T09:00", "end": "2026-08-11T23:59", "writer": "이호연", "posted": "2026-07-28", "views": 16716, "files": 0, "url": "https://www.nipa.kr/home/2-2/16874", "first_seen": "2026-10-01T17:40:41"}, {"id": 16872, "title": "2026 가상융합산업허브 입주기업 모집(2차)", "biz": "가상융합산업허브 기업성장센터", "start": "2026-07-28T12:00", "end": "2026-08-21T15:00", "writer": "이수진", "posted": "2026-07-28", "views": 13590, "files": 4, "url": "https://www.nipa.kr/home/2-2/16872", "first_seen": "2026-10-01T17:40:42"}, {"id": 16866, "title": "특화 인공지능 파운데이션 모델 개발(사이버 보안 분야) 사업 공고", "biz": "특화 인공지능 파운데이션 모델 개발(사이버 보안 분야) 사업", "start": "2026-07-22T14:00", "end": "2026-08-21T14:00", "writer": "박정호", "posted": "2026-07-22", "views": 19378, "files": 6, "url": "https://www.nipa.kr/home/2-2/16866", "first_seen": "2026-10-01T17:40:43"}, {"id": 16852, "title": "전 국민 AI 서비스 보편적 활용 지원(모두의 AI) 사업 공고", "biz": "전 국민 AI 서비스 보편적 활용 지원(모두의 AI) 사업", "start": "2026-07-13T17:00", "end": "2026-08-11T17:00", "writer": "송근호", "posted": "2026-07-13", "views": 34235, "files": 4, "url": "https://www.nipa.kr/home/2-2/16852", "first_seen": "2026-10-01T17:40:43"}, {"id": 16846, "title": "2026년도 소프트웨어 산업발전 유공자 포상계획 공고", "biz": "중소SW기업경쟁력강화", "start": "2026-07-07T09:00", "end": "2026-07-24T23:59", "writer": "이호연", "posted": "2026-07-07", "views": 22412, "files": 0, "url": "https://www.nipa.kr/home/2-2/16846", "first_seen": "2026-10-01T17:40:42"}, {"id": 16827, "title": "2026년도 SaaS 전환 컨설팅 2차 수요기업 모집", "biz": "SaaS 기반 창업성장 지원(SaaS 전환지원센터 운영)", "start": "2026-06-23T15:00", "end": "2026-07-20T18:00", "writer": "조현주", "posted": "2026-06-23", "views": 24019, "files": 2, "url": "https://www.nipa.kr/home/2-2/16827", "first_seen": "2026-10-01T17:40:44"}, {"id": 16820, "title": "하노이 IT지원센터‘26년 하반기 연간 입주기업 모집 공고", "biz": "해외IT지원센터(하노이) 운영", "start": "2026-06-18T09:51", "end": "2026-07-20T09:52", "writer": "이지수", "posted": "2026-06-18", "views": 18565, "files": 1, "url": "https://www.nipa.kr/home/2-2/16820", "first_seen": "2026-10-01T17:40:44"}, {"id": 16817, "title": "2026년도 고용노동부(안전보건공단) 연계 스마트 안전장비지원 품목 등록 시행계획 공고(1차)", "biz": "디지털 안전 선도모델 개발", "start": "2026-06-15T09:00", "end": "2026-07-15T13:00", "writer": "한상진", "posted": "2026-06-16", "views": 21275, "files": 5, "url": "https://www.nipa.kr/home/2-2/16817", "first_seen": "2026-10-01T17:40:45"}, {"id": 16815, "title": "2026년 오픈소스 개발자 대회 공고", "biz": "공개SW활성화지원", "start": "2026-06-15T15:57", "end": "2026-07-17T23:59", "writer": "유기현", "posted": "2026-06-15", "views": 26451, "files": 2, "url": "https://www.nipa.kr/home/2-2/16815", "first_seen": "2026-10-01T17:40:46"}, {"id": 16797, "title": "2026년도 과학기술정보통신부「고성능컴퓨팅지원」사업 사용자 추가모집 공고", "biz": "고성능컴퓨팅지원", "start": "2026-05-29T16:25", "end": "2026-06-29T15:00", "writer": "신동필", "posted": "2026-05-29", "views": 32760, "files": 6, "url": "https://www.nipa.kr/home/2-2/16797", "first_seen": "2026-10-01T17:40:46"}, {"id": 16795, "title": "｢2026년도 AX 원스톱 바우처｣ 지원사업 수요기업 추가 모집 공고", "biz": "AX 원스톱 바우처 지원", "start": "2026-05-28T20:00", "end": "2026-06-26T15:00", "writer": "한복미", "posted": "2026-05-28", "views": 35131, "files": 6, "url": "https://www.nipa.kr/home/2-2/16795", "first_seen": "2026-10-01T17:40:47"}, {"id": 16774, "title": "호치민IT지원센터 2026년 7월 입주기업 모집 계획(3인실, 2실 모집)", "biz": "해외IT지원센터(호치민) 운영", "start": "2026-05-18T09:51", "end": "2026-06-12T15:00", "writer": "이로운", "posted": "2026-05-18", "views": 22655, "files": 3, "url": "https://www.nipa.kr/home/2-2/16774", "first_seen": "2026-10-01T17:40:47"}, {"id": 16764, "title": "2026년도 ｢AI 청년창업기업 동반성장 바우처｣ 사업 수요기업 모집 공고", "biz": "AI 청년창업기업 동반성장 바우처", "start": "2026-05-08T17:18", "end": "2026-06-08T15:00", "writer": "김영근", "posted": "2026-05-08", "views": 40435, "files": 5, "url": "https://www.nipa.kr/home/2-2/16764", "first_seen": "2026-10-01T17:40:48"}, {"id": 16756, "title": "2026년「조선 AX 특화 AI 모델하우스 구축·실증사업」신규과제 모집공고", "biz": "조선AX 특화 AI모델하우스 구축·실증", "start": "2026-05-06T21:00", "end": "2026-06-04T14:00", "writer": "이해미", "posted": "2026-05-06", "views": 23537, "files": 6, "url": "https://www.nipa.kr/home/2-2/16756", "first_seen": "2026-10-01T17:40:48"}, {"id": 16752, "title": "2026년 「수출 유망 디지털콘텐츠 강소기업 육성」지원기업 추가모집 공고", "biz": "2026년 수출 유망 디지털콘텐츠 강소기업 육성 지원", "start": "2026-05-04T15:00", "end": "2026-05-23T14:00", "writer": "김진원", "posted": "2026-05-04", "views": 21417, "files": 4, "url": "https://www.nipa.kr/home/2-2/16752", "first_seen": "2026-10-01T17:40:49"}, {"id": 16731, "title": "2026년도 ｢AI 청년창업기업 동반성장 바우처｣ 지원사업 운영기관 모집 공고", "biz": "AI 청년창업기업 동반성장 바우처", "start": "2026-04-20T19:00", "end": "2026-05-11T15:00", "writer": "김영근", "posted": "2026-04-20", "views": 26984, "files": 4, "url": "https://www.nipa.kr/home/2-2/16731", "first_seen": "2026-10-01T17:40:49"}, {"id": 16730, "title": "2026년도 「AI 청년창업기업 동반성장 바우처」 지원사업 공급기업 후보군(POOL) 모집 수정공고", "biz": "AI 청년창업기업 동반성장 바우처", "start": "2026-04-20T19:00", "end": "2026-04-30T15:00", "writer": "김영근", "posted": "2026-04-20", "views": 31578, "files": 3, "url": "https://www.nipa.kr/home/2-2/16730", "first_seen": "2026-10-01T17:40:50"}, {"id": 16728, "title": "2026년 AI기반 의료시스템 디지털 전환 지원(AI특화병원 AX-Ready 시범사업) 사업 공고", "biz": "2026년 AI 기반 의료시스템 디지털 전환 지원(AX-Ready 시범사업)", "start": "2026-04-20T10:00", "end": "2026-05-26T16:00", "writer": "최원석", "posted": "2026-04-20", "views": 29294, "files": 8, "url": "https://www.nipa.kr/home/2-2/16728", "first_seen": "2026-10-01T17:40:50"}, {"id": 16726, "title": "2026년 산업전문인력 AI역량강화 지원사업 발표평가 결과 및 지원 대상과제 선정 공고", "biz": "산업전문인력 AI역량강화", "start": null, "end": null, "writer": "김광혁", "posted": "2026-04-20", "views": 22151, "files": 1, "url": "https://www.nipa.kr/home/2-2/16726", "first_seen": "2026-10-01T17:40:51"}, {"id": 16725, "title": "2026년 코리아 국제 스트리밍 페스티벌 투자유치 쇼케이스 참가 기업 모집 공고(기간연장)", "biz": "K-OTT 확산지원사업", "start": "2026-03-12T09:00", "end": "2026-04-30T18:00", "writer": "임슬아", "posted": "2026-04-17", "views": 15867, "files": 4, "url": "https://www.nipa.kr/home/2-2/16725", "first_seen": "2026-10-01T17:40:51"}, {"id": 16720, "title": "싱가포르IT지원센터 2026년 상반기 입주기업 모집 공고", "biz": "해외IT지원센터(싱가포르) 운영", "start": "2026-04-15T13:19", "end": "2026-05-18T10:00", "writer": "김수련", "posted": "2026-04-15", "views": 15978, "files": 2, "url": "https://www.nipa.kr/home/2-2/16720", "first_seen": "2026-10-01T17:40:52"}, {"id": 16712, "title": "2026년도 호치민IT지원센터 공간 효율화를 위한 인테리어 용역 입찰 공고", "biz": "해외IT지원센터(호치민) 운영", "start": "2026-04-13T15:00", "end": "2026-04-27T15:00", "writer": "이로운", "posted": "2026-04-13", "views": 14700, "files": 2, "url": "https://www.nipa.kr/home/2-2/16712", "first_seen": "2026-10-01T17:40:52"}, {"id": 16691, "title": "2026년 산업전문인력 AI역량강화 지원사업 서류평가 결과 및 발표평가 대상자 선정 공고", "biz": "산업전문인력 AI역량강화", "start": null, "end": null, "writer": "김광혁", "posted": "2026-04-08", "views": 18416, "files": 1, "url": "https://www.nipa.kr/home/2-2/16691", "first_seen": "2026-10-01T17:40:53"}, {"id": 16680, "title": "하노이 IT지원센터 ‘26년 상반기 연간/단기 입주기업 모집 공고", "biz": "해외IT지원센터(하노이) 운영", "start": "2026-04-06T13:51", "end": "2026-04-20T23:00", "writer": "이서현", "posted": "2026-04-06", "views": 13325, "files": 1, "url": "https://www.nipa.kr/home/2-2/16680", "first_seen": "2026-10-01T17:40:54"}, {"id": 16676, "title": "2026년 AI·디지털전환 혁신기업 해외실증 지원 사업 참여기업 모집 공고", "biz": "AI·디지털전환 혁신기업 해외실증 지원", "start": "2026-03-23T09:00", "end": "2026-04-12T23:00", "writer": "곽정호", "posted": "2026-04-06", "views": 15105, "files": 3, "url": "https://www.nipa.kr/home/2-2/16676", "first_seen": "2026-10-01T17:41:02"}, {"id": 16675, "title": "2026년 DNA 융합 제품·서비스 해외진출 지원 사업 참여기업 모집 공고", "biz": "DNA 융합 제품서비스 해외진출 지원", "start": "2026-03-10T09:00", "end": "2026-09-30T23:00", "writer": "곽정호", "posted": "2026-04-06", "views": 16013, "files": 2, "url": "https://www.nipa.kr/home/2-2/16675", "first_seen": "2026-10-01T17:40:53"}, {"id": 16671, "title": "[재공고]2026년 소프트웨어 인재키움 사업 수행지역 및 기관 선정 공고", "biz": "소프트웨어 인재키움", "start": "2026-04-03T17:00", "end": "2026-05-04T15:00", "writer": "주다인", "posted": "2026-04-03", "views": 14950, "files": 6, "url": "https://www.nipa.kr/home/2-2/16671", "first_seen": "2026-10-01T17:40:54"}, {"id": 16668, "title": "[접수마감]「첨단 GPU 활용 지원 사업」사용자 수시 모집 공고", "biz": "AI컴퓨팅자원 활용기반 강화사업 (첨단 GPU 활용 지원)", "start": "2026-04-01T18:52", "end": "2026-11-30T13:00", "writer": "정윤서", "posted": "2026-04-01", "views": 27619, "files": 5, "url": "https://www.nipa.kr/home/2-2/16668", "first_seen": "2026-10-01T17:40:55"}, {"id": 16666, "title": "「K-테크 파이오니어즈」 글로벌 한국 인재·팀 모집 공고", "biz": "K-테크 파이오니어즈", "start": "2026-04-08T09:00", "end": "2026-04-28T18:00", "writer": "강현우", "posted": "2026-04-02", "views": 13158, "files": 7, "url": "https://www.nipa.kr/home/2-2/16666", "first_seen": "2026-10-01T17:40:55"}, {"id": 16665, "title": "2026년「디지털콘텐츠 융합기업 글로벌 마켓 참가사업(AWE USA 2026) 지원기업 모집 공고", "biz": "디지털콘텐츠 융합기업 글로벌 마켓 참가", "start": "2026-04-01T16:00", "end": "2026-04-30T14:00", "writer": "임혜순", "posted": "2026-04-01", "views": 13848, "files": 4, "url": "https://www.nipa.kr/home/2-2/16665", "first_seen": "2026-10-01T17:40:56"}, {"id": 16664, "title": "2026년도 AI 통합 바우처(클라우드 바우처) 지원 사업 수정공고", "biz": "중소기업 등 클라우드 서비스 보급·확산(바우처)", "start": "2026-04-03T12:00", "end": "2026-04-21T11:00", "writer": "백성현", "posted": "2026-04-01", "views": 29932, "files": 4, "url": "https://www.nipa.kr/home/2-2/16664", "first_seen": "2026-10-01T17:40:57"}, {"id": 16662, "title": "2026년 KoVAC XR 쇼룸 입주기업 모집 공고", "biz": "KoVAC XR쇼룸 상설전시관 운영", "start": "2026-04-01T00:00", "end": "2026-04-28T15:00", "writer": "유희수", "posted": "2026-04-01", "views": 11299, "files": 4, "url": "https://www.nipa.kr/home/2-2/16662", "first_seen": "2026-10-01T17:40:57"}, {"id": 16626, "title": "2026년 클라우드컴퓨팅 전문인력 양성기관 신규 지정 공고", "biz": "클라우드 생태계 조성", "start": "2026-03-30T23:00", "end": "2026-04-29T15:00", "writer": "김응석", "posted": "2026-03-30", "views": 12101, "files": 3, "url": "https://www.nipa.kr/home/2-2/16626", "first_seen": "2026-10-01T17:40:58"}, {"id": 16615, "title": "2026년 지속가능한 데이터센터 산업 발전 지원 사업 통합 공고", "biz": "지속가능한 데이터센터 산업 발전 지원", "start": "2026-03-30T09:00", "end": "2026-04-30T11:00", "writer": "고범수", "posted": "2026-03-30", "views": 16534, "files": 4, "url": "https://www.nipa.kr/home/2-2/16615", "first_seen": "2026-10-01T17:40:58"}, {"id": 16614, "title": "2026년도 『인공지능 루키(AI Rookie)』대회 공고", "biz": "경쟁형 AI 혁신인재 성장지원", "start": "2026-03-27T14:00", "end": "2026-05-08T17:00", "writer": "전혜빈", "posted": "2026-03-30", "views": 16149, "files": 2, "url": "https://www.nipa.kr/home/2-2/16614", "first_seen": "2026-10-01T17:40:59"}, {"id": 16613, "title": "2026년도 『인공지능 챔피언(AI Champion)』대회 공고", "biz": "경쟁형 AI 혁신인재 성장지원", "start": "2026-03-27T14:00", "end": "2026-04-24T17:00", "writer": "전혜빈", "posted": "2026-03-30", "views": 16394, "files": 2, "url": "https://www.nipa.kr/home/2-2/16613", "first_seen": "2026-10-01T17:40:59"}, {"id": 16608, "title": "2026년 1차 XR기업성장지원센터(상암 누리꿈스퀘어) 신규 입주기업 모집 공고", "biz": "KoVAC XR기업성장지원센터 운영", "start": "2026-03-27T15:00", "end": "2026-04-23T15:00", "writer": "유희수", "posted": "2026-03-27", "views": 11344, "files": 4, "url": "https://www.nipa.kr/home/2-2/16608", "first_seen": "2026-10-01T17:41:00"}, {"id": 16602, "title": "2026년도 과학기술정보통신부「고성능컴퓨팅지원」사업 사용자 모집 공고", "biz": "고성능컴퓨팅지원", "start": "2026-03-25T12:00", "end": "2026-04-23T15:00", "writer": "신동필", "posted": "2026-03-25", "views": 46722, "files": 5, "url": "https://www.nipa.kr/home/2-2/16602", "first_seen": "2026-10-01T17:41:00"}, {"id": 16598, "title": "2026년 온디바이스 AI 서비스 실증·확산 사업 신규과제 모집공고", "biz": "온디바이스AI서비스 실증·확산", "start": "2026-04-13T09:00", "end": "2026-04-30T15:00", "writer": "임소현", "posted": "2026-03-24", "views": 24584, "files": 5, "url": "https://www.nipa.kr/home/2-2/16598", "first_seen": "2026-10-01T17:41:01"}, {"id": 16597, "title": "2026년 SaaS 개발·사업화 지원 사업 공고", "biz": "SaaS 개발·사업화 지원", "start": "2026-03-23T17:00", "end": "2026-04-22T11:00", "writer": "정상현", "posted": "2026-03-23", "views": 28406, "files": 4, "url": "https://www.nipa.kr/home/2-2/16597", "first_seen": "2026-10-01T17:41:02"}, {"id": 16596, "title": "2026년 GovTech 창업기업 AI 실증·사업화 지원사업 모집 공고", "biz": "디지털 공공 혁신 생태계조성", "start": "2026-03-24T09:00", "end": "2026-04-23T16:00", "writer": "송원민", "posted": "2026-03-23", "views": 26791, "files": 9, "url": "https://www.nipa.kr/home/2-2/16596", "first_seen": "2026-10-01T17:41:01"}, {"id": 16594, "title": "2026년 3D프린팅 전문인력 양성교육 운영기관 모집 공고", "biz": "3D프린팅 혁신성장 거점조성", "start": "2026-03-23T09:00", "end": "2026-04-22T14:00", "writer": "서미란", "posted": "2026-03-23", "views": 10100, "files": 3, "url": "https://www.nipa.kr/home/2-2/16594", "first_seen": "2026-10-01T17:41:03"}, {"id": 16593, "title": "2026년 글로벌 SaaS 마켓플레이스 지원 사업수행기관 모집 공고", "biz": "글로벌 SaaS 마켓플레이스 지원", "start": "2026-02-23T10:00", "end": "2026-03-24T14:00", "writer": "정윤서", "posted": "2026-03-21", "views": 9698, "files": 4, "url": "https://www.nipa.kr/home/2-2/16593", "first_seen": "2026-10-01T17:41:03"}, {"id": 16592, "title": "2026년「AI 통합 바우처 지원사업(AI바우처 지원사업)」모집 수정공고(공급기업 POOL 최종)", "biz": "AI바우처 지원", "start": "2026-03-20T17:00", "end": "2026-03-30T15:00", "writer": "이대영", "posted": "2026-03-20", "views": 48483, "files": 6, "url": "https://www.nipa.kr/home/2-2/16592", "first_seen": "2026-10-01T17:41:04"}, {"id": 16588, "title": "「2026년도 AX 원스톱 바우처」지원사업 수요기업 모집 공고", "biz": "AX 원스톱 바우처 지원", "start": "2026-03-19T14:09", "end": "2026-05-07T15:00", "writer": "한복미", "posted": "2026-03-19", "views": 30828, "files": 4, "url": "https://www.nipa.kr/home/2-2/16588", "first_seen": "2026-10-01T17:41:04"}, {"id": 16587, "title": "2026년 KoVAC 실감콘텐츠 인프라 지원사업 공고", "biz": "실감콘텐츠 인프라 조성", "start": "2026-03-19T13:00", "end": "2026-04-17T15:00", "writer": "김송이", "posted": "2026-03-19", "views": 9741, "files": 3, "url": "https://www.nipa.kr/home/2-2/16587", "first_seen": "2026-10-01T17:41:05"}, {"id": 16586, "title": "2026년 AI기반 엔드프로덕트 상용화 지원사업 Type2 신규과제 모집 공고", "biz": "AI기반 엔드프로덕트 상용화 지원 (Type2)", "start": "2026-04-05T00:00", "end": "2026-04-20T14:00", "writer": "이현세", "posted": "2026-03-19", "views": 13633, "files": 5, "url": "https://www.nipa.kr/home/2-2/16586", "first_seen": "2026-10-01T17:41:05"}, {"id": 16585, "title": "2026년 AI기반 엔드프로덕트 상용화 지원사업 Type1 신규과제 모집 공고", "biz": "AI기반 엔드프로덕트 상용화 지원 (Type1)", "start": "2026-04-05T00:00", "end": "2026-04-20T14:00", "writer": "이주남", "posted": "2026-03-19", "views": 17137, "files": 5, "url": "https://www.nipa.kr/home/2-2/16585", "first_seen": "2026-10-01T17:41:06"}, {"id": 16581, "title": "2026년 AX 원스톱 바우처 지원사업 공급기업 후보군 모집 공고", "biz": "AX 원스톱 바우처 지원", "start": "2026-03-18T15:00", "end": "2026-04-03T15:00", "writer": "한복미", "posted": "2026-03-18", "views": 24006, "files": 4, "url": "https://www.nipa.kr/home/2-2/16581", "first_seen": "2026-10-01T17:41:06"}, {"id": 16580, "title": "[연장공고] 2026년도 『VICTORY 프로그램』 (벤처캐피탈리스트 ICT 전문성 강화 교육) 제26기 교육생 모집 공고", "biz": "ICT창의기업육성", "start": "2026-03-19T00:00", "end": "2026-05-08T15:00", "writer": "권찬욱", "posted": "2026-03-18", "views": 10399, "files": 3, "url": "https://www.nipa.kr/home/2-2/16580", "first_seen": "2026-10-01T17:41:07"}, {"id": 16578, "title": "2026년「디지털콘텐츠 융합기업 홍보·마케팅 수출지원 사업」지원기업 모집 공고", "biz": "2026년 디지털콘텐츠 융합기업 홍보마케팅 수출지원", "start": "2026-03-17T16:00", "end": "2026-04-15T14:00", "writer": "임혜순", "posted": "2026-03-17", "views": 11397, "files": 4, "url": "https://www.nipa.kr/home/2-2/16578", "first_seen": "2026-10-01T17:41:07"}, {"id": 16577, "title": "2026년「디지털콘텐츠 융합기업 글로벌 마켓 참가사업」지원기업 모집 공고", "biz": "디지털콘텐츠 융합기업 글로벌 마켓 참가", "start": "2026-03-17T16:00", "end": "2026-04-15T14:00", "writer": "임혜순", "posted": "2026-03-17", "views": 9108, "files": 4, "url": "https://www.nipa.kr/home/2-2/16577", "first_seen": "2026-10-01T17:41:08"}, {"id": 16576, "title": "2026년 「수출 유망 디지털콘텐츠 강소기업 육성」지원기업 모집 공고", "biz": "2026년 수출 유망 디지털콘텐츠 강소기업 육성 지원", "start": "2026-03-17T16:00", "end": "2026-04-15T14:00", "writer": "김진원", "posted": "2026-03-17", "views": 9676, "files": 4, "url": "https://www.nipa.kr/home/2-2/16576", "first_seen": "2026-10-01T17:41:09"}, {"id": 16572, "title": "2026년 산업맞춤형 혁신바우처 지원사업 공급기업 최종 등록 결과 안내", "biz": "디지털 전환 역량강화", "start": "2026-03-16T18:00", "end": "2026-03-16T18:00", "writer": "송근호", "posted": "2026-03-16", "views": 9887, "files": 1, "url": "https://www.nipa.kr/home/2-2/16572", "first_seen": "2026-10-01T17:41:09"}, {"id": 16571, "title": "「첨단 GPU 활용 지원 사업」사용자 모집(26-1차) (산업계 대상) 공고 안내", "biz": "AI컴퓨팅자원 활용기반 강화사업 (첨단 GPU 활용 지원)", "start": "2026-03-16T18:00", "end": "2026-03-30T12:00", "writer": "정윤서", "posted": "2026-03-16", "views": 15422, "files": 5, "url": "https://www.nipa.kr/home/2-2/16571", "first_seen": "2026-10-01T17:41:10"}, {"id": 16570, "title": "2026년 신산업 분야 오픈소스 사업화 지원사업 신규과제 모집 공고", "biz": "공개SW활성화지원", "start": "2026-03-16T17:00", "end": "2026-04-16T15:00", "writer": "홍윤서", "posted": "2026-03-16", "views": 14165, "files": 7, "url": "https://www.nipa.kr/home/2-2/16570", "first_seen": "2026-10-01T17:41:10"}, {"id": 16567, "title": "2026년도 과학기술정보통신부「고성능컴퓨팅지원」사업 공급사 모집 공고", "biz": "고성능컴퓨팅지원", "start": "2026-03-16T16:00", "end": "2026-04-16T17:00", "writer": "신동필", "posted": "2026-03-16", "views": 17685, "files": 10, "url": "https://www.nipa.kr/home/2-2/16567", "first_seen": "2026-10-01T17:41:11"}, {"id": 16566, "title": "2026년 디지털콘텐츠 허브활성화 수행기관 모집 공고", "biz": "2026년 디지털콘텐츠 허브활성화(5~12월)", "start": "2026-03-16T10:00", "end": "2026-04-14T15:00", "writer": "김송이", "posted": "2026-03-16", "views": 7398, "files": 3, "url": "https://www.nipa.kr/home/2-2/16566", "first_seen": "2026-10-01T17:41:11"}, {"id": 16564, "title": "생성형 AI 기반 가상융합 콘텐츠 제작 전문인력 양성 교육 운영기관 모집공고", "biz": "생성형 AI 기반 가상융합 콘텐츠 제작 전문인력 양성", "start": "2026-03-13T17:00", "end": "2026-04-13T15:00", "writer": "정민경", "posted": "2026-03-13", "views": 10292, "files": 6, "url": "https://www.nipa.kr/home/2-2/16564", "first_seen": "2026-10-01T17:41:12"}, {"id": 16562, "title": "2026년 강원의료AX산업실증허브조성 총괄운영", "biz": "강원 의료 AX 산업 실증 허브 조성", "start": "2026-03-13T12:00", "end": "2026-04-13T15:00", "writer": "김영수", "posted": "2026-03-13", "views": 11570, "files": 7, "url": "https://www.nipa.kr/home/2-2/16562", "first_seen": "2026-10-01T17:41:12"}, {"id": 16560, "title": "2026년 AI컴퓨팅자원 활용기반 강화사업 (GPU 확보·구축·운용지원) 모집 공고", "biz": "AI컴퓨팅자원 활용기반 강화사업 (GPU 확보·구축·운용지원)", "start": "2026-03-12T16:00", "end": "2026-04-13T15:00", "writer": "박예찬", "posted": "2026-03-12", "views": 26801, "files": 5, "url": "https://www.nipa.kr/home/2-2/16560", "first_seen": "2026-10-01T17:41:13"}, {"id": 16548, "title": "2026 코리아 국제 스트리밍 페스티벌 투자유치 쇼케이스 참가기업 모집공고", "biz": "K-OTT 확산지원사업", "start": "2026-03-11T09:00", "end": "2026-04-17T18:00", "writer": "임슬아", "posted": "2026-03-10", "views": 9140, "files": 4, "url": "https://www.nipa.kr/home/2-2/16548", "first_seen": "2026-10-01T17:41:13"}, {"id": 16547, "title": "2026년 디지털트윈 3D프린팅 의료공동제조소 실증 지원과제 모집 공고", "biz": "디지털트윈 3D프린팅 의료공동제조소 실증", "start": "2026-03-10T12:00", "end": "2026-04-10T14:00", "writer": "최창범", "posted": "2026-03-10", "views": 8413, "files": 5, "url": "https://www.nipa.kr/home/2-2/16547", "first_seen": "2026-10-01T17:41:14"}, {"id": 16546, "title": "2026년「AI 통합 바우처 지원사업(AI바우처 지원사업)」모집 수정공고", "biz": "AI바우처 지원", "start": "2026-03-10T09:00", "end": "2026-03-30T15:00", "writer": "이대영", "posted": "2026-03-10", "views": 38834, "files": 6, "url": "https://www.nipa.kr/home/2-2/16546", "first_seen": "2026-10-01T17:41:15"}, {"id": 16545, "title": "2026 가상융합산업허브(메타버스허브) 입주기업 모집(1차)", "biz": "가상융합산업허브 기업성장센터", "start": "2026-03-09T09:00", "end": "2026-04-08T15:00", "writer": "이수진", "posted": "2026-03-09", "views": 8108, "files": 4, "url": "https://www.nipa.kr/home/2-2/16545", "first_seen": "2026-10-01T17:41:16"}, {"id": 16544, "title": "2026년 AI바우처 지원사업 공급기업 POOL 2차 모집 공고", "biz": "AI바우처 지원", "start": "2026-03-09T18:22", "end": "2026-03-16T17:00", "writer": "이대영", "posted": "2026-03-09", "views": 28341, "files": 9, "url": "https://www.nipa.kr/home/2-2/16544", "first_seen": "2026-10-01T17:41:16"}, {"id": 16542, "title": "의료AI 교육 확산 신규과제 공모", "biz": "의료AI 교육 확산", "start": "2026-03-04T09:00", "end": "2026-04-07T16:00", "writer": "최원석", "posted": "2026-03-09", "views": 7770, "files": 7, "url": "https://www.nipa.kr/home/2-2/16542", "first_seen": "2026-10-01T17:41:17"}, {"id": 16540, "title": "｢2026년도 AI바우처 지원사업｣ 운영기관 모집 공고", "biz": "AI바우처 지원", "start": "2026-03-09T15:54", "end": "2026-04-07T15:00", "writer": "이대영", "posted": "2026-03-09", "views": 24827, "files": 5, "url": "https://www.nipa.kr/home/2-2/16540", "first_seen": "2026-10-01T17:41:18"}, {"id": 16538, "title": "2026년도 디지털 혁신기업 글로벌 성장 바우처 지원사업「Solution 바우처 지원과제」모집공고", "biz": "디지털 혁신기업 글로벌 성장 바우처 지원", "start": "2026-03-09T09:00", "end": "2026-03-27T16:00", "writer": "홍진경", "posted": "2026-03-09", "views": 16613, "files": 3, "url": "https://www.nipa.kr/home/2-2/16538", "first_seen": "2026-10-01T17:41:18"}, {"id": 16537, "title": "2026년 SaaS 전환지원센터 SaaS 전환 컨설팅 공급기업 모집 공고", "biz": "SaaS 기반 창업성장 지원(SaaS 전환지원센터 운영)", "start": "2026-03-10T10:00", "end": "2026-03-20T18:00", "writer": "조현주", "posted": "2026-03-09", "views": 8660, "files": 2, "url": "https://www.nipa.kr/home/2-2/16537", "first_seen": "2026-10-01T17:41:14"}, {"id": 16536, "title": "2026년 SaaS 전환지원센터 SaaS 전환 컨설팅(1차) 수요기업 모집 공고", "biz": "SaaS 기반 창업성장 지원(SaaS 전환지원센터 운영)", "start": "2026-03-10T10:00", "end": "2026-04-10T18:00", "writer": "조현주", "posted": "2026-03-09", "views": 8869, "files": 2, "url": "https://www.nipa.kr/home/2-2/16536", "first_seen": "2026-10-01T17:41:15"}, {"id": 16525, "title": "2026년 글로벌 ICT 미래 유니콘 육성 (ICT GROWTH) 사업 공고", "biz": "ICT창의기업육성", "start": "2026-03-05T12:00", "end": "2026-04-02T16:00", "writer": "손해석", "posted": "2026-03-05", "views": 8737, "files": 4, "url": "https://www.nipa.kr/home/2-2/16525", "first_seen": "2026-10-01T17:41:19"}, {"id": 16524, "title": "2026년도 의료AI혁신생태계조성(닥터앤서3.0) 사업 공고", "biz": "의료AI혁신생태계조성(닥터앤서3.0)", "start": "2026-03-25T10:00", "end": "2026-04-07T15:00", "writer": "채윤경", "posted": "2026-03-04", "views": 12133, "files": 7, "url": "https://www.nipa.kr/home/2-2/16524", "first_seen": "2026-10-01T17:41:19"}, {"id": 16521, "title": "(수정공고) 2026년도 오픈소스 AI·SW 개발·활용 지원사업 신규과제 모집 공고", "biz": "AI 분야 오픈소스 생태계 조성", "start": "2026-03-04T14:00", "end": "2026-04-03T15:00", "writer": "최가연", "posted": "2026-03-04", "views": 20152, "files": 5, "url": "https://www.nipa.kr/home/2-2/16521", "first_seen": "2026-10-01T17:41:20"}, {"id": 16518, "title": "2026년도 AI 통합 바우처(클라우드 바우처) 지원 사업 공고", "biz": "중소기업 등 클라우드 서비스 보급·확산(바우처)", "start": "2026-04-03T00:00", "end": "2026-04-21T11:00", "writer": "백성현", "posted": "2026-03-03", "views": 47578, "files": 4, "url": "https://www.nipa.kr/home/2-2/16518", "first_seen": "2026-10-01T17:41:20"}, {"id": 16516, "title": "2026년「AI 통합 바우처 지원사업(AI바우처 지원사업)」모집 공고", "biz": "AI바우처 지원", "start": "2026-02-27T17:14", "end": "2026-03-30T15:00", "writer": "이대영", "posted": "2026-03-03", "views": 89778, "files": 5, "url": "https://www.nipa.kr/home/2-2/16516", "first_seen": "2026-10-01T17:41:21"}, {"id": 16512, "title": "2026년 산업맞춤형 혁신바우처 지원사업 신규과제 모집공고", "biz": "디지털 전환 역량강화", "start": "2026-02-27T09:00", "end": "2026-04-03T15:00", "writer": "송근호", "posted": "2026-02-27", "views": 23707, "files": 6, "url": "https://www.nipa.kr/home/2-2/16512", "first_seen": "2026-10-01T17:41:21"}, {"id": 16509, "title": "2026년 디지털인프라(SW) 진단 및 개선 사업 수요기업(기관) 모집 공고", "biz": "디지털인프라(SW) 진단 및 개선", "start": "2026-02-26T15:00", "end": "2026-05-22T23:59", "writer": "한상진", "posted": "2026-02-26", "views": 7446, "files": 3, "url": "https://www.nipa.kr/home/2-2/16509", "first_seen": "2026-10-01T17:41:22"}, {"id": 16508, "title": "2026년 지능형 홈 서비스 실증·확산 사업 수행기관 모집 공고", "biz": "2026년 지능형 홈 서비스 실증·확산", "start": "2026-02-26T16:00", "end": "2026-03-31T15:00", "writer": "김성수", "posted": "2026-02-26", "views": 8177, "files": 6, "url": "https://www.nipa.kr/home/2-2/16508", "first_seen": "2026-10-01T17:41:23"}, {"id": 16506, "title": "2026년도 ｢산업전문인력 AI역량강화｣ 지원사업 신규과제 모집 공고", "biz": "산업전문인력 AI역량강화", "start": "2026-02-26T10:48", "end": "2026-03-27T15:00", "writer": "김광혁", "posted": "2026-02-26", "views": 18769, "files": 6, "url": "https://www.nipa.kr/home/2-2/16506", "first_seen": "2026-10-01T17:41:23"}, {"id": 16505, "title": "2026년 AI기반 가상융합산업육성사업 신규과제 모집공고", "biz": "AI가상융합 산업혁신 프로젝트", "start": "2026-02-26T09:00", "end": "2026-03-27T15:00", "writer": "박병천", "posted": "2026-02-25", "views": 17711, "files": 4, "url": "https://www.nipa.kr/home/2-2/16505", "first_seen": "2026-10-01T17:41:24"}, {"id": 16501, "title": "2026년 해양문화도시기반의 에이지테크 실증거점 조성 사업 공고", "biz": "해양문화도시 기반의 에이지테크 실증거점 조성", "start": "2026-02-25T15:00", "end": "2026-04-06T15:00", "writer": "김태오", "posted": "2026-02-25", "views": 7433, "files": 5, "url": "https://www.nipa.kr/home/2-2/16501", "first_seen": "2026-10-01T17:41:24"}, {"id": 16498, "title": "2026년 SaaS 전환지원센터 SaaS 개발환경 지원 수요기업 모집 공고", "biz": "SaaS 기반 창업성장 지원(SaaS 전환지원센터 운영)", "start": "2026-02-25T10:00", "end": "2026-03-27T18:00", "writer": "조현주", "posted": "2026-02-25", "views": 12660, "files": 2, "url": "https://www.nipa.kr/home/2-2/16498", "first_seen": "2026-10-01T17:41:25"}, {"id": 16497, "title": "2026년 SaaS 전환지원센터 SaaS 개발환경 지원 공급기업 모집 공고", "biz": "SaaS 기반 창업성장 지원(SaaS 전환지원센터 운영)", "start": "2026-02-25T10:00", "end": "2026-03-06T18:00", "writer": "조현주", "posted": "2026-02-25", "views": 10184, "files": 2, "url": "https://www.nipa.kr/home/2-2/16497", "first_seen": "2026-10-01T17:41:25"}, {"id": 16496, "title": "2026년 AI선박 특화 플랫폼 및 애플리케이션 개발·실증 사업 공고", "biz": "AI선박 특화 플랫폼 및 애플리케이션 개발·실증", "start": "2026-02-25T15:00", "end": "2026-04-06T15:00", "writer": "홍채현", "posted": "2026-02-25", "views": 8725, "files": 5, "url": "https://www.nipa.kr/home/2-2/16496", "first_seen": "2026-10-01T17:41:26"}, {"id": 16495, "title": "2026년 인공지능 신뢰성 혁신실증 사업 수행기관 모집공고", "biz": "인공지능 신뢰성 혁신 실증사업", "start": "2026-02-25T12:00", "end": "2026-04-06T15:00", "writer": "박용석", "posted": "2026-02-25", "views": 9329, "files": 5, "url": "https://www.nipa.kr/home/2-2/16495", "first_seen": "2026-10-01T17:41:26"}, {"id": 16494, "title": "2026년 AI-반도체 해외실증 지원 사업 신규과제(서버형) 공고", "biz": "AI반도체 해외실증 지원(신규)", "start": "2026-02-24T09:00", "end": "2026-03-25T15:00", "writer": "박민찬", "posted": "2026-02-24", "views": 8658, "files": 5, "url": "https://www.nipa.kr/home/2-2/16494", "first_seen": "2026-10-01T17:41:27"}, {"id": 16493, "title": "2026년 AI-반도체 해외실증 지원 사업 신규과제(엣지형) 공고", "biz": "AI반도체 해외실증 지원(신규)", "start": "2026-02-24T09:00", "end": "2026-03-25T15:00", "writer": "박민찬", "posted": "2026-02-24", "views": 7805, "files": 5, "url": "https://www.nipa.kr/home/2-2/16493", "first_seen": "2026-10-01T17:41:27"}, {"id": 16491, "title": "2026년 AX디바이스 개발 실증(미니트랙) 사업 공고", "biz": "AX디바이스 개발 실증(미니트랙)", "start": "2026-02-24T09:00", "end": "2026-03-25T15:00", "writer": "강승준", "posted": "2026-02-24", "views": 10245, "files": 6, "url": "https://www.nipa.kr/home/2-2/16491", "first_seen": "2026-10-01T17:41:28"}, {"id": 16487, "title": "2026년도 호치민 Korea IT School(KITS) 운영 대행 용역 입찰 공고", "biz": "해외IT지원센터(호치민) 운영", "start": "2026-02-24T15:00", "end": "2026-03-09T16:00", "writer": "권대은", "posted": "2026-02-24", "views": 6055, "files": 2, "url": "https://www.nipa.kr/home/2-2/16487", "first_seen": "2026-10-01T17:41:29"}, {"id": 16486, "title": "2026년도 하노이 Korea IT School(KITS) 운영 대행 용역 입찰 공고", "biz": "해외IT지원센터(하노이) 운영", "start": "2026-02-24T13:00", "end": "2026-03-09T16:00", "writer": "이서현", "posted": "2026-02-24", "views": 5593, "files": 2, "url": "https://www.nipa.kr/home/2-2/16486", "first_seen": "2026-10-01T17:41:29"}, {"id": 16483, "title": "2026년 Dubai AI Festival 한국관 구축 및 포럼 운영 용역 모집- 잠정 중단 안내", "biz": "해외IT지원센터(UAE) 운영", "start": "2026-02-23T11:51", "end": "2026-03-05T22:00", "writer": "류한샘", "posted": "2026-02-23", "views": 6608, "files": 4, "url": "https://www.nipa.kr/home/2-2/16483", "first_seen": "2026-10-01T17:41:30"}, {"id": 16482, "title": "2026년 디지털 혁신기업 글로벌 성장 Solution 바우처 지원 사업 공급기업 Pool 모집·등록 공고", "biz": "디지털 혁신기업 글로벌 성장 바우처 지원", "start": "2026-02-23T09:00", "end": "2026-03-13T15:00", "writer": "홍진경", "posted": "2026-02-23", "views": 16209, "files": 2, "url": "https://www.nipa.kr/home/2-2/16482", "first_seen": "2026-10-01T17:41:30"}, {"id": 16480, "title": "2026년 지능형 IoT 적용 확산 사업 신규과제 모집 공고", "biz": "지능형 IoT 적용 확산", "start": "2026-03-12T09:00", "end": "2026-03-27T15:00", "writer": "양효주", "posted": "2026-02-23", "views": 11145, "files": 6, "url": "https://www.nipa.kr/home/2-2/16480", "first_seen": "2026-10-01T17:41:31"}, {"id": 16479, "title": "2026년 글로벌 SaaS 마켓플레이스 지원 사업수행기관 모집 공고", "biz": "글로벌 SaaS 마켓플레이스 지원", "start": "2026-02-23T10:00", "end": "2026-03-24T14:00", "writer": "정윤서", "posted": "2026-02-20", "views": 7581, "files": 4, "url": "https://www.nipa.kr/home/2-2/16479", "first_seen": "2026-10-01T17:41:31"}, {"id": 16477, "title": "2026년 소프트웨어 인재키움 사업 수행지역 및 기관 선정 공고", "biz": "소프트웨어 인재키움", "start": "2026-02-19T17:17", "end": "2026-03-20T15:00", "writer": "주다인", "posted": "2026-02-19", "views": 4713, "files": 6, "url": "https://www.nipa.kr/home/2-2/16477", "first_seen": "2026-10-01T17:41:32"}, {"id": 16475, "title": "2026년도 AI 응용제품 신속 상용화 지원사업 신규과제 모집 공고 (AI 기반 엔드프로덕트 상용화 지원 Type 2(AI 민생 프로젝트))", "biz": "2026년도 AI 응용제품 신속 상용화 지원사업 신규과제 모집 공고 (AI 기반 엔드프로덕트 상용화 지원 Type 2(AI 민생 프로젝트))", "start": "2026-03-02T09:00", "end": "2026-03-16T14:00", "writer": "이현세", "posted": "2026-02-13", "views": 27524, "files": 7, "url": "https://www.nipa.kr/home/2-2/16475", "first_seen": "2026-10-01T17:41:32"}, {"id": 16474, "title": "2026년도 중소기업 클라우드 서비스 보급·확산 사업 공급기업(컨설팅 포함) 모집 공고", "biz": "중소기업 등 클라우드 서비스 보급·확산(바우처)", "start": "2026-02-13T15:00", "end": "2026-03-20T11:00", "writer": "백성현", "posted": "2026-02-13", "views": 24178, "files": 3, "url": "https://www.nipa.kr/home/2-2/16474", "first_seen": "2026-10-01T17:41:33"}, {"id": 16472, "title": "2026년 중동 ICT 비즈니스 파트너십 참가기업 모집 안내", "biz": "국제협력 인프라강화, 융합서비스 글로벌 마케팅 강화", "start": "2026-02-11T16:00", "end": "2026-02-27T16:00", "writer": "김서희", "posted": "2026-02-11", "views": 7901, "files": 3, "url": "https://www.nipa.kr/home/2-2/16472", "first_seen": "2026-10-01T17:41:34"}, {"id": 16469, "title": "2026년 AI바우처 지원사업 공급기업 POOL 모집 공고", "biz": "AI바우처 지원", "start": "2026-02-10T13:00", "end": "2026-02-24T17:00", "writer": "이대영", "posted": "2026-02-10", "views": 64210, "files": 8, "url": "https://www.nipa.kr/home/2-2/16469", "first_seen": "2026-10-01T17:41:34"}, {"id": 16465, "title": "2026년 한인도SW상생협력센터 공유 오피스 입주 기업 모집 공고", "biz": "글로벌 현지화·마케팅 진출지원", "start": "2026-02-09T10:21", "end": "2026-12-31T00:00", "writer": "한승우", "posted": "2026-02-09", "views": 6279, "files": 1, "url": "https://www.nipa.kr/home/2-2/16465", "first_seen": "2026-10-01T17:41:35"}, {"id": 16464, "title": "2026년 ICT이노베이션스퀘어 운영 디지털 신기술 교육 운영기관 모집공고", "biz": "ICT이노베이션스퀘어 운영", "start": "2026-02-05T15:00", "end": "2026-03-06T15:00", "writer": "전혜빈", "posted": "2026-02-05", "views": 9792, "files": 6, "url": "https://www.nipa.kr/home/2-2/16464", "first_seen": "2026-10-01T17:41:35"}, {"id": 16463, "title": "2026년도 AI·디지털 비즈니스 파트너십 특화 프로그램 참여기업 모집 공고", "biz": "AI·디지털 비즈니스 파트너십 구축", "start": "2026-02-05T09:00", "end": "2026-03-05T23:00", "writer": "임소정", "posted": "2026-02-05", "views": 13619, "files": 3, "url": "https://www.nipa.kr/home/2-2/16463", "first_seen": "2026-10-01T17:41:36"}, {"id": 16457, "title": "「K-테크 파이오니어즈」운영기관 모집공고", "biz": "K-테크 파이오니어즈", "start": "2026-01-27T17:00", "end": "2026-02-26T15:00", "writer": "강현우", "posted": "2026-01-27", "views": 7291, "files": 4, "url": "https://www.nipa.kr/home/2-2/16457", "first_seen": "2026-10-01T17:41:36"}, {"id": 16450, "title": "2026년 산업맞춤형 혁신바우처 지원사업 공급기업 1차 모집공고", "biz": "디지털 전환 역량강화", "start": "2026-01-22T14:10", "end": "2026-02-20T15:00", "writer": "송근호", "posted": "2026-01-22", "views": 44098, "files": 1, "url": "https://www.nipa.kr/home/2-2/16450", "first_seen": "2026-10-01T17:41:37"}, {"id": 16449, "title": "독자 AI 파운데이션 모델 프로젝트 추가 공고", "biz": "독자 AI 파운데이션 모델 추가 사업", "start": "2026-01-23T15:00", "end": "2026-02-12T16:00", "writer": "정재훈", "posted": "2026-01-22", "views": 17810, "files": 5, "url": "https://www.nipa.kr/home/2-2/16449", "first_seen": "2026-10-01T17:41:37"}, {"id": 16442, "title": "하노이 IT지원센터 ‘26년 상반기 연간/단기 입주기업 모집 공고", "biz": "해외IT지원센터(하노이) 운영", "start": "2026-01-15T17:00", "end": "2026-02-22T23:00", "writer": "이지수", "posted": "2026-01-15", "views": 6768, "files": 1, "url": "https://www.nipa.kr/home/2-2/16442", "first_seen": "2026-10-01T17:41:38"}, {"id": 16433, "title": "2026년 SW고성장클럽 사업 운영기관 모집공고", "biz": "SW고성장클럽", "start": "2026-01-13T10:00", "end": "2026-02-13T12:00", "writer": "박준민", "posted": "2026-01-12", "views": 9550, "files": 2, "url": "https://www.nipa.kr/home/2-2/16433", "first_seen": "2026-10-01T17:41:39"}, {"id": 16429, "title": "2026년도「고성능컴퓨팅지원」사업 운영기관 모집 공고", "biz": "고성능컴퓨팅지원", "start": "2026-01-02T17:00", "end": "2026-02-02T15:00", "writer": "신동필", "posted": "2026-01-02", "views": 25499, "files": 4, "url": "https://www.nipa.kr/home/2-2/16429", "first_seen": "2026-10-01T17:41:39"}, {"id": 16424, "title": "「첨단 GPU 활용 지원 사업」 베타서비스 참여자 모집 공모 안내 (산학연 지원)", "biz": "AI컴퓨팅자원 활용기반 강화사업 (첨단 GPU 활용 지원)", "start": "2025-12-22T13:00", "end": "2025-12-26T15:00", "writer": "진영", "posted": "2025-12-22", "views": 10249, "files": 1, "url": "https://www.nipa.kr/home/2-2/16424", "first_seen": "2026-10-01T17:41:40"}, {"id": 16423, "title": "「첨단 GPU 활용 지원 사업」 사용자 모집(25-1차) 공모 안내 (산학연 지원)", "biz": "AI컴퓨팅자원 활용기반 강화사업 (첨단 GPU 활용 지원)", "start": "2025-12-22T13:48", "end": "2026-01-28T15:00", "writer": "강효정", "posted": "2025-12-22", "views": 27938, "files": 5, "url": "https://www.nipa.kr/home/2-2/16423", "first_seen": "2026-10-01T17:41:40"}, {"id": 16421, "title": "2026년도 하노이IT지원센터 공용공간 이용기업 모집", "biz": "해외IT지원센터(하노이) 운영", "start": "2025-12-19T10:06", "end": "2026-12-31T10:06", "writer": "이지수", "posted": "2025-12-19", "views": 8352, "files": 1, "url": "https://www.nipa.kr/home/2-2/16421", "first_seen": "2026-10-01T17:41:41"}, {"id": 16416, "title": "하노이IT지원센터 2026년 한-베 협력 한국 IT스타트업 지원사업 공모", "biz": "해외IT지원센터(하노이) 운영", "start": "2025-12-15T16:27", "end": "2025-12-31T16:27", "writer": "이지수", "posted": "2025-12-15", "views": 9033, "files": 1, "url": "https://www.nipa.kr/home/2-2/16416", "first_seen": "2026-10-01T17:41:41"}, {"id": 16398, "title": "Korea-ASEAN Digital Academy - Phase 2 수행기관 모집 공고", "biz": "Korea-ASEAN Digital Academy - Phase 2", "start": "2025-11-21T12:00", "end": "2025-12-11T10:00", "writer": "강현우", "posted": "2025-11-21", "views": 10283, "files": 4, "url": "https://www.nipa.kr/home/2-2/16398", "first_seen": "2026-10-01T17:41:42"}, {"id": 16393, "title": "2025년 3차 메타버스허브 입주기업 모집(기한연장)", "biz": "메타버스허브 기업성장센터", "start": "2025-11-18T17:00", "end": "2025-12-09T17:00", "writer": "이수진", "posted": "2025-11-18", "views": 9015, "files": 4, "url": "https://www.nipa.kr/home/2-2/16393", "first_seen": "2026-10-01T17:41:42"}, {"id": 16382, "title": "KoVAC 공동제작센터 위탁운영 협력사 모집", "biz": "실감콘텐츠 인프라 조성", "start": "2025-11-11T17:00", "end": "2025-12-10T15:00", "writer": "이진서", "posted": "2025-11-12", "views": 17457, "files": 4, "url": "https://www.nipa.kr/home/2-2/16382", "first_seen": "2026-10-01T17:41:43"}, {"id": 16381, "title": "2025년 3차 XR기업성장지원센터(상암 누리꿈스퀘어) 입주기업 모집 공고", "biz": "KoVAC XR기업성장지원센터 운영", "start": "2025-11-12T09:00", "end": "2025-12-09T15:00", "writer": "유희수", "posted": "2025-11-12", "views": 10604, "files": 4, "url": "https://www.nipa.kr/home/2-2/16381", "first_seen": "2026-10-01T17:41:43"}, {"id": 16373, "title": "2025년도(추경)「AI컴퓨팅 자원 활용 기반 강화(GPU 임차 지원)」사업 사용자 추가모집 공고", "biz": "AI컴퓨팅자원 활용기반 강화 (GPU 임차 지원)", "start": "2025-11-04T00:00", "end": "2025-12-04T15:00", "writer": "채정열", "posted": "2025-11-04", "views": 31664, "files": 4, "url": "https://www.nipa.kr/home/2-2/16373", "first_seen": "2026-10-01T17:41:44"}, {"id": 16372, "title": "UAE IT지원센터 '25년도 입주 및 라이선스 기업 모집", "biz": "해외IT지원센터(UAE) 운영", "start": "2025-11-03T00:00", "end": "2025-11-24T23:00", "writer": "장희", "posted": "2025-11-04", "views": 9949, "files": 3, "url": "https://www.nipa.kr/home/2-2/16372", "first_seen": "2026-10-01T17:41:45"}, {"id": 16350, "title": "2025년 3차 메타버스허브 입주기업 모집", "biz": "메타버스허브 기업성장센터", "start": "2025-10-20T12:00", "end": "2025-11-17T12:00", "writer": "이수진", "posted": "2025-10-20", "views": 10862, "files": 3, "url": "https://www.nipa.kr/home/2-2/16350", "first_seen": "2026-10-01T17:41:46"}, {"id": 16340, "title": "[하노이IT지원센터] 2025년도 Korea IT School 채용상담회 참가기업 모집 공고", "biz": "해외IT지원센터(하노이) 운영", "start": "2025-10-14T00:00", "end": "2025-10-21T16:00", "writer": "이서현", "posted": "2025-10-14", "views": 11199, "files": 1, "url": "https://www.nipa.kr/home/2-2/16340", "first_seen": "2026-10-01T17:41:46"}, {"id": 16336, "title": "2026년 월드프렌즈코리아 NIPA자문단 종합관리센터 운영기관 모집공고", "biz": "2026년 WFK NIPA자문단 종합관리센터 운영사업", "start": "2025-10-13T09:00", "end": "2025-11-12T15:00", "writer": "이라영", "posted": "2025-10-13", "views": 11788, "files": 4, "url": "https://www.nipa.kr/home/2-2/16336", "first_seen": "2026-10-01T17:41:47"}, {"id": 16334, "title": "하노이 IT지원센터‘25년 하반기 입주기업 추가 모집 공고문", "biz": "해외IT지원센터(하노이) 운영", "start": "2025-10-02T09:37", "end": "2025-12-31T09:37", "writer": "이지수", "posted": "2025-10-06", "views": 12053, "files": 1, "url": "https://www.nipa.kr/home/2-2/16334", "first_seen": "2026-10-01T17:41:47"}, {"id": 16257, "title": "하노이IT지원센터 '25년도 베트남 현지 전문가 1:1 맞춤형 컨설팅(멘토링) 지원", "biz": "해외IT지원센터(하노이) 운영", "start": "2025-08-14", "end": "2026-12-31", "writer": "이지수", "posted": "2025-08-19", "views": 10141, "files": 1, "url": "https://www.nipa.kr/home/2-2/16257", "first_seen": "2026-10-01T17:41:48"}, {"id": 16246, "title": "2025년 AI모델 맞춤형 설계지원(파운데이션 모델 트랙) 사업 공모", "biz": "AI모델 맞춤형 설계지원(파운데이션 모델 트랙) 사업", "start": "2025-08-11", "end": "2025-08-27", "writer": "박명수", "posted": "2025-08-05", "views": 16786, "files": 2, "url": "https://www.nipa.kr/home/2-2/16246", "first_seen": "2026-10-01T17:41:48"}, {"id": 16227, "title": "2025년 AI반도체 최적화 설계지원 사업 통합 공고", "biz": "2025년 AI반도체 최적화 설계지원 사업 통합 공고", "start": "2025-07-28", "end": "2025-08-11", "writer": "이현아", "posted": "2025-07-21", "views": 18379, "files": 3, "url": "https://www.nipa.kr/home/2-2/16227", "first_seen": "2026-10-01T17:41:49"}, {"id": 16173, "title": "2025년 2차 메타버스허브 입주기업 모집", "biz": "메타버스허브 기업성장센터", "start": "2025-06-18", "end": "2025-07-18", "writer": "이수진", "posted": "2025-06-18", "views": 8603, "files": 3, "url": "https://www.nipa.kr/home/2-2/16173", "first_seen": "2026-10-01T17:41:49"}, {"id": 16099, "title": "2025년 산업맞춤형 혁신바우처 공급기업 2차 등록 결과 안내", "biz": "디지털 전환 역량강화", "start": "2025-05-13", "end": "2025-05-13", "writer": "송근호", "posted": "2025-05-13", "views": 14685, "files": 1, "url": "https://www.nipa.kr/home/2-2/16099", "first_seen": "2026-10-01T17:41:50"}, {"id": 16060, "title": "2025년 산업맞춤형 혁신바우처 지원사업 신규과제 모집공고", "biz": "디지털 전환 역량강화", "start": "2025-04-28", "end": "2025-05-23", "writer": "송근호", "posted": "2025-04-28", "views": 26552, "files": 5, "url": "https://www.nipa.kr/home/2-2/16060", "first_seen": "2026-10-01T17:41:50"}, {"id": 15995, "title": "2025년 1차 메타버스허브 입주기업 모집 공고", "biz": "ICT-문화융합센터", "start": "2025-04-01", "end": "2025-05-08", "writer": "이수진", "posted": "2025-03-31", "views": 12514, "files": 3, "url": "https://www.nipa.kr/home/2-2/15995", "first_seen": "2026-10-01T17:41:51"}, {"id": 15984, "title": "2025년 산업전문인력 AI역량강화 지원사업(신규) 서류평가 결과 및 발표평가 대상자 선정 공고", "biz": "산업전문인력 AI역량강화", "start": null, "end": null, "writer": "김광혁", "posted": "2025-03-27", "views": 13450, "files": 1, "url": "https://www.nipa.kr/home/2-2/15984", "first_seen": "2026-10-01T17:41:51"}, {"id": 15878, "title": "2025년도 K-Global 액셀러레이팅 사업 액셀러레이터 모집 공고", "biz": "ICT창의기업육성", "start": "2025-03-04", "end": "2025-04-03", "writer": "한병철", "posted": "2025-03-04", "views": 14344, "files": 5, "url": "https://www.nipa.kr/home/2-2/15878", "first_seen": "2026-10-01T17:41:52"}, {"id": 15835, "title": "2025년도 ｢산업전문인력 AI역량강화｣ 지원사업 신규과제 모집 공고", "biz": "산업전문인력 AI역량강화", "start": "2025-03-04", "end": "2025-03-18", "writer": "김광혁", "posted": "2025-02-17", "views": 28470, "files": 6, "url": "https://www.nipa.kr/home/2-2/15835", "first_seen": "2026-10-01T17:41:52"}, {"id": 15821, "title": "2025년 AI-반도체 해외실증 지원 사업 공고", "biz": "AI-반도체 해외실증지원 사업", "start": "2025-02-20", "end": "2025-03-20", "writer": "조재홍", "posted": "2025-02-13", "views": 12449, "files": 5, "url": "https://www.nipa.kr/home/2-2/15821", "first_seen": "2026-10-01T17:41:54"}, {"id": 15819, "title": "2025년도 SaaS 창업성장 지원사업(SaaS 전환지원센터 운영) 운영기관 모집 공고", "biz": "SaaS 기반 창업성장 지원(SaaS 전환지원센터 운영)", "start": "2025-02-12", "end": "2025-03-17", "writer": "조현주", "posted": "2025-02-13", "views": 10331, "files": 4, "url": "https://www.nipa.kr/home/2-2/15819", "first_seen": "2026-10-01T17:41:53"}, {"id": 15371, "title": "2024년 지역 자율형 디지털 실증지원 사업(AI기반 어장공간정보, 농식품 메타버스) 통합 재공고", "biz": "AI기반 어장공간정보 빅데이터 플랫폼 구축 및 활용", "start": "2024-04-08", "end": "2024-04-30", "writer": "김아령", "posted": "2024-04-08", "views": 10482, "files": 5, "url": "https://www.nipa.kr/home/2-2/15371", "first_seen": "2026-10-01T17:41:54"}, {"id": 15348, "title": "2024년도 AI 미디어‧문화 향유 확산 사업 신규과제 모집 공고(수정)", "biz": "AI 미디어·문화 향유 확산", "start": "2024-03-29", "end": "2024-04-30", "writer": "박정호", "posted": "2024-03-29", "views": 22388, "files": 7, "url": "https://www.nipa.kr/home/2-2/15348", "first_seen": "2026-10-01T17:41:55"}, {"id": 15193, "title": "2024년도 과학기술정보통신부 「고성능 컴퓨팅 지원(국산 AI반도체 활용 사업–AI반도체트랙)」 사용자 모집 공고(수정)", "biz": "고성능컴퓨팅지원", "start": "2024-02-16", "end": "2024-03-29", "writer": "박정호", "posted": "2024-02-16", "views": 12966, "files": 4, "url": "https://www.nipa.kr/home/2-2/15193", "first_seen": "2026-10-01T17:41:55"}, {"id": 15192, "title": "2024년도 과학기술정보통신부 「고성능 컴퓨팅 지원」 사용자 모집 공고 [수정]", "biz": "고성능컴퓨팅지원", "start": "2024-02-16", "end": "2024-03-20", "writer": "박정호", "posted": "2024-02-16", "views": 18319, "files": 4, "url": "https://www.nipa.kr/home/2-2/15192", "first_seen": "2026-10-01T17:41:56"}, {"id": 15157, "title": "2024년 지역 자율형 디지털 실증지원 사업(스마트물류, AI기반 어장공간정보, 농식품 메타버스) 통합공고", "biz": "AI기반 어장공간정보 빅데이터 플랫폼 구축 및 활용", "start": "2024-02-01", "end": "2024-03-18", "writer": "홍채현", "posted": "2024-01-31", "views": 16130, "files": 5, "url": "https://www.nipa.kr/home/2-2/15157", "first_seen": "2026-10-01T17:41:56"}, {"id": 15134, "title": "2024년도 과학기술정보통신부 「고성능 컴퓨팅 지원 사업」 공급자 모집 공고", "biz": "고성능컴퓨팅지원", "start": "2024-01-08", "end": "2024-02-07", "writer": "박정호", "posted": "2024-01-08", "views": 21814, "files": 8, "url": "https://www.nipa.kr/home/2-2/15134", "first_seen": "2026-10-01T17:41:57"}, {"id": 15133, "title": "2024년도 과학기술정보통신부 「고성능 컴퓨팅 지원 사업」 운영기관 모집 공고", "biz": "고성능컴퓨팅지원", "start": "2024-01-08", "end": "2024-02-07", "writer": "박정호", "posted": "2024-01-08", "views": 13176, "files": 6, "url": "https://www.nipa.kr/home/2-2/15133", "first_seen": "2026-10-01T17:41:57"}, {"id": 14641, "title": "2023년 유망 SaaS 개발·육성 지원 사업 공고", "biz": "유망 SaaS 개발·육성 지원", "start": "2023-03-06", "end": "2023-04-14", "writer": "강효정", "posted": "2023-03-06", "views": 30499, "files": 5, "url": "https://www.nipa.kr/home/2-2/14641", "first_seen": "2026-10-01T17:41:58"}, {"id": 14619, "title": "2023년 산업맞춤형 혁신 바우처 지원과제 모집공고", "biz": "산업전문인력 AI역량강화", "start": "2023-02-24", "end": "2023-03-27", "writer": "이병주", "posted": "2023-02-24", "views": 20259, "files": 7, "url": "https://www.nipa.kr/home/2-2/14619", "first_seen": "2026-10-01T17:41:58"}, {"id": 12388, "title": "2023년 K-Global 액셀러레이터 육성 사업 모집 공고", "biz": "ICT창의기업육성", "start": "2023-02-21", "end": "2023-03-24", "writer": "류지연", "posted": "2023-02-21", "views": 15007, "files": 6, "url": "https://www.nipa.kr/home/2-2/12388", "first_seen": "2026-10-01T17:41:59"}, {"id": 12383, "title": "호치민IT지원센터 확대 이전 시설 인테리어 공사 용역", "biz": "해외IT지원센터(호치민) 운영", "start": null, "end": null, "writer": "김진선", "posted": "2023-02-16", "views": 10123, "files": 4, "url": "https://www.nipa.kr/home/2-2/12383", "first_seen": "2026-10-01T17:42:00"}, {"id": 12376, "title": "2023년 생활밀착분야 비대면 선도서비스 활성화 사업 지원기업 모집공고", "biz": "생활밀착분야 비대면 선도서비스 활성화", "start": "2023-02-14", "end": "2023-03-15", "writer": "박민찬", "posted": "2023-02-14", "views": 17427, "files": 7, "url": "https://www.nipa.kr/home/2-2/12376", "first_seen": "2026-10-01T17:42:00"}, {"id": 12371, "title": "2023년 디지털인프라(SW) 진단 및 개선 사업 수요기업(기관) 모집 공고(1차)", "biz": "디지털인프라(SW) 진단 및 개선", "start": null, "end": null, "writer": "한상진", "posted": "2023-02-13", "views": 9536, "files": 4, "url": "https://www.nipa.kr/home/2-2/12371", "first_seen": "2026-10-01T17:42:01"}, {"id": 12358, "title": "2022년 Korea IT School 교육 위탁운영 기관 공모", "biz": "해외IT지원센터(호치민) 운영", "start": "2023-02-20", "end": "2023-02-20", "writer": "김진선", "posted": "2023-02-07", "views": 10304, "files": 4, "url": "https://www.nipa.kr/home/2-2/12358", "first_seen": "2026-10-01T17:42:01"}, {"id": 12356, "title": "(수정) 2023년 지역 디지털 혁신거점 조성지원 사업 신규지역 선정 공고", "biz": "디지털혁신거점 조성지원", "start": null, "end": null, "writer": "임애경", "posted": "2023-02-03", "views": 16243, "files": 1, "url": "https://www.nipa.kr/home/2-2/12356", "first_seen": "2026-10-01T17:42:02"}, {"id": 12351, "title": "2023년 SW융합클러스터 2.0 사업(특화산업강화) 공고", "biz": "SW융합클러스터2.0", "start": null, "end": null, "writer": "서린", "posted": "2023-01-30", "views": 15411, "files": 4, "url": "https://www.nipa.kr/home/2-2/12351", "first_seen": "2026-10-01T17:42:03"}, {"id": 12348, "title": "2023년도 ｢산업전문인력 AI역량강화｣ 지원사업 신규과제 모집 공고", "biz": "산업전문인력 AI역량강화", "start": "2023-01-30", "end": "2023-02-28", "writer": "김광혁", "posted": "2023-01-30", "views": 16662, "files": 6, "url": "https://www.nipa.kr/home/2-2/12348", "first_seen": "2026-10-01T17:42:03"}, {"id": 12344, "title": "호치민IT지원센터 23년 멤버십기업 모집 공고 (연장)", "biz": "해외IT지원센터(호치민) 운영", "start": "2023-02-17", "end": "2023-02-17", "writer": "김경수", "posted": "2023-01-19", "views": 12215, "files": 1, "url": "https://www.nipa.kr/home/2-2/12344", "first_seen": "2026-10-01T17:42:04"}, {"id": 12342, "title": "2023년 정보소외지역SW교육지원강화(SW미래채움)사업공고", "biz": "정보소외지역 SW교육지원 강화", "start": "2023-01-18", "end": "2023-02-17", "writer": "이재호", "posted": "2023-01-18", "views": 12419, "files": 0, "url": "https://www.nipa.kr/home/2-2/12342", "first_seen": "2026-10-01T17:42:04"}, {"id": 12340, "title": "2023년 공공SW사업 간소화 과업심의위원회 전문위원 모집공고", "biz": "공공SW사업발주기술지원 및 SW사업정보관리", "start": null, "end": null, "writer": "범원택", "posted": "2023-01-18", "views": 17122, "files": 3, "url": "https://www.nipa.kr/home/2-2/12340", "first_seen": "2026-10-01T17:42:05"}, {"id": 12338, "title": "2023년 SW고성장클럽 사업 지원기업 모집공고", "biz": "SW고성장클럽", "start": "2023-01-09", "end": "2023-02-10", "writer": "허영준", "posted": "2023-01-09", "views": 18261, "files": 0, "url": "https://www.nipa.kr/home/2-2/12338", "first_seen": "2026-10-01T17:42:05"}, {"id": 12337, "title": "2023년 SW고성장클럽 사업 운영기관 모집공고", "biz": "SW고성장클럽", "start": "2023-01-05", "end": "2023-01-27", "writer": "허영준", "posted": "2023-01-05", "views": 12903, "files": 0, "url": "https://www.nipa.kr/home/2-2/12337", "first_seen": "2026-10-01T17:42:06"}, {"id": 12333, "title": "2023년도 과학기술정보통신부「고성능 컴퓨팅 지원」 사용자 모집 공고", "biz": "고성능컴퓨팅지원", "start": "2022-12-28", "end": "2022-12-31", "writer": "박정호", "posted": "2022-12-28", "views": 23703, "files": 3, "url": "https://www.nipa.kr/home/2-2/12333", "first_seen": "2026-10-01T17:42:06"}, {"id": 12332, "title": "2023년도 과학기술정보통신부「고성능 컴퓨팅 지원 사업」 공급자 모집 공고", "biz": "고성능컴퓨팅지원", "start": "2022-12-27", "end": "2022-12-31", "writer": "박정호", "posted": "2022-12-27", "views": 15617, "files": 4, "url": "https://www.nipa.kr/home/2-2/12332", "first_seen": "2026-10-01T17:42:07"}, {"id": 12331, "title": "2023년도 과학기술정보통신부「고성능 컴퓨팅 지원 사업」 운영기관 모집 공고", "biz": "고성능컴퓨팅지원", "start": "2022-12-27", "end": "2022-12-31", "writer": "박정호", "posted": "2022-12-27", "views": 12194, "files": 6, "url": "https://www.nipa.kr/home/2-2/12331", "first_seen": "2026-10-01T17:42:08"}, {"id": 12329, "title": "2022년도 과학기술정보통신부「하반기 초거대 인공지능 활용 등을 위한 고성능 컴퓨팅 지원 사업」사용자 모집 마감 안내 공고", "biz": "고성능컴퓨팅지원", "start": "2022-12-07", "end": "2022-12-31", "writer": "박정호", "posted": "2022-12-07", "views": 9780, "files": 0, "url": "https://www.nipa.kr/home/2-2/12329", "first_seen": "2026-10-01T17:42:08"}, {"id": 12320, "title": "NIPA 글로벌ICT포털(GIP) 현지 전문가 비대면 상담시스템 운영 안내", "biz": "정보통신방송 해외정보제공(GIP)", "start": "2022-10-24", "end": "2022-12-31", "writer": "이종현", "posted": "2022-10-24", "views": 14708, "files": 2, "url": "https://www.nipa.kr/home/2-2/12320", "first_seen": "2026-10-01T17:42:09"}, {"id": 12318, "title": "인도 IT시장진출 전략 공유 웨비나 개최", "biz": "정보통신방송 해외정보제공(GIP)", "start": "2022-10-12", "end": "2022-12-31", "writer": "이종현", "posted": "2022-10-12", "views": 12112, "files": 1, "url": "https://www.nipa.kr/home/2-2/12318", "first_seen": "2026-10-01T17:42:09"}, {"id": 12313, "title": "2022년도 베트남 OCOM 프로그램 공고", "biz": "해외IT지원센터(호치민) 운영", "start": "2022-09-26", "end": "2022-12-31", "writer": "김경수", "posted": "2022-09-26", "views": 15270, "files": 3, "url": "https://www.nipa.kr/home/2-2/12313", "first_seen": "2026-10-01T17:42:10"}, {"id": 12310, "title": "『2022년 제4회 통신사 대상 비대면 IR』 참가기업 모집 공고", "biz": "ICT창의기업육성", "start": "2022-09-13", "end": "2022-12-31", "writer": "신동훈", "posted": "2022-09-13", "views": 15333, "files": 3, "url": "https://www.nipa.kr/home/2-2/12310", "first_seen": "2026-10-01T17:42:10"}, {"id": 12309, "title": "2022년도 과학기술정보통신부 대기업·기금사 대상 비대면 기업홍보 지원사업 공고", "biz": "ICT창의기업육성", "start": "2022-09-13", "end": "2022-12-31", "writer": "신동훈", "posted": "2022-09-13", "views": 15045, "files": 3, "url": "https://www.nipa.kr/home/2-2/12309", "first_seen": "2026-10-01T17:42:11"}, {"id": 12301, "title": "2022년도 과학기술정보통신부 비대면 기업홍보 지원사업(비대면 IR) 하반기 통합공고", "biz": "ICT창의기업육성", "start": "2022-08-31", "end": "2022-12-31", "writer": "신동훈", "posted": "2022-08-31", "views": 15384, "files": 2, "url": "https://www.nipa.kr/home/2-2/12301", "first_seen": "2026-10-01T17:42:11"}, {"id": 12298, "title": "2022년도 과학기술정보통신부 「초거대 인공지능 API 서비스 지원」 사용자 모집 공고(수정)", "biz": "고성능컴퓨팅지원", "start": "2022-08-23", "end": "2022-12-31", "writer": "박정호", "posted": "2022-08-23", "views": 20346, "files": 3, "url": "https://www.nipa.kr/home/2-2/12298", "first_seen": "2026-10-01T17:42:12"}, {"id": 12297, "title": "2022년도 과학기술정보통신부 「하반기 초거대 인공지능 활용 등을 위한 고성능 컴퓨팅 지원 사업」 사용자 모집 공고", "biz": "고성능컴퓨팅지원", "start": "2022-08-23", "end": "2022-12-31", "writer": "박정호", "posted": "2022-08-23", "views": 20769, "files": 3, "url": "https://www.nipa.kr/home/2-2/12297", "first_seen": "2026-10-01T17:42:13"}, {"id": 12294, "title": "2022년도 과학기술정보통신부「하반기 초거대 인공지능 활용 등을 위한 고성능 컴퓨팅 지원 사업」공급자 모집 공고", "biz": "고성능컴퓨팅지원", "start": "2022-08-16", "end": "2022-12-31", "writer": "박정호", "posted": "2022-08-16", "views": 14690, "files": 5, "url": "https://www.nipa.kr/home/2-2/12294", "first_seen": "2026-10-01T17:42:13"}, {"id": 12291, "title": "2022년 고성능 컴퓨팅 지원 사업 2차 추가 사용자 모집", "biz": "고성능컴퓨팅지원", "start": "2022-08-03", "end": "2022-12-31", "writer": "박정호", "posted": "2022-08-03", "views": 17680, "files": 3, "url": "https://www.nipa.kr/home/2-2/12291", "first_seen": "2026-10-01T17:42:14"}, {"id": 12288, "title": "주한 베트남 유학생 SW인력양성 교육 수강생 모집 연장공고", "biz": "글로벌 현지화·마케팅 진출지원", "start": "2022-07-26", "end": "2022-12-31", "writer": "서예원", "posted": "2022-07-26", "views": 12251, "files": 3, "url": "https://www.nipa.kr/home/2-2/12288", "first_seen": "2026-10-01T17:42:15"}, {"id": 12282, "title": "2022 하반기 K-실감스튜디오 볼류메트릭(Volumetric) 콘텐츠 제작 지원사업 공고", "biz": "실감콘텐츠 인프라 조성", "start": "2022-07-22", "end": "2022-12-31", "writer": "이수진", "posted": "2022-07-22", "views": 12119, "files": 2, "url": "https://www.nipa.kr/home/2-2/12282", "first_seen": "2026-10-01T17:42:15"}, {"id": 12281, "title": "｢AI출입국 심사 관리 솔루션 개발 및 검증｣ 선정 결과 공지", "biz": "인공지능식별추적시스템구축", "start": "2022-07-20", "end": "2022-12-31", "writer": "김대원", "posted": "2022-07-20", "views": 9784, "files": 1, "url": "https://www.nipa.kr/home/2-2/12281", "first_seen": "2026-10-01T17:42:16"}, {"id": 12259, "title": "2022년도 「초거대 인공지능 API 시범 서비스 지원」사용자 모집 안내(수정)", "biz": "고성능컴퓨팅지원", "start": "2022-06-17", "end": "2022-12-31", "writer": "박정호", "posted": "2022-06-17", "views": 22456, "files": 4, "url": "https://www.nipa.kr/home/2-2/12259", "first_seen": "2026-10-01T17:42:17"}, {"id": 12257, "title": "ICT기업 해외진출 및 공급망 대응현황 조사 수행기관 모집 공고", "biz": "DNA 대중소 파트너십 동반진출", "start": "2022-06-14", "end": "2022-12-31", "writer": "서예원", "posted": "2022-06-14", "views": 14683, "files": 4, "url": "https://www.nipa.kr/home/2-2/12257", "first_seen": "2026-10-01T17:42:18"}, {"id": 12254, "title": "2022년 AI 출입국 심사·관리 솔루션 개발 및 검증사업 지원과제 모집 공고(수정)", "biz": "인공지능식별추적시스템구축", "start": "2022-06-07", "end": "2022-12-31", "writer": "김윤하", "posted": "2022-06-07", "views": 12320, "files": 6, "url": "https://www.nipa.kr/home/2-2/12254", "first_seen": "2026-10-01T17:42:18"}, {"id": 12253, "title": "2022년 인공지능 온라인 경진대회 우수 성과 기업 사업화 지원사업 공고", "biz": "개방형 경진대회 플랫폼 구축", "start": "2022-06-07", "end": "2022-12-31", "writer": "박지혜", "posted": "2022-06-07", "views": 13602, "files": 7, "url": "https://www.nipa.kr/home/2-2/12253", "first_seen": "2026-10-01T17:42:19"}, {"id": 12249, "title": "2022년 초거대 인공지능 API 시범 서비스 지원 공급자 모집 공고", "biz": "고성능컴퓨팅지원", "start": "2022-05-31", "end": "2022-12-31", "writer": "박정호", "posted": "2022-05-31", "views": 14092, "files": 3, "url": "https://www.nipa.kr/home/2-2/12249", "first_seen": "2026-10-01T17:42:20"}, {"id": 12247, "title": "22년 디지털인프라(SW) 진단 및 개선지원 사업 수요기업(기관) 모집 공고(3차)", "biz": "디지털인프라(SW) 진단 및 개선", "start": "2022-05-30", "end": "2022-12-31", "writer": "한상진", "posted": "2022-05-30", "views": 12324, "files": 4, "url": "https://www.nipa.kr/home/2-2/12247", "first_seen": "2026-10-01T17:42:21"}, {"id": 12235, "title": "2022년 메타버스 콘텐츠 글로벌 진출 역량강화 지원기업 온라인 사업설명회", "biz": "디지털콘텐츠 글로벌 역량강화", "start": "2022-05-16", "end": "2022-12-31", "writer": "임문정", "posted": "2022-05-16", "views": 10123, "files": 0, "url": "https://www.nipa.kr/home/2-2/12235", "first_seen": "2026-10-01T17:42:22"}, {"id": 12233, "title": "2022년 메타버스 콘텐츠 「글로벌 진출 역량강화 지원 기업」 모집 연장 공고", "biz": "디지털콘텐츠 글로벌 역량강화", "start": "2022-05-13", "end": "2022-12-31", "writer": "심자영", "posted": "2022-05-13", "views": 20855, "files": 9, "url": "https://www.nipa.kr/home/2-2/12233", "first_seen": "2026-10-01T17:42:22"}, {"id": 12229, "title": "2022년 고성능 컴퓨팅 지원 사업 추가 사용자 모집 안내", "biz": "고성능컴퓨팅지원", "start": "2022-05-11", "end": "2022-12-31", "writer": "박정호", "posted": "2022-05-11", "views": 14381, "files": 3, "url": "https://www.nipa.kr/home/2-2/12229", "first_seen": "2026-10-01T17:42:23"}, {"id": 12228, "title": "2022년도 VICTORY 프로그램(벤처캐피탈리스트 ICT 전문성 강화교육) 제22기 교육생 모집 연장", "biz": "ICT창의기업육성", "start": "2022-05-10", "end": "2022-12-31", "writer": "박은영", "posted": "2022-05-10", "views": 14164, "files": 4, "url": "https://www.nipa.kr/home/2-2/12228", "first_seen": "2026-10-01T17:42:23"}, {"id": 12226, "title": "2022년 인공지능 온라인 경진대회 개최 공고", "biz": "개방형 경진대회 플랫폼 구축", "start": "2022-05-09", "end": "2022-12-31", "writer": "강옥태", "posted": "2022-05-09", "views": 11529, "files": 2, "url": "https://www.nipa.kr/home/2-2/12226", "first_seen": "2026-10-01T17:42:24"}, {"id": 12223, "title": "2022년 K-Global 스타트업 공모전 모집 공고", "biz": "ICT창의기업육성", "start": "2022-05-06", "end": "2022-12-31", "writer": "김수정", "posted": "2022-05-06", "views": 19846, "files": 3, "url": "https://www.nipa.kr/home/2-2/12223", "first_seen": "2026-10-01T17:42:25"}, {"id": 12210, "title": "2022년도 VICTORY 프로그램(벤처캐피탈리스트 ICT 전문성 강화교육) 제22기 교육생 모집 (4.27~5.6 오후 4시까지)", "biz": "ICT창의기업육성", "start": "2022-04-27", "end": "2022-12-31", "writer": "박은영", "posted": "2022-04-27", "views": 14048, "files": 4, "url": "https://www.nipa.kr/home/2-2/12210", "first_seen": "2026-10-01T17:42:25"}, {"id": 12208, "title": "22년 디지털인프라(SW) 진단 및 개선지원 사업 수요기업(기관) 모집 공고(2차)", "biz": "디지털인프라(SW) 진단 및 개선", "start": "2022-04-27", "end": "2022-12-31", "writer": "한상진", "posted": "2022-04-27", "views": 11937, "files": 4, "url": "https://www.nipa.kr/home/2-2/12208", "first_seen": "2026-10-01T17:42:26"}, {"id": 12197, "title": "2022년 K-Global 스타트업 공모전 운영지원 사업 재공고", "biz": "ICT창의기업육성", "start": "2022-04-11", "end": "2022-12-31", "writer": "김수정", "posted": "2022-04-11", "views": 15007, "files": 6, "url": "https://www.nipa.kr/home/2-2/12197", "first_seen": "2026-10-01T17:42:27"}, {"id": 12191, "title": "2022년 메타버스 콘텐츠 「글로벌 시장개척 지원사업」 사업수행기관 선정 공고", "biz": "디지털콘텐츠 글로벌 역량강화", "start": "2022-04-08", "end": "2022-12-31", "writer": "윤지애", "posted": "2022-04-08", "views": 14629, "files": 7, "url": "https://www.nipa.kr/home/2-2/12191", "first_seen": "2026-10-01T17:42:27"}, {"id": 12189, "title": "2022년 메타버스 콘텐츠 「글로벌 진출 역량강화 지원 기업」 모집 공고", "biz": "디지털콘텐츠 글로벌 역량강화", "start": "2022-04-08", "end": "2022-12-31", "writer": "임문정", "posted": "2022-04-08", "views": 16597, "files": 8, "url": "https://www.nipa.kr/home/2-2/12189", "first_seen": "2026-10-01T17:42:28"}, {"id": 12163, "title": "2022년 스마트서비스 창출기반 확충 사업 운영기관 모집 연장공고", "biz": "스마트서비스창출기반확충", "start": "2022-03-24", "end": "2022-12-31", "writer": "조목은", "posted": "2022-03-24", "views": 13201, "files": 3, "url": "https://www.nipa.kr/home/2-2/12163", "first_seen": "2026-10-01T17:42:29"}, {"id": 12155, "title": "2022년 경력단절자 AISW 교육사업 운영기관 모집 공고", "biz": "디지털 전환 전문가 양성", "start": "2022-03-14", "end": "2022-12-31", "writer": "김예슬", "posted": "2022-03-14", "views": 16731, "files": 5, "url": "https://www.nipa.kr/home/2-2/12155", "first_seen": "2026-10-01T17:42:29"}, {"id": 12151, "title": "2022년 ｢산업전문인력 AI역량강화 지원사업 신규과제｣ 선정 결과 공지", "biz": "산업전문인력 AI역량강화", "start": "2022-03-11", "end": "2022-12-31", "writer": "김대원", "posted": "2022-03-11", "views": 14144, "files": 1, "url": "https://www.nipa.kr/home/2-2/12151", "first_seen": "2026-10-01T17:42:30"}, {"id": 12148, "title": "2022년 K-Global 스타트업 공모전 운영지원 사업 모집 공고", "biz": "ICT창의기업육성", "start": "2022-03-10", "end": "2022-12-31", "writer": "김수정", "posted": "2022-03-10", "views": 15844, "files": 6, "url": "https://www.nipa.kr/home/2-2/12148", "first_seen": "2026-10-01T17:42:30"}, {"id": 12147, "title": "2022년 K-Startup 그랜드 챌린지 액셀러레이팅 운영 사업 모집 공고", "biz": "K-Startup 그랜드 챌린지", "start": "2022-03-10", "end": "2022-12-31", "writer": "한서경", "posted": "2022-03-10", "views": 14397, "files": 5, "url": "https://www.nipa.kr/home/2-2/12147", "first_seen": "2026-10-01T17:42:31"}, {"id": 12146, "title": "2022년 민간 인공지능 신뢰성 시범인증 사업자 모집 공고", "biz": "AI신뢰성 기반조성", "start": "2022-03-04", "end": "2022-12-31", "writer": "박지혜", "posted": "2022-03-04", "views": 13047, "files": 7, "url": "https://www.nipa.kr/home/2-2/12146", "first_seen": "2026-10-01T17:42:31"}, {"id": 12144, "title": "2022년 공개SW 기업성장 지원사업 시행 공고", "biz": "공개SW활성화지원", "start": "2022-03-04", "end": "2022-12-31", "writer": "김도형", "posted": "2022-03-04", "views": 15709, "files": 6, "url": "https://www.nipa.kr/home/2-2/12144", "first_seen": "2026-10-01T17:42:32"}, {"id": 12143, "title": "2022년 개방형OS 확산 지원사업 시행공고", "biz": "공개SW활성화지원", "start": "2022-03-04", "end": "2022-12-31", "writer": "박영근", "posted": "2022-03-04", "views": 14576, "files": 6, "url": "https://www.nipa.kr/home/2-2/12143", "first_seen": "2026-10-01T17:42:33"}, {"id": 12142, "title": "2022년 디지털 혁신기술 박람회 개최 지원 사업 모집 공고", "biz": "스마트서비스창출기반확충", "start": "2022-03-03", "end": "2022-12-31", "writer": "조목은", "posted": "2022-03-03", "views": 13048, "files": 4, "url": "https://www.nipa.kr/home/2-2/12142", "first_seen": "2026-10-01T17:42:33"}, {"id": 12141, "title": "2022년 SW신산업 글로벌 레퍼런스 확대 지원사업 공고", "biz": "글로벌 현지화·마케팅 진출지원", "start": "2022-03-02", "end": "2022-12-31", "writer": "김기순", "posted": "2022-03-02", "views": 13354, "files": 5, "url": "https://www.nipa.kr/home/2-2/12141", "first_seen": "2026-10-01T17:42:34"}, {"id": 12134, "title": "2022년 글로벌 현지화·마케팅 진출지원 지원기업 모집공고", "biz": "글로벌 현지화·마케팅 진출지원", "start": "2022-02-28", "end": "2022-12-31", "writer": "주민경", "posted": "2022-02-28", "views": 15615, "files": 5, "url": "https://www.nipa.kr/home/2-2/12134", "first_seen": "2026-10-01T17:42:34"}, {"id": 12131, "title": "2022년도 메타버스 플랫폼 개발지원사업", "biz": "산업융합형 메타버스 플랫폼 실증", "start": "2022-02-25", "end": "2022-12-31", "writer": "유한종", "posted": "2022-02-25", "views": 24220, "files": 6, "url": "https://www.nipa.kr/home/2-2/12131", "first_seen": "2026-10-01T17:42:35"}, {"id": 12128, "title": "2022년 스마트서비스 창출기반 확충 사업 운영기관 모집 공고", "biz": "스마트서비스창출기반확충", "start": "2022-02-24", "end": "2022-12-31", "writer": "조목은", "posted": "2022-02-24", "views": 13431, "files": 3, "url": "https://www.nipa.kr/home/2-2/12128", "first_seen": "2026-10-01T17:42:36"}, {"id": 12127, "title": "2022년 K-Global 액셀러레이터 육성사업 신청 공고", "biz": "ICT창의기업육성", "start": "2022-02-24", "end": "2022-12-31", "writer": "홍지명", "posted": "2022-02-24", "views": 14787, "files": 6, "url": "https://www.nipa.kr/home/2-2/12127", "first_seen": "2026-10-01T17:42:36"}, {"id": 12116, "title": "2022년 「SW고성장클럽」 사업 운영기관 모집 연장 공고", "biz": "SW고성장클럽", "start": "2022-02-21", "end": "2022-12-31", "writer": "허영준", "posted": "2022-02-21", "views": 14116, "files": 4, "url": "https://www.nipa.kr/home/2-2/12116", "first_seen": "2026-10-01T17:42:37"}, {"id": 12107, "title": "22년 디지털인프라(SW) 진단 및 개선지원 사업 수요기업(기관) 모집 공고", "biz": "디지털인프라(SW) 진단 및 개선", "start": "2022-02-15", "end": "2022-12-31", "writer": "한상진", "posted": "2022-02-15", "views": 12212, "files": 4, "url": "https://www.nipa.kr/home/2-2/12107", "first_seen": "2026-10-01T17:42:37"}, {"id": 12095, "title": "2022년 SW고성장클럽 지원기업 모집공고", "biz": "SW고성장클럽", "start": "2022-02-09", "end": "2022-12-31", "writer": "허영준", "posted": "2022-02-09", "views": 16404, "files": 4, "url": "https://www.nipa.kr/home/2-2/12095", "first_seen": "2026-10-01T17:42:38"}, {"id": 12088, "title": "2022년 「SW고성장클럽」 사업 운영기관 모집공고", "biz": "SW고성장클럽", "start": "2022-01-28", "end": "2022-12-31", "writer": "허영준", "posted": "2022-01-28", "views": 14203, "files": 4, "url": "https://www.nipa.kr/home/2-2/12088", "first_seen": "2026-10-01T17:42:39"}, {"id": 12085, "title": "2022년 지역SW서비스사업화(세종) 공고", "biz": "지역디지털기초체력지원(세종)", "start": "2022-01-27", "end": "2022-12-31", "writer": "최윤정", "posted": "2022-01-27", "views": 11257, "files": 4, "url": "https://www.nipa.kr/home/2-2/12085", "first_seen": "2026-10-01T17:42:39"}, {"id": 12084, "title": "2022년 지역SW서비스사업화(제주) 공고", "biz": "지역디지털기초체력지원(제주)", "start": "2022-01-27", "end": "2022-12-31", "writer": "최윤정", "posted": "2022-01-27", "views": 11458, "files": 4, "url": "https://www.nipa.kr/home/2-2/12084", "first_seen": "2026-10-01T17:42:40"}, {"id": 12083, "title": "2022년 지역SW서비스사업화(지역지원) 통합 공고", "biz": "지역디지털기초체력지원(지역지원)", "start": "2022-01-27", "end": "2022-12-31", "writer": "최윤정", "posted": "2022-01-27", "views": 18647, "files": 6, "url": "https://www.nipa.kr/home/2-2/12083", "first_seen": "2026-10-01T17:42:40"}, {"id": 12082, "title": "2022년 정보소외지역SW교육지원강화(SW미래채움) 사업공고", "biz": "정보소외지역 SW교육지원 강화", "start": "2022-01-27", "end": "2022-12-31", "writer": "이재호", "posted": "2022-01-27", "views": 14404, "files": 6, "url": "https://www.nipa.kr/home/2-2/12082", "first_seen": "2026-10-01T17:42:41"}, {"id": 12081, "title": "2022년도 ｢산업전문인력 AI역량강화｣ 지원사업 신규과제 모집 공고", "biz": "산업전문인력 AI역량강화", "start": "2022-01-27", "end": "2022-12-31", "writer": "김광혁", "posted": "2022-01-27", "views": 15977, "files": 7, "url": "https://www.nipa.kr/home/2-2/12081", "first_seen": "2026-10-01T17:42:41"}, {"id": 12080, "title": "2022년 지역산업 SW인재양성 기반조성 사업공고", "biz": "지역산업 SW인재양성 기반조성", "start": "2022-01-27", "end": "2022-12-31", "writer": "이성은", "posted": "2022-01-27", "views": 14740, "files": 5, "url": "https://www.nipa.kr/home/2-2/12080", "first_seen": "2026-10-01T17:42:42"}, {"id": 12078, "title": "2022년 고성능컴퓨팅지원 사업 운영기관 모집 안내(2차 수정)", "biz": "고성능컴퓨팅지원", "start": "2022-01-26", "end": "2022-12-31", "writer": "박정호", "posted": "2022-01-26", "views": 12322, "files": 4, "url": "https://www.nipa.kr/home/2-2/12078", "first_seen": "2026-10-01T17:42:43"}, {"id": 12077, "title": "2022년 핵심산업 클라우드 플래그십 프로젝트 사업 공고", "biz": "유망 SaaS 개발·육성 지원", "start": "2022-01-26", "end": "2022-12-31", "writer": "강효정", "posted": "2022-01-26", "views": 27368, "files": 6, "url": "https://www.nipa.kr/home/2-2/12077", "first_seen": "2026-10-01T17:42:43"}, {"id": 12075, "title": "2022년 고성능컴퓨팅지원 사업 운영기관 모집 안내(수정)", "biz": "고성능컴퓨팅지원", "start": "2022-01-24", "end": "2022-12-31", "writer": "박정호", "posted": "2022-01-24", "views": 12774, "files": 4, "url": "https://www.nipa.kr/home/2-2/12075", "first_seen": "2026-10-01T17:42:44"}, {"id": 12071, "title": "2023년 공공부문 인공지능 융합사업 수요조사", "biz": "부처협업 기반 AI확산", "start": "2022-01-20", "end": "2022-12-31", "writer": "송근우", "posted": "2022-01-20", "views": 13483, "files": 1, "url": "https://www.nipa.kr/home/2-2/12071", "first_seen": "2026-10-01T17:42:45"}, {"id": 12070, "title": "2022년 한인도SW상생협력센터 공용 오피스 사무공간 활용기업 모집", "biz": "글로벌 현지화·마케팅 진출지원", "start": "2022-01-18", "end": "2022-12-31", "writer": "한승우", "posted": "2022-01-18", "views": 11329, "files": 2, "url": "https://www.nipa.kr/home/2-2/12070", "first_seen": "2026-10-01T17:42:45"}, {"id": 12068, "title": "2022년 고성능컴퓨팅지원 사업 운영기관 모집 안내", "biz": "고성능컴퓨팅지원", "start": "2021-12-23", "end": "2021-12-31", "writer": "박정호", "posted": "2021-12-23", "views": 15865, "files": 6, "url": "https://www.nipa.kr/home/2-2/12068", "first_seen": "2026-10-01T17:42:46"}, {"id": 12067, "title": "2022년 인공지능 고성능 컴퓨팅 자원 사용자 모집 안내", "biz": "고성능컴퓨팅지원", "start": "2021-12-23", "end": "2021-12-31", "writer": "박정호", "posted": "2021-12-23", "views": 18866, "files": 3, "url": "https://www.nipa.kr/home/2-2/12067", "first_seen": "2026-10-01T17:42:47"}, {"id": 12061, "title": "메타버스허브 입주기업 모집 공고", "biz": "ICT-문화융합센터", "start": "2021-12-10", "end": "2021-12-31", "writer": "정윤서", "posted": "2021-12-10", "views": 17413, "files": 5, "url": "https://www.nipa.kr/home/2-2/12061", "first_seen": "2026-10-01T17:42:48"}, {"id": 12056, "title": "2022년 산업 맞춤형 AI인력양성 바우처 사업 공급기업(관) Pool 모집공고", "biz": "산업전문인력 AI역량강화", "start": "2021-12-07", "end": "2021-12-31", "writer": "송자영", "posted": "2021-12-07", "views": 17717, "files": 2, "url": "https://www.nipa.kr/home/2-2/12056", "first_seen": "2026-10-01T17:42:48"}, {"id": 12043, "title": "2021년도 대기업·기금사 대상 6차 비대면 기업홍보 지원(비대면IR) 공고", "biz": "ICT창의기업육성", "start": "2021-10-25", "end": "2021-12-31", "writer": "박지혜", "posted": "2021-10-25", "views": 15390, "files": 3, "url": "https://www.nipa.kr/home/2-2/12043", "first_seen": "2026-10-01T17:42:49"}, {"id": 12032, "title": "2021년도 대기업·기금사 대상 5차 비대면 기업홍보 지원(비대면IR) 공고", "biz": "ICT창의기업육성", "start": "2021-09-27", "end": "2021-12-31", "writer": "박지혜", "posted": "2021-09-27", "views": 15459, "files": 3, "url": "https://www.nipa.kr/home/2-2/12032", "first_seen": "2026-10-01T17:42:50"}, {"id": 12024, "title": "2021년도 과학기술정보통신부 비대면 기업홍보 지원사업(비대면 IR) 하반기 통합공고", "biz": "ICT창의기업육성", "start": "2021-09-01", "end": "2021-12-31", "writer": "박지혜", "posted": "2021-09-01", "views": 16164, "files": 2, "url": "https://www.nipa.kr/home/2-2/12024", "first_seen": "2026-10-01T17:42:50"}, {"id": 12019, "title": "2021년도 대기업·기금사 대상 4차 비대면 기업홍보 지원(비대면IR) 공고", "biz": "ICT창의기업육성", "start": "2021-08-27", "end": "2021-12-31", "writer": "박지혜", "posted": "2021-08-27", "views": 15556, "files": 3, "url": "https://www.nipa.kr/home/2-2/12019", "first_seen": "2026-10-01T17:42:51"}, {"id": 12014, "title": "SW안전기술 원포인트 컨설팅 수요기업 모집", "biz": "SW공학경쟁력강화", "start": "2021-08-17", "end": "2021-12-31", "writer": "이병주", "posted": "2021-08-17", "views": 12521, "files": 0, "url": "https://www.nipa.kr/home/2-2/12014", "first_seen": "2026-10-01T17:42:53"}, {"id": 12006, "title": "2021년도 ICT융합 프로젝트 지원사업 공고", "biz": "ICT-문화융합센터", "start": "2021-08-03", "end": "2021-12-31", "writer": "정윤서", "posted": "2021-08-03", "views": 22480, "files": 7, "url": "https://www.nipa.kr/home/2-2/12006", "first_seen": "2026-10-01T17:42:54"}, {"id": 12005, "title": "​21년 하반기 K-실감스튜디오 인프라 기반 360도 Volumetric 콘텐츠 제작 지원사업 모집공고", "biz": "실감콘텐츠 인프라 조성", "start": "2021-08-02", "end": "2021-12-31", "writer": "이수진", "posted": "2021-08-02", "views": 13639, "files": 2, "url": "https://www.nipa.kr/home/2-2/12005", "first_seen": "2026-10-01T17:42:54"}, {"id": 11992, "title": "2021년 K-Global@China K-Pitch 참가기업 모집 연장 공고", "biz": "SW신산업 글로벌 레퍼런스 확대 지원", "start": "2021-07-06", "end": "2021-12-31", "writer": "신동훈", "posted": "2021-07-06", "views": 15219, "files": 3, "url": "https://www.nipa.kr/home/2-2/11992", "first_seen": "2026-10-01T17:42:55"}, {"id": 11991, "title": "2021년 디지털 전환 교육 수요처 모집 공고", "biz": "디지털 전환 지원", "start": "2021-07-05", "end": "2021-12-31", "writer": "류지연", "posted": "2021-07-05", "views": 13271, "files": 1, "url": "https://www.nipa.kr/home/2-2/11991", "first_seen": "2026-10-01T17:42:55"}, {"id": 11987, "title": "2021년 KoVAC Shared Infra(개발/테스트 장비) 지원 안내", "biz": "VR·AR 산업거점(KoVAC) 기능 고도화", "start": "2021-06-21", "end": "2021-12-31", "writer": "김연희", "posted": "2021-06-21", "views": 15434, "files": 4, "url": "https://www.nipa.kr/home/2-2/11987", "first_seen": "2026-10-01T17:42:56"}, {"id": 11984, "title": "[메타버스 얼라이언스] 참여 안내", "biz": "VR·AR 산업거점(KoVAC) 기능 고도화", "start": "2021-06-16", "end": "2021-12-31", "writer": "김연희", "posted": "2021-06-16", "views": 23179, "files": 5, "url": "https://www.nipa.kr/home/2-2/11984", "first_seen": "2026-10-01T17:42:56"}, {"id": 11983, "title": "2021년 K-Global@China K-Pitch 참가기업 모집 공고", "biz": "SW신산업 글로벌 레퍼런스 확대 지원", "start": "2021-06-15", "end": "2021-12-31", "writer": "신동훈", "posted": "2021-06-15", "views": 15364, "files": 3, "url": "https://www.nipa.kr/home/2-2/11983", "first_seen": "2026-10-01T17:42:57"}, {"id": 11982, "title": "2021년 디지털인프라(SW) 진단 및 개선지원 사업 진단 수요기업(기관) 모집공고(3차)", "biz": "디지털인프라(SW) 진단 및 개선", "start": "2021-06-07", "end": "2021-12-31", "writer": "한상진", "posted": "2021-06-07", "views": 15705, "files": 4, "url": "https://www.nipa.kr/home/2-2/11982", "first_seen": "2026-10-01T17:42:57"}, {"id": 11980, "title": "2021년 디지털 전환 전문 강사 모집 공고", "biz": "디지털 전환 지원", "start": "2021-06-01", "end": "2021-12-31", "writer": "류지연", "posted": "2021-06-01", "views": 15426, "files": 1, "url": "https://www.nipa.kr/home/2-2/11980", "first_seen": "2026-10-01T17:42:58"}, {"id": 11978, "title": "2021년도 대기업·기금사 대상 3차 비대면 기업홍보 지원(언택트IR) 공고", "biz": "ICT창의기업육성", "start": "2021-05-28", "end": "2021-12-31", "writer": "박지혜", "posted": "2021-05-28", "views": 16204, "files": 3, "url": "https://www.nipa.kr/home/2-2/11978", "first_seen": "2026-10-01T17:42:59"}, {"id": 11972, "title": "2021년 실감교육 콘텐츠 개발지원사업 발표평가 결과 공지", "biz": "실감교육강화사업", "start": "2021-05-17", "end": "2021-12-31", "writer": "박홍선", "posted": "2021-05-17", "views": 12038, "files": 0, "url": "https://www.nipa.kr/home/2-2/11972", "first_seen": "2026-10-01T17:43:00"}, {"id": 11964, "title": "2021년 실감교육 콘텐츠 개발지원사업 서면평가 결과 공지", "biz": "실감교육강화사업", "start": "2021-05-07", "end": "2021-12-31", "writer": "박홍선", "posted": "2021-05-07", "views": 10638, "files": 0, "url": "https://www.nipa.kr/home/2-2/11964", "first_seen": "2026-10-01T17:43:00"}, {"id": 11963, "title": "2021년 공개소프트웨어 리더급 개발자(오픈 프런티어) 모집 공고", "biz": "공개SW활성화지원", "start": "2021-05-06", "end": "2021-12-31", "writer": "이정은", "posted": "2021-05-06", "views": 16531, "files": 4, "url": "https://www.nipa.kr/home/2-2/11963", "first_seen": "2026-10-01T17:43:01"}, {"id": 11962, "title": "2021년 공개소프트웨어 기반 창업기업 모집 공고", "biz": "공개SW활성화지원", "start": "2021-05-06", "end": "2021-12-31", "writer": "이정은", "posted": "2021-05-06", "views": 17310, "files": 4, "url": "https://www.nipa.kr/home/2-2/11962", "first_seen": "2026-10-01T17:43:02"}, {"id": 11953, "title": "2021년도 대기업·기금사 대상 2차 비대면 기업홍보 지원(언택트IR) 공고", "biz": "ICT창의기업육성", "start": "2021-04-30", "end": "2021-12-31", "writer": "박지혜", "posted": "2021-04-30", "views": 18375, "files": 3, "url": "https://www.nipa.kr/home/2-2/11953", "first_seen": "2026-10-01T17:43:03"}, {"id": 11951, "title": "2021년 K-Global 스타트업 공모전 프로그램 참가자 모집공고", "biz": "ICT창의기업육성", "start": "2021-04-27", "end": "2021-12-31", "writer": "이다예", "posted": "2021-04-27", "views": 18279, "files": 4, "url": "https://www.nipa.kr/home/2-2/11951", "first_seen": "2026-10-01T17:43:03"}, {"id": 11941, "title": "2021년 3D프린팅 전문인력 양성교육 공고", "biz": "3D프린팅혁신성장거점조성", "start": "2021-04-19", "end": "2021-12-31", "writer": "최보경", "posted": "2021-04-19", "views": 15908, "files": 8, "url": "https://www.nipa.kr/home/2-2/11941", "first_seen": "2026-10-01T17:43:04"}, {"id": 11936, "title": "(수정공고-마감시간 수정) 2021년 디지털 전환 교육 지원 사업 운영기관 모집 공고", "biz": "디지털 전환 지원", "start": "2021-04-14", "end": "2021-12-31", "writer": "류지연", "posted": "2021-04-14", "views": 15231, "files": 5, "url": "https://www.nipa.kr/home/2-2/11936", "first_seen": "2026-10-01T17:43:05"}, {"id": 11935, "title": "「2021년 디지털콘텐츠기업 동반진출 지원사업」 선정 결과 공지", "biz": "디지털콘텐츠기업 동반진출지원", "start": "2021-04-14", "end": "2021-12-31", "writer": "강현태", "posted": "2021-04-14", "views": 9324, "files": 0, "url": "https://www.nipa.kr/home/2-2/11935", "first_seen": "2026-10-01T17:43:05"}, {"id": 11927, "title": "2021년 ｢산업전문인력 AI역량강화 지원사업 신규과제｣ 선정 결과 공지", "biz": "산업전문인력 AI역량강화", "start": "2021-04-12", "end": "2021-12-31", "writer": "김광혁", "posted": "2021-04-12", "views": 18677, "files": 1, "url": "https://www.nipa.kr/home/2-2/11927", "first_seen": "2026-10-01T17:43:06"}, {"id": 11926, "title": "2021년 디지털콘텐츠 해외진출 투자유치 지원사업 재공고", "biz": "해외 홍보·마케팅 지원", "start": "2021-04-09", "end": "2021-12-31", "writer": "강현태", "posted": "2021-04-09", "views": 13264, "files": 5, "url": "https://www.nipa.kr/home/2-2/11926", "first_seen": "2026-10-01T17:43:07"}, {"id": 11919, "title": "2021년 디지털 전환 교육 지원 사업 운영기관 모집 공고", "biz": "디지털 전환 지원", "start": "2021-04-08", "end": "2021-12-31", "writer": "류지연", "posted": "2021-04-08", "views": 17070, "files": 5, "url": "https://www.nipa.kr/home/2-2/11919", "first_seen": "2026-10-01T17:43:08"}, {"id": 11914, "title": "2021년도 대기업·기금사 대상 1차 비대면 기업홍보 지원(언택트IR) 공고", "biz": "ICT창의기업육성", "start": "2021-04-05", "end": "2021-12-31", "writer": "박지혜", "posted": "2021-04-05", "views": 18871, "files": 6, "url": "https://www.nipa.kr/home/2-2/11914", "first_seen": "2026-10-01T17:43:09"}, {"id": 11913, "title": "2021년도 과학기술정보통신부 비대면 기업홍보 지원사업(언택트 IR) 상반기 통합공고", "biz": "ICT창의기업육성", "start": "2021-04-05", "end": "2021-12-31", "writer": "박지혜", "posted": "2021-04-05", "views": 19679, "files": 6, "url": "https://www.nipa.kr/home/2-2/11913", "first_seen": "2026-10-01T17:43:09"}, {"id": 11912, "title": "2021년 디지털콘텐츠기업 동반진출 지원사업 서면평가 결과 공지", "biz": "디지털콘텐츠기업 동반진출지원", "start": "2021-04-05", "end": "2021-12-31", "writer": "강현태", "posted": "2021-04-05", "views": 9011, "files": 0, "url": "https://www.nipa.kr/home/2-2/11912", "first_seen": "2026-10-01T17:43:10"}, {"id": 11910, "title": "2021년 실감교육 콘텐츠 개발지원 과제 공고", "biz": "실감교육강화사업", "start": "2021-04-01", "end": "2021-12-31", "writer": "임문정", "posted": "2021-04-01", "views": 17781, "files": 9, "url": "https://www.nipa.kr/home/2-2/11910", "first_seen": "2026-10-01T17:43:10"}, {"id": 11906, "title": "K-Startup 그랜드 챌린지 액셀러레이팅 운영사업 모집공고", "biz": "K-Startup 그랜드 챌린지", "start": "2021-03-31", "end": "2021-12-31", "writer": "최보영", "posted": "2021-03-31", "views": 23926, "files": 6, "url": "https://www.nipa.kr/home/2-2/11906", "first_seen": "2026-10-01T17:43:11"}, {"id": 11902, "title": "2021년 디지털인프라(SW) 진단 및 개선지원 사업 진단 수요기업(기관) 모집 공고(2차)", "biz": "디지털인프라(SW) 진단 및 개선", "start": "2021-03-29", "end": "2021-12-31", "writer": "한상진", "posted": "2021-03-29", "views": 16757, "files": 4, "url": "https://www.nipa.kr/home/2-2/11902", "first_seen": "2026-10-01T17:43:11"}, {"id": 11865, "title": "2021년도 5G기반 디지털트윈 제조산업 적용 실증사업 발표 평가 결과", "biz": "디지털 트윈 혁신서비스 선도", "start": "2021-03-17", "end": "2021-12-31", "writer": "이현정", "posted": "2021-03-17", "views": 16388, "files": 0, "url": "https://www.nipa.kr/home/2-2/11865", "first_seen": "2026-10-01T17:43:12"}, {"id": 11861, "title": "2021년도 5G기반 디지털트윈 시설물안전 실증사업 발표 평가 결과", "biz": "디지털 트윈 혁신서비스 선도", "start": "2021-03-16", "end": "2021-12-31", "writer": "이현정", "posted": "2021-03-16", "views": 15217, "files": 0, "url": "https://www.nipa.kr/home/2-2/11861", "first_seen": "2026-10-01T17:43:13"}, {"id": 11857, "title": "2021년 ICT융합 디바이스 개발 신규지원 대상사업 공고", "biz": "지역균형발전SW·ICT융합기술개발", "start": "2021-03-15", "end": "2021-12-31", "writer": "서린", "posted": "2021-03-15", "views": 19592, "files": 9, "url": "https://www.nipa.kr/home/2-2/11857", "first_seen": "2026-10-01T17:43:13"}, {"id": 11850, "title": "2021년 공개SW 기업성장 지원사업 시행 공고", "biz": "공개SW활성화지원", "start": "2021-03-10", "end": "2021-12-31", "writer": "김도형", "posted": "2021-03-10", "views": 21836, "files": 5, "url": "https://www.nipa.kr/home/2-2/11850", "first_seen": "2026-10-01T17:43:14"}, {"id": 11848, "title": "2021년 개방형OS 확산 지원사업 시행 공고", "biz": "공개SW활성화지원", "start": "2021-03-10", "end": "2021-12-31", "writer": "박영근", "posted": "2021-03-10", "views": 18563, "files": 5, "url": "https://www.nipa.kr/home/2-2/11848", "first_seen": "2026-10-01T17:43:14"}, {"id": 11839, "title": "2021년 디지털 혁신기술 박람회 개최 지원 사업 공고", "biz": "스마트서비스창출기반확충", "start": "2021-03-08", "end": "2021-12-31", "writer": "조목은", "posted": "2021-03-08", "views": 18051, "files": 4, "url": "https://www.nipa.kr/home/2-2/11839", "first_seen": "2026-10-01T17:43:15"}, {"id": 11830, "title": "2021년도 핵심산업 클라우드 플래그십 프로젝트 사업 [인프라기업-물류부문] 재공고", "biz": "유망 SaaS 개발·육성 지원", "start": "2021-03-03", "end": "2021-12-31", "writer": "강효정", "posted": "2021-03-03", "views": 19444, "files": 5, "url": "https://www.nipa.kr/home/2-2/11830", "first_seen": "2026-10-01T17:43:16"}, {"id": 11817, "title": "2021년 글로벌SaaS육성프로젝트(GSIP) 사업 공고", "biz": "글로벌 SaaS 육성 프로젝트(GSIP)", "start": "2021-02-24", "end": "2021-12-31", "writer": "구현도", "posted": "2021-02-24", "views": 25868, "files": 8, "url": "https://www.nipa.kr/home/2-2/11817", "first_seen": "2026-10-01T17:43:17"}, {"id": 11816, "title": "2021년 『글로벌 ICT 미래 유니콘 육성(ICT Growth)』사업 공고", "biz": "ICT창의기업육성", "start": "2021-02-24", "end": "2021-12-31", "writer": "신동훈", "posted": "2021-02-24", "views": 23381, "files": 5, "url": "https://www.nipa.kr/home/2-2/11816", "first_seen": "2026-10-01T17:43:18"}, {"id": 11815, "title": "2021년도 산업전문인력 AI역량강화 지원사업 신규과제 모집 공고", "biz": "산업전문인력 AI역량강화", "start": "2021-02-24", "end": "2021-12-31", "writer": "김광혁", "posted": "2021-02-24", "views": 25999, "files": 7, "url": "https://www.nipa.kr/home/2-2/11815", "first_seen": "2026-10-01T17:43:19"}, {"id": 11813, "title": "2021년 디지털콘텐츠기업 동반진출 지원사업 공고", "biz": "디지털콘텐츠기업 동반진출지원", "start": "2021-02-23", "end": "2021-12-31", "writer": "강현태", "posted": "2021-02-23", "views": 14876, "files": 7, "url": "https://www.nipa.kr/home/2-2/11813", "first_seen": "2026-10-01T17:43:19"}, {"id": 11805, "title": "​21년 상반기 K-실감스튜디오 인프라 기반 360도 Volumetric 콘텐츠 시범제작 지원사업 모집공고", "biz": "실감형 콘텐츠 인프라 구축, 운영", "start": "2021-02-22", "end": "2021-12-31", "writer": "이수진", "posted": "2021-02-22", "views": 12893, "files": 2, "url": "https://www.nipa.kr/home/2-2/11805", "first_seen": "2026-10-01T17:43:20"}, {"id": 11796, "title": "XR소재.부품.장비 지원센터 구축 및 운영 사업 공고", "biz": "XR 소재·부품·장비 지원센터 구축 및 운영", "start": "2021-02-18", "end": "2021-12-31", "writer": "이길영", "posted": "2021-02-18", "views": 14529, "files": 4, "url": "https://www.nipa.kr/home/2-2/11796", "first_seen": "2026-10-01T17:43:21"}, {"id": 11794, "title": "2021년 클라우드 통합 사업설명회 동영상 게시 안내", "biz": "유망 SaaS 개발·육성 지원", "start": "2021-02-15", "end": "2021-12-31", "writer": "강효정", "posted": "2021-02-15", "views": 18103, "files": 0, "url": "https://www.nipa.kr/home/2-2/11794", "first_seen": "2026-10-01T17:43:22"}, {"id": 11791, "title": "2021년 해외진출 주요거점 인프라 지원사업 안내", "biz": "해외진출 주요거점 인프라 지원", "start": "2021-02-09", "end": "2021-12-31", "writer": "김수비", "posted": "2021-02-09", "views": 14877, "files": 2, "url": "https://www.nipa.kr/home/2-2/11791", "first_seen": "2026-10-01T17:43:22"}, {"id": 11789, "title": "2021년 디지털인프라(SW) 진단 및 개선지원 사업 진단 수요기업(기관) 모집 공고(1차)", "biz": "디지털인프라(SW) 진단 및 개선", "start": "2021-02-05", "end": "2021-12-31", "writer": "한상진", "posted": "2021-02-05", "views": 17912, "files": 4, "url": "https://www.nipa.kr/home/2-2/11789", "first_seen": "2026-10-01T17:43:23"}, {"id": 11762, "title": "21년 마포 3D-FAB 기술지원 위탁운영 사업자 공모", "biz": "3D프린팅혁신성장거점조성", "start": "2021-01-06", "end": "2021-12-31", "writer": "황순철", "posted": "2021-01-06", "views": 18464, "files": 5, "url": "https://www.nipa.kr/home/2-2/11762", "first_seen": "2026-10-01T17:43:23"}, {"id": 11758, "title": "[수정공고] 2021년 디지털콘텐츠 미래인재발굴 육성 교육기관 공고", "biz": "디지털콘텐츠 개발인력 역량 강화", "start": "2020-12-28", "end": "2020-12-31", "writer": "관리자", "posted": "2020-12-28", "views": 15759, "files": 4, "url": "https://www.nipa.kr/home/2-2/11758", "first_seen": "2026-10-01T17:43:24"}, {"id": 11757, "title": "2021년 「SW고성장클럽200」사업 운영기관 모집 공고", "biz": "SW고성장클럽", "start": "2020-12-17", "end": "2020-12-31", "writer": "허영준", "posted": "2020-12-17", "views": 21645, "files": 4, "url": "https://www.nipa.kr/home/2-2/11757", "first_seen": "2026-10-01T17:43:24"}, {"id": 11756, "title": "2021년 ｢SW고성장클럽 200｣ 및 ｢글로벌 SW전문기업육성｣ 사업 통합 공고", "biz": "SW고성장클럽", "start": "2020-12-17", "end": "2020-12-31", "writer": "허영준", "posted": "2020-12-17", "views": 24596, "files": 4, "url": "https://www.nipa.kr/home/2-2/11756", "first_seen": "2026-10-01T17:43:25"}, {"id": 11755, "title": "2021년 인공지능 고성능 컴퓨팅 자원 지원 사업 안내", "biz": "고성능컴퓨팅지원", "start": "2020-12-15", "end": "2020-12-31", "writer": "박정호", "posted": "2020-12-15", "views": 32979, "files": 3, "url": "https://www.nipa.kr/home/2-2/11755", "first_seen": "2026-10-01T17:43:25"}, {"id": 11747, "title": "’20년 디지털인프라(SW) 진단 및 개선 사업 프로세스 진단 수요기업(기관) 모집 공고(3차)", "biz": "디지털인프라(SW) 진단 및 개선", "start": "2020-10-19", "end": "2020-12-31", "writer": "한상진", "posted": "2020-10-19", "views": 20093, "files": 2, "url": "https://www.nipa.kr/home/2-2/11747", "first_seen": "2026-10-01T17:43:26"}, {"id": 11745, "title": "2020년 K-Global@Silicon Valley K-Pitch 참가기업 모집 공고", "biz": "SW신산업 글로벌 레퍼런스 확대 지원", "start": "2020-10-16", "end": "2020-12-31", "writer": "한선재", "posted": "2020-10-16", "views": 21852, "files": 4, "url": "https://www.nipa.kr/home/2-2/11745", "first_seen": "2026-10-01T17:43:27"}, {"id": 11744, "title": "KIC실리콘밸리 TRT(빅데이터/클라우드/AI 분야) 프로그램 참가기업 모집 연장 공고", "biz": "KIC 실리콘밸리 운영", "start": "2020-10-16", "end": "2020-12-31", "writer": "박진홍", "posted": "2020-10-16", "views": 20538, "files": 3, "url": "https://www.nipa.kr/home/2-2/11744", "first_seen": "2026-10-01T17:43:28"}, {"id": 11735, "title": "2020년 인공지능 문제해결 경진대회 개최 공고", "biz": "개방형 경진대회 플랫폼 구축", "start": "2020-09-24", "end": "2020-12-31", "writer": "임소현", "posted": "2020-09-24", "views": 19510, "files": 1, "url": "https://www.nipa.kr/home/2-2/11735", "first_seen": "2026-10-01T17:43:28"}, {"id": 11734, "title": "2020년 K-Global@China K-Pitch 참가기업 모집 연장공고", "biz": "SW신산업 글로벌 레퍼런스 확대 지원", "start": "2020-09-22", "end": "2020-12-31", "writer": "한선재", "posted": "2020-09-22", "views": 20627, "files": 4, "url": "https://www.nipa.kr/home/2-2/11734", "first_seen": "2026-10-01T17:43:29"}, {"id": 11732, "title": "KIC실리콘밸리 TRT(빅데이터/클라우드/AI 분야) 프로그램 참가기업 모집 공고", "biz": "KIC 실리콘밸리 운영", "start": "2020-09-16", "end": "2020-12-31", "writer": "박진홍", "posted": "2020-09-16", "views": 21540, "files": 3, "url": "https://www.nipa.kr/home/2-2/11732", "first_seen": "2026-10-01T17:43:30"}, {"id": 11730, "title": "KIC실리콘밸리 Soaring1단계 프로그램 참가기업 모집 공고", "biz": "KIC 실리콘밸리 운영", "start": "2020-09-09", "end": "2020-12-31", "writer": "박진홍", "posted": "2020-09-09", "views": 20974, "files": 3, "url": "https://www.nipa.kr/home/2-2/11730", "first_seen": "2026-10-01T17:43:30"}, {"id": 11729, "title": "KIC실리콘밸리 Challenging 프로그램 참가기업 모집 연장공고", "biz": "KIC 실리콘밸리 운영", "start": "2020-09-09", "end": "2020-12-31", "writer": "박진홍", "posted": "2020-09-09", "views": 20254, "files": 3, "url": "https://www.nipa.kr/home/2-2/11729", "first_seen": "2026-10-01T17:43:31"}, {"id": 11724, "title": "KIC실리콘밸리 Challenging 프로그램 참가기업 모집 공모", "biz": "KIC 실리콘밸리 운영", "start": "2020-08-25", "end": "2020-12-31", "writer": "박진홍", "posted": "2020-08-25", "views": 20952, "files": 2, "url": "https://www.nipa.kr/home/2-2/11724", "first_seen": "2026-10-01T17:43:32"}, {"id": 11700, "title": "[중요] AI바우처, AI+X(불법복제품 판독, 의료영상 진료/판독, 해안경비), 클라우드 추경사업 접수 유의사항 안내", "biz": "AI융합에너지효율화", "start": "2020-07-28", "end": "2020-12-31", "writer": "이민우", "posted": "2020-07-28", "views": 20477, "files": 0, "url": "https://www.nipa.kr/home/2-2/11700", "first_seen": "2026-10-01T17:43:34"}, {"id": 11694, "title": "2020년 『Go, Virtual! K-솔루션 페어』참가기업 모집", "biz": "해외IT지원센터(싱가포르) 운영", "start": "2020-07-24", "end": "2020-12-31", "writer": "조목은", "posted": "2020-07-24", "views": 21974, "files": 3, "url": "https://www.nipa.kr/home/2-2/11694", "first_seen": "2026-10-01T17:43:37"}, {"id": 11689, "title": "2020년 해외 진출용 방송콘텐츠 재제작 및 홍보 지원사업(신남방 및 중화권역) 참가기업 모집_기간 연장", "biz": "국제협력 인프라강화, 융합서비스 글로벌 마케팅 강화", "start": "2020-07-21", "end": "2020-12-31", "writer": "길성원", "posted": "2020-07-21", "views": 20914, "files": 3, "url": "https://www.nipa.kr/home/2-2/11689", "first_seen": "2026-10-01T17:43:38"}, {"id": 11684, "title": "신수요 창출형 AI융합 프로젝트(AI+X) 사업설명 동영상 안내", "biz": "AI융합에너지효율화", "start": "2020-07-15", "end": "2020-12-31", "writer": "이민우", "posted": "2020-07-15", "views": 23811, "files": 0, "url": "https://www.nipa.kr/home/2-2/11684", "first_seen": "2026-10-01T17:43:40"}, {"id": 11674, "title": "(추경) 2020년 핵심산업 클라우드 플래그쉽 프로젝트 지원사업 모집 공고", "biz": "유망 SaaS 개발·육성 지원", "start": "2020-07-10", "end": "2020-12-31", "writer": "강효정", "posted": "2020-07-10", "views": 30438, "files": 2, "url": "https://www.nipa.kr/home/2-2/11674", "first_seen": "2026-10-01T17:43:42"}, {"id": 11666, "title": "5G MEC 기반 콘텐츠 분석 및 컨설팅/기술지원 사업자 선정 공고", "biz": "메타버스 허브센터 구축 및 운영", "start": "2020-07-09", "end": "2020-12-31", "writer": "김자영", "posted": "2020-07-09", "views": 18441, "files": 2, "url": "https://www.nipa.kr/home/2-2/11666", "first_seen": "2026-10-01T17:43:42"}, {"id": 11661, "title": "디지털콘텐츠기업 성장지원센터 입주기업 모집공고(2020-01차)", "biz": "디지털콘텐츠 허브 활성화", "start": "2020-06-30", "end": "2020-12-31", "writer": "홍태준", "posted": "2020-06-30", "views": 16921, "files": 4, "url": "https://www.nipa.kr/home/2-2/11661", "first_seen": "2026-10-01T17:43:43"}, {"id": 11658, "title": "2020 하반기 Volumetric 콘텐츠 시범제작 지원사업 모집공고", "biz": "실감형 콘텐츠 인프라 구축, 운영", "start": "2020-06-25", "end": "2020-12-31", "writer": "이수진", "posted": "2020-06-25", "views": 14425, "files": 2, "url": "https://www.nipa.kr/home/2-2/11658", "first_seen": "2026-10-01T17:43:44"}, {"id": 11639, "title": "2020년 K-Global 스타트업 공모전 모집공고", "biz": "ICT창의기업육성", "start": "2020-05-25", "end": "2020-12-31", "writer": "이다예", "posted": "2020-05-25", "views": 20948, "files": 4, "url": "https://www.nipa.kr/home/2-2/11639", "first_seen": "2026-10-01T17:43:46"}, {"id": 11637, "title": "AI, 5G, 빅데이터, VR, AR, e-Commerce, IoT 스타트업 공모 (2020 K-Global 액셀러레이터 - 어썸벤처스)", "biz": "ICT창의기업육성", "start": "2020-05-19", "end": "2020-12-31", "writer": "박지혜", "posted": "2020-05-19", "views": 26295, "files": 1, "url": "https://www.nipa.kr/home/2-2/11637", "first_seen": "2026-10-01T17:48:01"}, {"id": 11636, "title": "AI 및 IoT 스타트업 공모 (2020 K-Global 액셀러레이터 - 인포뱅크)", "biz": "ICT창의기업육성", "start": "2020-05-19", "end": "2020-12-31", "writer": "박지혜", "posted": "2020-05-19", "views": 23419, "files": 1, "url": "https://www.nipa.kr/home/2-2/11636", "first_seen": "2026-10-01T17:48:02"}, {"id": 11635, "title": "블록체인 융합 핀테크·콘텐츠·지식정보 분야, 스마트팩토리 스타트업 공모 (2020 K-Global 액셀러레이터 - 블록크래프터스)", "biz": "ICT창의기업육성", "start": "2020-05-19", "end": "2020-12-31", "writer": "박지혜", "posted": "2020-05-19", "views": 25264, "files": 2, "url": "https://www.nipa.kr/home/2-2/11635", "first_seen": "2026-10-01T17:48:03"}, {"id": 11634, "title": "블록체인·IoT 기반 핀테크·바이오헬스케어 스타트업 공모 (2020 K-Global 액셀러레이터 - 요즈마그룹코리아)", "biz": "ICT창의기업육성", "start": "2020-05-19", "end": "2020-12-31", "writer": "박지혜", "posted": "2020-05-19", "views": 21981, "files": 2, "url": "https://www.nipa.kr/home/2-2/11634", "first_seen": "2026-10-01T17:48:03"}, {"id": 11633, "title": "AI∘클라우드∘테크핀∘블록체인 스타트업 공모 (2020 K-Global 액셀러레이터 - 케이액셀러레이터)", "biz": "ICT창의기업육성", "start": "2020-05-19", "end": "2020-12-31", "writer": "박지혜", "posted": "2020-05-19", "views": 22661, "files": 1, "url": "https://www.nipa.kr/home/2-2/11633", "first_seen": "2026-10-01T17:48:04"}, {"id": 11631, "title": "AI & IoT 스마트홈, 스마트시티, 스마트 콘텐츠 스타트업 공모(2020 K-Global 액셀러레이터 - 코맥스벤처러스)", "biz": "ICT창의기업육성", "start": "2020-05-18", "end": "2020-12-31", "writer": "박지혜", "posted": "2020-05-18", "views": 23966, "files": 1, "url": "https://www.nipa.kr/home/2-2/11631", "first_seen": "2026-10-01T17:48:04"}, {"id": 11629, "title": "ICT 중소·벤처기업의 투자유치·업무협력 지원을 위한 ‘3차 언택트(온라인) IR’ 참가기업 모집 공고", "biz": "ICT창의기업육성", "start": "2020-05-18", "end": "2020-12-31", "writer": "윤후성", "posted": "2020-05-18", "views": 24123, "files": 1, "url": "https://www.nipa.kr/home/2-2/11629", "first_seen": "2026-10-01T17:48:05"}, {"id": 11626, "title": "2020년 인공지능 온라인 경진대회 개최 공고", "biz": "개방형 경진대회 플랫폼 구축", "start": "2020-05-15", "end": "2020-12-31", "writer": "조정석", "posted": "2020-05-15", "views": 18969, "files": 1, "url": "https://www.nipa.kr/home/2-2/11626", "first_seen": "2026-10-01T17:48:06"}, {"id": 11621, "title": "2020년 개방형 경진대회 플랫폼 구축 사업 안내(수정공고)", "biz": "개방형 경진대회 플랫폼 구축", "start": "2020-05-12", "end": "2020-12-31", "writer": "조정석", "posted": "2020-05-12", "views": 17797, "files": 2, "url": "https://www.nipa.kr/home/2-2/11621", "first_seen": "2026-10-01T17:48:06"}, {"id": 11616, "title": "ICT 중소·벤처기업의 투자유치·업무협력 지원을 위한 ‘2차 언택트(온라인) IR’ 참가기업 모집 공고", "biz": "ICT창의기업육성", "start": "2020-04-27", "end": "2020-12-31", "writer": "윤후성", "posted": "2020-04-27", "views": 22361, "files": 2, "url": "https://www.nipa.kr/home/2-2/11616", "first_seen": "2026-10-01T17:48:07"}, {"id": 11609, "title": "[수정공고] 2020년 K-Startup 그랜드 챌린지 액셀러레이팅 운영 사업 수행기간 및 사업비 수정 공고", "biz": "글로벌 액셀러레이팅 활성화", "start": "2020-04-22", "end": "2020-12-31", "writer": "관리자", "posted": "2020-04-22", "views": 15024, "files": 2, "url": "https://www.nipa.kr/home/2-2/11609", "first_seen": "2026-10-01T17:48:07"}, {"id": 11608, "title": "[수정공고] 2020년 K-Startup 그랜드 챌린지 스케일업 및 오픈 이노베이션 운영 사업 2차 수정 공고", "biz": "ICT이노베이션스퀘어 운영", "start": "2020-04-22", "end": "2020-12-31", "writer": "관리자", "posted": "2020-04-22", "views": 17799, "files": 2, "url": "https://www.nipa.kr/home/2-2/11608", "first_seen": "2026-10-01T17:48:08"}, {"id": 11604, "title": "2020년 ICT융합 디바이스 개발 사업 공고", "biz": "지역균형발전SW·ICT융합기술개발", "start": "2020-04-21", "end": "2020-12-31", "writer": "서린", "posted": "2020-04-21", "views": 21746, "files": 9, "url": "https://www.nipa.kr/home/2-2/11604", "first_seen": "2026-10-01T17:48:08"}, {"id": 11599, "title": "ICT 중소·벤처기업의 투자유치·업무협력 지원을 위한 ‘1차 언택트(온라인) IR’ 참가기업 모집 공고", "biz": "ICT창의기업육성", "start": "2020-04-13", "end": "2020-12-31", "writer": "윤후성", "posted": "2020-04-13", "views": 23975, "files": 2, "url": "https://www.nipa.kr/home/2-2/11599", "first_seen": "2026-10-01T17:48:09"}, {"id": 11598, "title": "2020년도 과학기술정보통신부 비대면 기업홍보 지원사업(언택트 IR) 통합공고", "biz": "ICT창의기업육성", "start": "2020-04-13", "end": "2020-12-31", "writer": "윤후성", "posted": "2020-04-13", "views": 22355, "files": 1, "url": "https://www.nipa.kr/home/2-2/11598", "first_seen": "2026-10-01T17:48:10"}, {"id": 11540, "title": "[수정공고] 2020년 K-Startup 그랜드 챌린지 스케일업 및 오픈 이노베이션 운영 사업 접수기간 연장 및 수행기간 수정 공고", "biz": "글로벌 액셀러레이팅 활성화", "start": "2020-03-24", "end": "2020-12-31", "writer": "관리자", "posted": "2020-03-24", "views": 15789, "files": 2, "url": "https://www.nipa.kr/home/2-2/11540", "first_seen": "2026-10-01T17:48:10"}, {"id": 11539, "title": "[수정공고] 2020년 K-Startup 그랜드 챌린지 액셀러레이팅 운영 사업 접수기간 연장 및 수행기간 수정 공고", "biz": "글로벌 액셀러레이팅 활성화", "start": "2020-03-24", "end": "2020-12-31", "writer": "관리자", "posted": "2020-03-24", "views": 13938, "files": 2, "url": "https://www.nipa.kr/home/2-2/11539", "first_seen": "2026-10-01T17:48:11"}, {"id": 11532, "title": "2020년 클라우드 전문인력 양성기관 지정 사업 공고", "biz": "클라우드 생태계 조성", "start": "2020-03-13", "end": "2020-12-31", "writer": "박수아", "posted": "2020-03-13", "views": 23548, "files": 4, "url": "https://www.nipa.kr/home/2-2/11532", "first_seen": "2026-10-01T17:48:11"}, {"id": 11530, "title": "2020년 해외진출 주요거점 인프라 지원사업 안내자료", "biz": "해외진출 주요거점 인프라 지원", "start": "2020-03-11", "end": "2020-12-31", "writer": "윤지애", "posted": "2020-03-11", "views": 87760, "files": 2, "url": "https://www.nipa.kr/home/2-2/11530", "first_seen": "2026-10-01T17:48:12"}, {"id": 11526, "title": "2020년 클라우드컴퓨팅 활성화를 위한 지원사업 통합 공고", "biz": "유망 SaaS 개발·육성 지원", "start": "2020-03-10", "end": "2020-12-31", "writer": "박수아", "posted": "2020-03-10", "views": 30129, "files": 7, "url": "https://www.nipa.kr/home/2-2/11526", "first_seen": "2026-10-01T17:48:12"}, {"id": 11525, "title": "2020년 KoVAC Shared Infra(개발/테스트 장비) 지원 안내", "biz": "VR·AR 산업거점(KoVAC) 기능 고도화", "start": "2020-03-10", "end": "2020-12-31", "writer": "이현철", "posted": "2020-03-10", "views": 19237, "files": 4, "url": "https://www.nipa.kr/home/2-2/11525", "first_seen": "2026-10-01T17:48:13"}, {"id": 11520, "title": "2020년 SOS랩 구축 및 SW서비스 개발 사업 추가공고", "biz": "지역균형발전SW·ICT융합기술개발", "start": "2020-03-05", "end": "2020-12-31", "writer": "서린", "posted": "2020-03-05", "views": 23098, "files": 9, "url": "https://www.nipa.kr/home/2-2/11520", "first_seen": "2026-10-01T17:48:14"}, {"id": 11515, "title": "2020년 소프트웨어(SW) 미래채움 사업 추가 공고", "biz": "정보소외지역 SW교육지원 강화", "start": "2020-03-02", "end": "2020-12-31", "writer": "이노원", "posted": "2020-03-02", "views": 26594, "files": 2, "url": "https://www.nipa.kr/home/2-2/11515", "first_seen": "2026-10-01T17:48:14"}, {"id": 11510, "title": "2020년 공개SW 기술확산 지원사업 사업설명회 자료 게시", "biz": "공개SW활성화지원", "start": "2020-02-28", "end": "2020-12-31", "writer": "권보미", "posted": "2020-02-28", "views": 25988, "files": 1, "url": "https://www.nipa.kr/home/2-2/11510", "first_seen": "2026-10-01T17:48:15"}, {"id": 11504, "title": "Volumetric 콘텐츠 시범제작 지원사업 모집 공고", "biz": "실감형 콘텐츠 인프라 구축, 운영", "start": "2020-02-27", "end": "2020-12-31", "writer": "이수진", "posted": "2020-02-27", "views": 15647, "files": 2, "url": "https://www.nipa.kr/home/2-2/11504", "first_seen": "2026-10-01T17:48:16"}, {"id": 11501, "title": "2020년 K-Startup 그랜드 챌린지 스케일업 및 오픈 이노베이션 운영 사업", "biz": "글로벌 액셀러레이팅 활성화", "start": "2020-02-26", "end": "2020-12-31", "writer": "관리자", "posted": "2020-02-26", "views": 14488, "files": 5, "url": "https://www.nipa.kr/home/2-2/11501", "first_seen": "2026-10-01T17:48:16"}, {"id": 11498, "title": "2020년 ICT융합 디바이스 개발 사업 공고", "biz": "지역균형발전SW·ICT융합기술개발", "start": "2020-02-24", "end": "2020-12-31", "writer": "서린", "posted": "2020-02-24", "views": 25601, "files": 8, "url": "https://www.nipa.kr/home/2-2/11498", "first_seen": "2026-10-01T17:48:16"}, {"id": 11494, "title": "2020년 개방형 경진대회 플랫폼 구축 사업 안내(수정공고)", "biz": "개방형 경진대회 플랫폼 구축", "start": "2020-02-24", "end": "2020-12-31", "writer": "조정석", "posted": "2020-02-24", "views": 17282, "files": 2, "url": "https://www.nipa.kr/home/2-2/11494", "first_seen": "2026-10-01T17:48:17"}, {"id": 11486, "title": "누리꿈스퀘어 KoVAC '글로벌 비즈니스 쇼룸(GBS)' 입주 콘텐츠 모집 안내", "biz": "VR·AR 산업거점(KoVAC) 기능 고도화", "start": "2020-02-20", "end": "2020-12-31", "writer": "이수진", "posted": "2020-02-20", "views": 20065, "files": 3, "url": "https://www.nipa.kr/home/2-2/11486", "first_seen": "2026-10-01T17:48:18"}, {"id": 11479, "title": "20년 K-Global 액셀러레이터 육성사업 액셀러레이터 모집공고", "biz": "ICT창의기업육성", "start": "2020-02-19", "end": "2020-12-31", "writer": "곽정호", "posted": "2020-02-19", "views": 23270, "files": 6, "url": "https://www.nipa.kr/home/2-2/11479", "first_seen": "2026-10-01T17:48:18"}, {"id": 11478, "title": "2020년 공개SW 기술확산 지원사업 사업공고(수정)", "biz": "공개SW활성화지원", "start": "2020-02-18", "end": "2020-12-31", "writer": "권보미", "posted": "2020-02-18", "views": 27845, "files": 6, "url": "https://www.nipa.kr/home/2-2/11478", "first_seen": "2026-10-01T17:48:19"}, {"id": 11477, "title": "2020년 『글로벌 ICT 미래 유니콘 육성(ICT Growth)』 사업 공고", "biz": "ICT창의기업육성", "start": "2020-02-17", "end": "2020-12-31", "writer": "한선재", "posted": "2020-02-17", "views": 26994, "files": 5, "url": "https://www.nipa.kr/home/2-2/11477", "first_seen": "2026-10-01T17:48:19"}, {"id": 11471, "title": "2020년도 5G기반 디지털트윈 공공선도 사업 공고", "biz": "디지털 트윈 혁신서비스 선도", "start": "2020-02-11", "end": "2020-12-31", "writer": "정재학", "posted": "2020-02-11", "views": 30370, "files": 6, "url": "https://www.nipa.kr/home/2-2/11471", "first_seen": "2026-10-01T17:48:20"}, {"id": 11470, "title": "2020년 SOS랩 구축 및 SW서비스 개발 사업설명회 자료 게시(참고자료 추가)", "biz": "지역균형발전SW·ICT융합기술개발", "start": "2020-02-10", "end": "2020-12-31", "writer": "우성주", "posted": "2020-02-10", "views": 21316, "files": 2, "url": "https://www.nipa.kr/home/2-2/11470", "first_seen": "2026-10-01T17:48:20"}, {"id": 11468, "title": "5G 기반 VR·AR 디바이스 개발 지원센터 운영 사업 공고", "biz": "5G 기반 VR·AR 디바이스 개발 지원센터 운영", "start": "2020-02-07", "end": "2020-12-31", "writer": "이혁준", "posted": "2020-02-07", "views": 16658, "files": 4, "url": "https://www.nipa.kr/home/2-2/11468", "first_seen": "2026-10-01T17:48:21"}, {"id": 11449, "title": "2020년 지역 VR·AR제작거점센터 구축 사업 지원대상 모집 공고", "biz": "가상융합산업혁신센터", "start": "2020-01-16", "end": "2020-12-31", "writer": "서재필", "posted": "2020-01-16", "views": 21026, "files": 4, "url": "https://www.nipa.kr/home/2-2/11449", "first_seen": "2026-10-01T17:48:21"}, {"id": 11448, "title": "2020년 세일즈 랩 프로그램 참여기업 모집 공고", "biz": "해외IT지원센터(싱가포르) 운영", "start": "2020-01-14", "end": "2020-12-31", "writer": "조목은", "posted": "2020-01-14", "views": 22412, "files": 4, "url": "https://www.nipa.kr/home/2-2/11448", "first_seen": "2026-10-01T17:48:22"}, {"id": 11447, "title": "(수정) 2020년 SOS랩 구축 및 SW서비스 개발 사업 공고(사업설명회 추가)", "biz": "지역균형발전SW·ICT융합기술개발", "start": "2020-01-10", "end": "2020-12-31", "writer": "서린", "posted": "2020-01-10", "views": 24075, "files": 9, "url": "https://www.nipa.kr/home/2-2/11447", "first_seen": "2026-10-01T17:48:22"}, {"id": 11446, "title": "2020년 소프트웨어(SW)미래채움 사업 공고", "biz": "정보소외지역 SW교육지원 강화", "start": "2020-01-10", "end": "2020-12-31", "writer": "이노원", "posted": "2020-01-10", "views": 29039, "files": 3, "url": "https://www.nipa.kr/home/2-2/11446", "first_seen": "2026-10-01T17:48:23"}, {"id": 11444, "title": "[추가모집] 2020년 인공지능 고성능 컴퓨팅 자원 이용자 (추가)모집 안내", "biz": "고성능컴퓨팅지원", "start": "2020-01-06", "end": "2020-12-31", "writer": "박정호", "posted": "2020-01-06", "views": 22479, "files": 2, "url": "https://www.nipa.kr/home/2-2/11444", "first_seen": "2026-10-01T17:48:23"}, {"id": 11430, "title": "2020년 인공지능 고성능 컴퓨팅 자원 이용자 모집 안내", "biz": "고성능컴퓨팅지원", "start": "2019-11-11", "end": "2019-12-31", "writer": "박정호", "posted": "2019-11-11", "views": 22082, "files": 2, "url": "https://www.nipa.kr/home/2-2/11430", "first_seen": "2026-10-01T17:48:24"}, {"id": 11429, "title": "[추가모집] 인도시장 진출을 위한 \"한인도SW상생협력센터 입주 및 개방형 사무공간 활용기업 모집", "biz": "글로벌 현지화·마케팅 진출지원", "start": "2019-10-23", "end": "2019-12-31", "writer": "김효근", "posted": "2019-10-23", "views": 20304, "files": 2, "url": "https://www.nipa.kr/home/2-2/11429", "first_seen": "2026-10-01T17:48:24"}, {"id": 7565, "title": "2020년 ｢산업전문인력 AI역량강화｣ 지원사업 모집 공고", "biz": "", "start": "2020-07-13", "end": "2020-12-31", "writer": "김광혁", "posted": "2020-07-13", "views": 13023, "files": 5, "url": "https://www.nipa.kr/home/2-2/7565", "first_seen": "2026-10-01T17:43:41"}, {"id": 7498, "title": "누리꿈스퀘어 판매시설 관리 대행 운영 사업 공고", "biz": "", "start": "2020-06-12", "end": "2020-12-31", "writer": "김현철", "posted": "2020-06-12", "views": 9517, "files": 5, "url": "https://www.nipa.kr/home/2-2/7498", "first_seen": "2026-10-01T17:43:45"}, {"id": 6819, "title": "2019년도 해외필름마켓(아메리칸필름마켓) 연계 컴퓨터그래픽 비즈니스 쇼케이스 참가기업 모집", "biz": "", "start": "2019-09-03", "end": "2019-12-31", "writer": "조강흠", "posted": "2019-09-03", "views": 9914, "files": 1, "url": "https://www.nipa.kr/home/2-2/6819", "first_seen": "2026-10-01T17:48:25"}], "attach": {"count": 1338, "bytes": 2012409856, "by_ext": {"doc": 2, "docx": 13, "egg": 1, "gif": 7, "hwp": 602, "hwpx": 32, "jpg": 111, "pdf": 238, "png": 19, "ppt": 7, "xlsx": 34, "zip": 272}}, "last_run": {"run_id": "CR-2026-1001-1751", "mode": "incremental", "started_at": "2026-10-01T17:51:13", "ended_at": "2026-10-01T17:51:20", "pages_total": 36, "pages_done": 1, "rows": 10, "new_rows": 0, "updated_rows": 10, "errors": 0, "log": [{"ts": "17:51:13", "lvl": "INFO", "msg": "run CR-2026-1001-1751 start · mode=incremental · known=353"}, {"ts": "17:51:20", "lvl": "OK", "msg": "page 1/36 — 10 rows · new 0 · 6.4s"}, {"ts": "17:51:20", "lvl": "INFO", "msg": "page 1에 새 글 없음 → 증분 수집 종료"}, {"ts": "17:51:20", "lvl": "INFO", "msg": "done · rows 10 · new 0 · errors 0 · 6s"}]}};</script>
+<script>
+(() => {
+  const D = window.NIPA_DATA;
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const fmt = (n) => Number(n || 0).toLocaleString("ko-KR");
+  const NOW = new Date();
+  const DAY = 86400000;
+  const pad = (n) => String(n).padStart(2, "0");
+  const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const toDate = (s, endOfDay) => {
+    if (!s) return null;
+    if (s.length === 10) return new Date(s + (endOfDay ? "T23:59:59" : "T00:00:00"));
+    return new Date(s);
+  };
+  const bytes = (b) => b >= 1024 ** 3 ? (b / 1024 ** 3).toFixed(2) + " GB"
+                    : b >= 1024 ** 2 ? (b / 1024 ** 2).toFixed(1) + " MB"
+                    : (b / 1024).toFixed(0) + " KB";
+
+  // ── 상태 계산: 파일을 연 시각 기준 ──
+  const items = D.items.map((it) => {
+    const start = toDate(it.start), end = toDate(it.end, true);
+    let st, label, cls, dleft = null;
+    if (!start && !end) { st = "always"; label = "상시"; cls = "permanent"; }
+    else if (start && NOW < start) { st = "upcoming"; label = "예정"; cls = "info"; }
+    else if (end && NOW > end) { st = "ended"; label = "종료"; cls = "ended"; }
+    else if (!end) { st = "always"; label = "상시"; cls = "permanent"; }
+    else {
+      const today = new Date(ymd(NOW) + "T00:00:00");
+      const endDay = new Date(ymd(end) + "T00:00:00");
+      dleft = Math.round((endDay - today) / DAY);
+      if (dleft <= 7) { st = "urgent"; label = dleft === 0 ? "D-day" : "D-" + dleft; cls = dleft <= 3 ? "critical" : "warn"; }
+      else { st = "active"; label = "진행중"; cls = "active"; }
+    }
+    return { ...it, st, label, cls, dleft, endDate: end };
+  });
+
+  // ── 상단 상태 ──
+  const run = D.last_run || {};
+  const lastSync = run.ended_at ? new Date(run.ended_at) : null;
+  const ageH = lastSync ? (NOW - lastSync) / 3600000 : Infinity;
+  $("syncPillText").textContent = lastSync ? (ageH < 1 ? "Synced · " + Math.max(1, Math.round(ageH * 60)) + "m ago" : ageH < 24 ? "Synced · " + Math.round(ageH) + "h ago" : "Stale · " + Math.floor(ageH / 24) + "d ago") : "No run";
+  if (ageH >= 24) $("syncPill").classList.add("stale");
+  $("clock").innerHTML = `<strong>${ymd(NOW).replace(/-/g, ".")}</strong> · ${pad(NOW.getHours())}:${pad(NOW.getMinutes())} KST`;
+  $("lastSync").textContent = lastSync ? "last sync " + run.ended_at.replace("T", " ") : "last sync —";
+
+  // ── KPI ──
+  const spark = (vals, color, type) => {
+    const max = Math.max(1, ...vals), n = vals.length;
+    if (type === "bar") {
+      const w = 120 / n;
+      return `<svg class="kpi-spark" viewBox="0 0 120 22" preserveAspectRatio="none"><g fill="${color}" opacity="0.9">` +
+        vals.map((v, i) => { const h = Math.max(v ? 2 : 0.5, (v / max) * 20); return `<rect x="${(i * w + w * 0.15).toFixed(1)}" y="${(22 - h).toFixed(1)}" width="${(w * 0.7).toFixed(1)}" height="${h.toFixed(1)}"/>`; }).join("") + "</g></svg>";
+    }
+    const pts = vals.map((v, i) => `${(i * 120 / (n - 1)).toFixed(1)},${(20 - (v / max) * 17).toFixed(1)}`).join(" ");
+    return `<svg class="kpi-spark" viewBox="0 0 120 22" preserveAspectRatio="none"><polyline fill="none" stroke="${color}" stroke-width="1.4" points="${pts}"/><polyline fill="${color}" fill-opacity="0.08" stroke="none" points="${pts} 120,22 0,22"/></svg>`;
+  };
+  const postedOn = (d) => items.filter((x) => x.posted === ymd(d)).length;
+  const daysBack = (n) => Array.from({ length: n }, (_, i) => new Date(NOW - (n - 1 - i) * DAY));
+
+  // 누적 공고 수 (최근 16개월, 월말 기준)
+  const months = Array.from({ length: 16 }, (_, i) => new Date(NOW.getFullYear(), NOW.getMonth() - 15 + i + 1, 0));
+  const cumul = months.map((m) => items.filter((x) => x.posted && x.posted <= ymd(m)).length);
+  const urgent = items.filter((x) => x.st === "urgent");
+  const critical = urgent.filter((x) => x.dleft <= 3);
+  const openN = items.filter((x) => x.st === "active" || x.st === "urgent").length;
+  const deadlines = Array.from({ length: 14 }, (_, i) => items.filter((x) => x.endDate && ymd(x.endDate) === ymd(new Date(+NOW + i * DAY))).length);
+  const todayNew = postedOn(NOW);
+  const week = daysBack(7).reduce((s, d) => s + postedOn(d), 0);
+  const latestPosted = items.map((x) => x.posted).filter(Boolean).sort().pop() || "—";
+  const A = D.attach;
+  const exts = Object.entries(A.by_ext).sort((a, b) => b[1] - a[1]);
+  const extColors = ["#d4ff3a", "#5fb8ff", "#f5b942", "#5dd97a", "#9aa3ad"];
+  let x0 = 0;
+  const extBar = `<svg class="kpi-spark" viewBox="0 0 120 22" preserveAspectRatio="none"><g>` +
+    exts.slice(0, 5).map(([, n], i) => { const w = (n / Math.max(1, A.count)) * 120; const r = `<rect x="${x0.toFixed(1)}" y="6" width="${w.toFixed(1)}" height="10" fill="${extColors[i]}" opacity="0.85"/>`; x0 += w; return r; }).join("") + "</g></svg>";
+
+  $("kpis").innerHTML = `
+    <div class="kpi reveal reveal-2">
+      <div class="kpi-label">전체 수집 공고</div>
+      <div class="kpi-number">${fmt(items.length)}</div>
+      <div class="kpi-meta"><span><span class="delta">▲ +${fmt(run.new_rows)}</span>&nbsp; last run</span><span>${fmt(run.pages_total)} pages</span></div>
+      ${spark(cumul, "#d4ff3a")}
+    </div>
+    <div class="kpi critical reveal reveal-3">
+      <div class="kpi-label">마감 임박 (D-7 이내)</div>
+      <div class="kpi-number">${fmt(urgent.length)}</div>
+      <div class="kpi-meta"><span>진행중 ${fmt(openN)}</span><span>${fmt(critical.length)} critical</span></div>
+      ${spark(deadlines, "#ff5e58", "bar")}
+    </div>
+    <div class="kpi reveal reveal-4">
+      <div class="kpi-label">오늘 신규</div>
+      <div class="kpi-number">${fmt(todayNew)}</div>
+      <div class="kpi-meta"><span><span class="delta">▲ +${fmt(week)}</span>&nbsp; 7d</span><span>latest ${latestPosted.slice(5)}</span></div>
+      ${spark(daysBack(12).map(postedOn), "#5fb8ff", "bar")}
+    </div>
+    <div class="kpi reveal reveal-5">
+      <div class="kpi-label">첨부 파일</div>
+      <div class="kpi-number">${fmt(A.count)}<span class="unit">files</span></div>
+      <div class="kpi-meta"><span>${bytes(A.bytes)}</span><span>${exts.slice(0, 4).map((e) => e[0]).join(" · ")}</span></div>
+      ${extBar}
+    </div>`;
+
+  // ── Last run ──
+  $("runId").textContent = "job · " + (run.run_id || "—");
+  const badge = $("runBadge");
+  if (run.errors) { badge.className = "badge critical"; badge.textContent = `errors ${run.errors}`; }
+  else { badge.className = "badge active"; badge.textContent = "completed"; }
+  const modeArg = run.mode === "full" ? "--full" : run.mode && run.mode.startsWith("pages:") ? "--pages " + run.mode.split(":")[1] : "";
+  $("cmdLine").innerHTML = `<span class="prompt">$</span><span>python</span><span>nipa_crawler.py</span>${modeArg ? `<span class="arg">${modeArg}</span>` : ""}<span class="arg">--delay ${D.delay}</span><span class="arg">→ nipa.db · xlsx</span>`;
+  const incr = run.mode === "incremental";
+  const pct = incr ? 100 : run.pages_total ? (run.pages_done / run.pages_total) * 100 : 0;
+  $("progFill").style.width = pct.toFixed(1) + "%";
+  $("progPct").textContent = pct.toFixed(pct === 100 ? 0 : 1) + "%";
+  const secs = run.started_at && run.ended_at ? (new Date(run.ended_at) - new Date(run.started_at)) / 1000 : 0;
+  $("progMeta").innerHTML = [
+    ["Page", incr ? `${fmt(run.pages_done)} <span style="font-size:12px;color:var(--text-muted)">증분 · 사이트 ${fmt(run.pages_total)}p</span>` : `${fmt(run.pages_done)} / ${fmt(run.pages_total)}`],
+    ["Elapsed", `${pad(Math.floor(secs / 60))}:${pad(Math.round(secs % 60))}`],
+    ["Rows", `${fmt(run.rows)} <span style="font-size:12px;color:var(--text-muted)">new ${fmt(run.new_rows)}</span>`],
+    ["Rows/min", secs ? (run.rows / (secs / 60)).toFixed(1) : "—"],
+  ].map(([l, v]) => `<div><div class="pm-label">${l}</div><div class="pm-value">${v}</div></div>`).join("");
+  const lvlCls = { OK: "ok", INFO: "info", WARN: "warn", ERR: "err", FETCH: "fetch" };
+  $("logList").innerHTML = (run.log || []).slice(-7).reverse().map((l) =>
+    `<div class="log-line"><span class="ts">${esc(l.ts)}</span><span class="lvl ${lvlCls[l.lvl] || "info"}">${esc(l.lvl)}</span><span class="msg">${esc(l.msg)}</span></div>`).join("");
+
+  // ── 마감 임박 ──
+  const open = items.filter((x) => x.st === "urgent" || x.st === "active").sort((a, b) => a.endDate - b.endDate);
+  $("urgentCount").textContent = `${Math.min(6, open.length)} / ${open.length}`;
+  const p16 = (s) => (s || "").replace("T", " ");
+  $("urgentList").innerHTML = open.length ? open.slice(0, 6).map((x) => `
+    <a class="urgent-row" href="${esc(x.url)}" target="_blank" rel="noopener">
+      <div class="dday ${x.dleft <= 3 ? "critical" : x.dleft <= 7 ? "warn" : ""}"><span class="label">D-day</span>${x.dleft === 0 ? "D-0" : "D-" + x.dleft}</div>
+      <div>
+        <div class="urgent-title">${esc(x.title)}</div>
+        <div class="urgent-meta">${esc(p16(x.start))} ~ ${esc(p16(x.end))} · 첨부 ${x.files}</div>
+      </div>
+      <div class="urgent-arrow">↗</div>
+    </a>`).join("") : `<div class="empty">현재 접수 중인 공고가 없습니다.</div>`;
+
+  // ── 차트 ──
+  function buckets(range) {
+    const out = [];
+    if (range === "14d" || range === "30d") {
+      const n = range === "14d" ? 14 : 30;
+      daysBack(n).forEach((d) => out.push({ label: `${pad(d.getMonth() + 1)}/${pad(d.getDate())}`, from: ymd(d), to: ymd(d) }));
+    } else if (range === "90d") {
+      const end = new Date(ymd(NOW) + "T00:00:00");
+      for (let i = 12; i >= 0; i--) {
+        const to = new Date(+end - i * 7 * DAY), from = new Date(+to - 6 * DAY);
+        out.push({ label: `${pad(from.getMonth() + 1)}/${pad(from.getDate())}`, from: ymd(from), to: ymd(to) });
+      }
+    } else {
+      for (let i = 11; i >= 0; i--) {
+        const f = new Date(NOW.getFullYear(), NOW.getMonth() - i, 1), t = new Date(f.getFullYear(), f.getMonth() + 1, 0);
+        out.push({ label: `${String(f.getFullYear()).slice(2)}.${pad(f.getMonth() + 1)}`, from: ymd(f), to: ymd(t) });
+      }
+    }
+    out.forEach((b) => {
+      const hit = items.filter((x) => x.posted && x.posted >= b.from && x.posted <= b.to);
+      b.n = hit.length; b.files = hit.reduce((s, x) => s + x.files, 0);
+    });
+    return out;
+  }
+  function drawChart(range) {
+    const bs = buckets(range), max = Math.max(4, ...bs.map((b) => b.n));
+    const nice = Math.ceil(max / 4) * 4, H = 168, top = 20, left = 34, W = 800 - left - 6;
+    const slot = W / bs.length, bw = Math.min(40, slot * 0.66);
+    let s = `<g stroke="#1f242d" stroke-width="1">`;
+    for (let i = 1; i <= 4; i++) { const y = top + (H - top) * (1 - i / 4); s += `<line x1="${left}" y1="${y}" x2="800" y2="${y}"/>`; }
+    s += `</g><g fill="#5e6772" font-family="JetBrains Mono, monospace" font-size="9">`;
+    for (let i = 0; i <= 4; i++) { const y = top + (H - top) * (1 - i / 4); s += `<text x="4" y="${y + 3}">${(nice * i) / 4}</text>`; }
+    s += `</g><g>`;
+    const every = Math.ceil(bs.length / 14);
+    bs.forEach((b, i) => {
+      const h = (b.n / nice) * (H - top), x = left + i * slot + (slot - bw) / 2, y = H - h;
+      const last = i === bs.length - 1, col = last ? "#d4ff3a" : "#5fb8ff";
+      s += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(0, h).toFixed(1)}" fill="${col}" opacity="${last ? 0.95 : 0.8}"><title>${b.from}${b.from !== b.to ? " ~ " + b.to : ""} · 공고 ${b.n} · 첨부 ${b.files}</title></rect>`;
+      if (b.n) s += `<text x="${(x + bw / 2).toFixed(1)}" y="${(y - 4).toFixed(1)}" fill="${last ? "#d4ff3a" : "#9aa3ad"}" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">${b.n}</text>`;
+      if (i % every === 0 || last) s += `<text x="${(x + bw / 2).toFixed(1)}" y="196" fill="${last ? "#d4ff3a" : "#5e6772"}" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">${b.label}</text>`;
+    });
+    s += `</g>`;
+    $("chart").innerHTML = s;
+    const tot = bs.reduce((a, b) => a + b.n, 0), files = bs.reduce((a, b) => a + b.files, 0);
+    $("chartSum").innerHTML = `구간 합계 · <strong style="color:#e8ecef">${fmt(tot)} 공고</strong> · <strong style="color:#e8ecef">${fmt(files)} 첨부</strong>`;
+  }
+  document.querySelectorAll("#chartTabs .tab").forEach((t) => t.addEventListener("click", () => {
+    document.querySelectorAll("#chartTabs .tab").forEach((x) => x.classList.remove("active"));
+    t.classList.add("active"); drawChart(t.dataset.range);
+  }));
+  drawChart("90d");
+
+  // ── 표 ──
+  const FILTERS = [["all", "전체"], ["active", "진행중"], ["urgent", "마감임박"], ["upcoming", "예정"], ["always", "상시"], ["ended", "종료"]];
+  let filter = "all", query = "", sortKey = "posted", sortDir = -1, limit = 30;
+  const count = (k) => k === "all" ? items.length : items.filter((x) => x.st === k).length;
+  function renderChips() {
+    $("chips").innerHTML = FILTERS.filter(([k]) => k === "all" || count(k))
+      .map(([k, l]) => `<span class="chip ${k === filter ? "active" : ""}" data-f="${k}">${l}<span class="count">·${count(k)}</span></span>`).join(" ");
+    $("chips").querySelectorAll(".chip").forEach((c) => c.addEventListener("click", () => { filter = c.dataset.f; limit = 30; renderChips(); renderTable(); }));
+  }
+  function filtered() {
+    const q = query.trim().toLowerCase();
+    return items.filter((x) => (filter === "all" || x.st === filter) &&
+      (!q || [x.title, x.biz, x.writer].some((v) => (v || "").toLowerCase().includes(q))))
+      .sort((a, b) => {
+        const va = sortKey === "end" ? (a.end || "") : a[sortKey] ?? "", vb = sortKey === "end" ? (b.end || "") : b[sortKey] ?? "";
+        return (va > vb ? 1 : va < vb ? -1 : b.id - a.id) * sortDir;
+      });
+  }
+  function renderTable() {
+    const rows = filtered();
+    $("tableMeta").textContent = `수집 ${fmt(items.length)}건 · 표시 ${fmt(rows.length)}건`;
+    $("tbody").innerHTML = rows.slice(0, limit).map((x) => `
+      <tr>
+        <td class="col-num">${x.id}</td>
+        <td><span class="badge ${x.cls}">${x.label}</span></td>
+        <td class="col-title"><a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}</a>
+          <span class="biz">${esc(x.biz || "—")} · ${esc(x.writer || "")}</span></td>
+        <td class="col-period">${x.start ? esc(x.start.slice(0, 10)) + " → " + esc((x.end || "").slice(0, 10)) : "상시 모집"}</td>
+        <td class="col-num-right">${fmt(x.views)}</td>
+        <td class="col-num-right"><span class="attach-bubble ${x.files ? "" : "zero"}">◇ ${x.files}</span></td>
+        <td class="col-period">${esc(x.posted || "")}</td>
+      </tr>`).join("") || `<tr><td colspan="7" class="empty">조건에 맞는 공고가 없습니다.</td></tr>`;
+    $("shownCount").textContent = `${fmt(Math.min(limit, rows.length))} / ${fmt(rows.length)} 표시`;
+    $("moreBtn").style.display = rows.length > limit ? "" : "none";
+  }
+  $("search").addEventListener("input", (e) => { query = e.target.value; limit = 30; renderTable(); });
+  $("moreBtn").addEventListener("click", () => { limit += 30; renderTable(); });
+  document.querySelectorAll("th.sortable").forEach((th) => th.addEventListener("click", () => {
+    const k = th.dataset.sort;
+    sortDir = sortKey === k ? -sortDir : (k === "title" ? 1 : -1); sortKey = k;
+    document.querySelectorAll("th.sortable").forEach((h) => { h.classList.remove("sorted"); h.querySelector(".sort").textContent = "↕"; });
+    th.classList.add("sorted"); th.querySelector(".sort").textContent = sortDir > 0 ? "↑" : "↓";
+    renderTable();
+  }));
+  $("csvBtn").addEventListener("click", () => {
+    const head = ["게시물ID", "상태", "제목", "사업구분", "신청시작", "신청마감", "작성자", "작성일", "조회수", "첨부수", "URL"];
+    const q = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const lines = [head.map(q).join(",")].concat(filtered().map((x) =>
+      [x.id, x.label, x.title, x.biz, x.start, x.end, x.writer, x.posted, x.views, x.files, x.url].map(q).join(",")));
+    const blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+    const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: `nipa_announcements_${ymd(NOW)}.csv` });
+    a.click(); URL.revokeObjectURL(a.href);
+  });
+  renderChips(); renderTable();
+
+  // ── 푸터 ──
+  $("footRun").textContent = `delay ${D.delay}s · UA Chrome/120 · parser lxml · pages 1..${run.pages_total || "?"}`;
+  $("footGen").textContent = `generated ${D.generated_at.replace("T", " ")}`;
+})();
+</script>
+</body>
+</html>

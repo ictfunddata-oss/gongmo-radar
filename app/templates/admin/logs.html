@@ -1,0 +1,49 @@
+{% extends "admin/base.html" %}
+{% block title %}로그 · ICT기금 공모사업 AI RADAR{% endblock %}
+{% macro st(s) %}<span class="au-s {{ (s or '')[:2] }}">{{ s or '—' }}</span>{% endmacro %}
+{% macro hm(t) %}{{ t[5:16].replace('T', ' ') if t else '—' }}{% endmacro %}
+{% block content %}
+<div class="ds-head"><h1>로그 관리</h1></div>
+<div class="tabs lg">
+  {% for key, name in tabs %}<a href="{{ url_for('admin.logs', t=key) }}" class="{{ 'on' if key == tab }}">{{ name }}{% if key == 'crawl' and problems.crawl %}<i class="bd">{{ problems.crawl }}</i>{% elif key == 'auto' and problems.auto %}<i class="bd">{{ problems.auto }}</i>{% endif %}</a>{% endfor %}
+</div>
+
+<section class="au-card">
+  {% if tab == 'crawl' %}
+  <h2>수집 실행 기록 <small>총 {{ total }}건 · 최근 7일 문제 {{ problems.crawl }}건</small></h2>
+  <div class="ds-bar"><a class="ru-btn {{ 'on' if f != 'issue' }}" href="{{ url_for('admin.logs', t='crawl') }}">전체</a><a class="ru-btn {{ 'on' if f == 'issue' }}" href="{{ url_for('admin.logs', t='crawl', f='issue') }}">문제 있는 것만</a></div>
+  <table class="au-table"><thead><tr><th>시작</th><th>기관 · 게시판</th><th>방식</th><th class="num">쪽</th><th class="num">수집</th><th class="num">신규</th><th class="num">갱신</th><th class="num">첨부</th><th class="num">오류</th><th>상태</th></tr></thead><tbody>
+  {% for r in rows %}<tr>
+    <td class="nowrap">{{ hm(r.started_at) }}</td><td>{{ r.org or '—' }} · {{ r.board or '' }}</td><td>{{ r.mode or '' }}</td>
+    <td class="num">{{ r.pages_done or 0 }}/{{ r.pages_total or 0 }}</td><td class="num">{{ r.rows or 0 }}</td><td class="num">{{ r.new_rows or 0 }}</td><td class="num">{{ r.updated_rows or 0 }}</td>
+    <td class="num">{{ r.files_saved or 0 }}</td><td class="num {{ 'warn' if r.errors }}">{{ r.errors or 0 }}</td><td>{{ st(r.status) }}</td></tr>
+  {% if r.log %}<tr class="lgrow"><td colspan="10"><details><summary>실행 로그 {{ r.log|length }}줄</summary><pre class="au-log">{% for l in r.log %}{% if l is mapping %}{{ l.ts }} [{{ l.lvl }}] {{ l.msg }}{% else %}{{ l }}{% endif %}
+{% endfor %}</pre></details></td></tr>{% endif %}
+  {% else %}<tr><td colspan="10" class="empty">기록이 없습니다.</td></tr>{% endfor %}
+  </tbody></table>
+
+  {% elif tab == 'auto' %}
+  <h2>자동 실행 기록 <small>총 {{ total }}건 · 설정은 <a href="{{ url_for('admin.automation') }}">자동화</a></small></h2>
+  <table class="au-table"><thead><tr><th>시작</th><th>종료</th><th>방식</th><th>상태</th><th>단계별 결과</th></tr></thead><tbody>
+  {% for r in rows %}<tr><td class="nowrap">{{ hm(r.started_at) }}</td><td class="nowrap">{{ hm(r.ended_at) }}</td><td>{{ r.trigger }}</td><td>{{ st(r.status) }}</td>
+    <td>{% for k, v in r.summary.items() %}<span class="ds-tag">{{ k }}: {{ v if v is not mapping else (v|tojson) }}</span> {% endfor %}
+    {% if r.log %}<details><summary>로그 {{ r.log|length }}줄</summary><pre class="au-log">{% for l in r.log %}{{ l if l is string else (l|tojson) }}
+{% endfor %}</pre></details>{% endif %}</td></tr>
+  {% else %}<tr><td colspan="5" class="empty">기록이 없습니다.</td></tr>{% endfor %}
+  </tbody></table>
+
+  {% else %}
+  <h2>운영 이력 <small>총 {{ total }}건 · 관리자가 바꾼 것과 로그인 시도, 1년 보관</small></h2>
+  <form class="ds-bar" method="get"><input type="hidden" name="t" value="audit">
+    <select name="f" onchange="this.form.submit()"><option value="">모든 행위</option>{% for a in actions %}<option value="{{ a }}" {{ 'selected' if a == f }}>{{ a }}</option>{% endfor %}</select></form>
+  <table class="au-table"><thead><tr><th>일시</th><th>관리자</th><th>행위</th><th>대상</th><th>내용</th></tr></thead><tbody>
+  {% for r in rows %}<tr><td class="nowrap">{{ r.at[:19].replace('T', ' ') }}</td><td>{{ r.actor }}</td><td class="nowrap"><span class="ds-tag {{ 'bad' if '실패' in r.action or '차단' in r.action }}">{{ r.action }}</span></td><td>{{ r.target }}</td><td class="sub">{{ r.detail }}</td></tr>
+  {% else %}<tr><td colspan="5" class="empty">기록이 없습니다.</td></tr>{% endfor %}
+  </tbody></table>
+  {% endif %}
+
+  {% if pages > 1 %}<nav class="pager">
+    {% if page > 1 %}<a href="{{ url_for('admin.logs', t=tab, f=f or None, page=page - 1) }}">← 이전</a>{% endif %}<span>{{ page }} / {{ pages }}</span>
+    {% if page < pages %}<a href="{{ url_for('admin.logs', t=tab, f=f or None, page=page + 1) }}">다음 →</a>{% endif %}</nav>{% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends "admin/base.html" %}
+{% block title %}자동화 · ICT기금 공모사업 AI RADAR{% endblock %}
+{% block content %}
+<h1 style="font-size:20px;margin:0 0 14px">자동화 설정</h1>
+
+<section class="au-card">
+  <h2>현재 상태</h2>
+  <div class="au-state">
+    <div class="{{ 'on' if s.enabled else 'off' }}"><b>{{ '켜짐' if s.enabled else '꺼짐' }}</b><span>자동 실행</span></div>
+    <div class="{{ 'run' if running else '' }}"><b>{{ '실행 중' if running else '대기' }}</b><span>지금 상태</span></div>
+    <div><b>{{ nxt or '—' }}</b><span>다음 예약</span></div>
+  </div>
+  {% if s.enabled and not sched_here %}
+  <div class="au-warn">이 서버 프로세스에서는 예약 실행기가 꺼져 있습니다(<code>AUTOMATION_SCHEDULER=0</code>). 별도로 <code>flask --app run automation-daemon</code>을 실행 중이어야 예약이 동작합니다.</div>
+  {% endif %}
+</section>
+
+<div class="au-grid">
+<form method="post" action="{{ url_for('admin.automation_save') }}" class="au-card">
+  <h2>예약 설정 <small>서버의 현지 시각 기준</small></h2>
+  <div class="au-row"><label class="au-chk au-switch"><input type="checkbox" name="enabled" {{ 'checked' if s.enabled }}> 자동 실행 사용</label></div>
+
+  <div class="au-row"><label class="k">실행 요일</label>
+    {% for d in days %}<label class="au-chk"><input type="checkbox" name="days" value="{{ loop.index0 }}" {{ 'checked' if loop.index0 in s.days }}> {{ d }}</label>{% endfor %}
+  </div>
+  <div class="au-row"><label class="k">실행 시각</label>
+    {% for t in times %}<input type="time" name="t{{ loop.index }}" value="{{ t }}">{% endfor %}
+  </div>
+  <p class="au-hint">하루에 최대 3번까지 지정할 수 있습니다. 비워 두면 사용하지 않습니다. 서버가 꺼져 있던 동안 지나간 예약은 {{ 60 }}분 안에만 따라잡아 실행합니다.</p>
+
+  <div class="au-row"><label class="k">수집 대상</label>
+    {% for code, cls in boards %}<label class="au-chk"><input type="checkbox" name="boards" value="{{ code }}" {{ 'checked' if s.boards is none or code in s.boards }}> {{ cls.org_name }} {{ cls.board_name }}</label>{% endfor %}
+  </div>
+  <div class="au-row"><label class="k">수집 범위</label>
+    <input type="number" name="pages" min="0" max="200" value="{{ s.pages }}"> 쪽
+    <span class="au-hint" style="margin:0">0 = 새 글이 없는 쪽에서 자동으로 멈춤(권장)</span></div>
+
+  <div class="au-row"><label class="k">실행 단계</label>
+    <label class="au-chk"><input type="checkbox" name="crawl" {{ 'checked' if s.crawl }}> ① 수집</label>
+  </div>
+  <div class="au-row"><label class="k">첨부 파일</label>
+    <label class="au-chk"><input type="checkbox" name="attachments" {{ 'checked' if s.attachments }}> 첨부 파일을 내려받아 저장(끄면 파일 이름만 저장)</label></div>
+
+  <div class="au-row" style="margin-top:16px"><button class="au-btn">설정 저장</button></div>
+</form>
+
+<aside>
+  <section class="au-card">
+    <h2>지금 실행</h2>
+    <p style="margin:0 0 10px;font-size:13px;color:var(--t2)">저장된 설정의 단계대로 한 번 실행합니다. 자동 실행이 꺼져 있어도 됩니다. 설정을 바꿨다면 먼저 저장하세요.</p>
+    <form method="post" action="{{ url_for('admin.automation_run') }}"><button class="au-btn ghost" {{ 'disabled' if running }}>{{ '실행 중…' if running else '지금 실행' }}</button></form>
+  </section>
+</aside>
+</div>
+
+<section class="au-card">
+  <h2>실행 기록 <small>최근 15건 · 새로고침하면 갱신됩니다</small></h2>
+  <table class="au-table">
+    <thead><tr><th>시작</th><th>방식</th><th>상태</th><th>요약</th></tr></thead>
+    <tbody>
+    {% for r in runs %}
+      <tr>
+        <td class="nowrap">{{ r.started_at[:16].replace('T', ' ') }}<div class="sub">{% if r.ended_at %}종료 {{ r.ended_at[11:16] }}{% endif %}</div></td>
+        <td>{{ r.trigger }}</td>
+        <td><span class="au-s {{ r.status.split()[0] }}">{{ r.status }}</span></td>
+        <td>
+          {% if r.summary.crawl %}수집 신규 {{ r.summary.crawl.new }}건{% if r.summary.crawl.errors %} (오류 {{ r.summary.crawl.errors }}){% endif %} · {% endif %}
+          <details><summary class="sub" style="cursor:pointer">상세 기록</summary><pre class="au-log">{{ r.log|join('\n') }}</pre></details>
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="4" class="empty">아직 실행 기록이 없습니다.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

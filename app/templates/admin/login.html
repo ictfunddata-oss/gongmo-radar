@@ -1,0 +1,47 @@
+{% from "_brand.html" import brand %}<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>관리자 로그인 · ICT기금 공모사업 AI RADAR</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='brand.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+<style>
+  .lgtop { background: var(--navy); border-radius: 12px 12px 0 0; padding: 16px 20px; margin: -28px -28px 20px; }
+  .lgtop .brand { color: #fff; }
+  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+  .lg { width: 360px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 28px 28px 24px; }
+  .lg h1 { margin: 0 0 4px; font-size: 20px; } .lg p { margin: 0 0 18px; color: var(--t2); font-size: 13.5px; }
+  .lg label { display: block; font-size: 13px; color: var(--t2); margin: 12px 0 4px; }
+  .lg input { width: 100%; padding: 9px 11px; border: 1px solid #cfd6df; border-radius: 6px; font: inherit; }
+  .lg button { width: 100%; margin-top: 18px; padding: 10px; border: none; border-radius: 6px; background: var(--navy); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+  .lg .err { margin-top: 12px; padding: 8px 10px; border-radius: 6px; background: #fdecec; color: #b42323; font-size: 13px; }
+  .lg code { background: #f1f3f6; padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+  .lg .back { display: block; margin-top: 14px; text-align: center; font-size: 12.5px; }
+</style>
+</head>
+<body>
+<main class="lg">
+  <div class="lgtop">{{ brand(url_for('public.index')) }}</div>
+  <h1>관리자 로그인</h1>
+  {% if unset %}
+  <p>관리자 비밀번호가 아직 설정되지 않아 운영 화면을 열 수 없습니다.</p>
+  <p>프로젝트 폴더에서 아래 명령으로 비밀번호를 설정한 뒤 서버를 다시 켜 주세요.</p>
+  <p><code>flask --app run set-admin-password</code></p>
+  {% else %}
+  <p>운영 화면은 관리자만 볼 수 있습니다.</p>
+  <form method="post" autocomplete="off">
+    <input type="hidden" name="next" value="{{ next or '' }}">
+    <label for="id">아이디</label>
+    <input id="id" name="id" required autofocus>
+    <label for="password">비밀번호</label>
+    <input id="password" name="password" type="password" required autocomplete="current-password">
+    {% if error %}<div class="err">{{ error }}</div>{% endif %}
+    <button>로그인</button>
+  </form>
+  {% endif %}
+  <a class="back" href="{{ url_for('public.index') }}">← 수요자 화면으로</a>
+</main>
+</body>
+</html>

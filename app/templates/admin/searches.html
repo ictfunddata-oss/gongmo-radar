@@ -1,0 +1,36 @@
+{% extends "admin/base.html" %}
+{% from "admin/_charts.html" import chart, periods %}
+{% block title %}검색어 · ICT기금 공모사업 AI RADAR{% endblock %}
+{% block content %}
+<div class="ds-head"><h1>검색어 통계</h1>{{ periods('admin.search_stats', n, periods_list, {'zero': '1'} if only_zero else {}) }}</div>
+
+<section class="ds-kpi four">
+  <div><span>검색 횟수</span><b>{{ ss.total }}<small>회</small></b><em>최근 {{ n }}일</em></div>
+  <div><span>서로 다른 검색어</span><b>{{ ss.distinct }}<small>개</small></b><em>대소문자·공백 무시</em></div>
+  <div><span>결과 없음 비율</span><b>{{ (ss.zero_rate * 100)|round|int }}<small>%</small></b><em>{{ ss.zero }}회</em></div>
+  <div><span>평균 결과 수</span><b>{{ ss.avg_results|round|int }}<small>건</small></b><em>검색 1회당</em></div>
+</section>
+
+<section class="au-card">
+  <h2>일별 검색 <small>막대 = 검색 횟수, 선 = 결과 없음</small></h2>
+  {% if ss.total %}{{ chart(ss.series, 'n', 'zero', '일별 검색 횟수') }}{% else %}<p class="empty">검색 기록이 없습니다.</p>{% endif %}
+</section>
+
+<section class="au-card">
+  <h2>검색어 목록 <small>{{ found }}개 중 {{ shown }}개 표시</small></h2>
+  <div class="ds-bar">
+    <a class="ru-btn {{ 'on' if not only_zero }}" href="{{ url_for('admin.search_stats', days=n) }}">전체</a>
+    <a class="ru-btn {{ 'on' if only_zero }}" href="{{ url_for('admin.search_stats', days=n, zero=1) }}">결과 없음만</a>
+    <a class="ru-btn" href="{{ url_for('admin.search_stats', days=n, format='csv', zero=(1 if only_zero else None)) }}">CSV 내려받기</a>
+  </div>
+  <table class="au-table"><thead><tr><th>검색어</th><th class="num">검색 횟수</th><th class="num">결과 없음</th><th class="num">평균 결과</th><th>마지막 검색</th><th></th></tr></thead><tbody>
+  {% for t in terms %}<tr>
+    <td>{{ t.term }}{% if t.banned %} <span class="ds-tag">금칙어</span>{% endif %}</td>
+    <td class="num">{{ t.count }}</td><td class="num {{ 'warn' if t.zero }}">{{ t.zero }}</td><td class="num">{{ t.avg_results|round|int }}</td>
+    <td class="nowrap">{{ t.last[:16].replace('T', ' ') }}</td>
+    <td class="nowrap"><a href="{{ url_for('admin.banned', test=t.term) }}">금칙어 점검</a></td></tr>
+  {% else %}<tr><td colspan="6" class="empty">해당하는 검색어가 없습니다.</td></tr>{% endfor %}
+  </tbody></table>
+  <p class="au-hint" style="margin-left:0">검색한 사람은 저장하지 않습니다. 이메일·전화번호처럼 보이는 값, 2자 미만·30자 초과 값, 금칙어는 기록하지 않으며 기록은 180일 뒤 지웁니다. 같은 사람이 여러 번 검색하면 횟수가 늘어납니다.</p>
+</section>
+{% endblock %}

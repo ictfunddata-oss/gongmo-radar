@@ -1,0 +1,81 @@
+{% extends "admin/base.html" %}
+{% block title %}금칙어 관리{% endblock %}
+{% block content %}
+<h2 style="margin:0 0 4px">금칙어 관리</h2>
+<p class="sub" style="margin:0 0 16px">수요자 화면의 '많이 찾는 검색어'에서 뺄 단어입니다. 금칙어가 들어 있는 검색어는 기록하지 않고, 이미 쌓인 기록도 화면에서 숨깁니다. 이용자의 검색 자체는 막지 않습니다.
+  목록은 <code>{{ path }}</code> 파일에 저장되며, 수정할 때마다 <code>.bak</code>으로 직전 상태를 백업합니다.</p>
+
+<div class="bn-grid">
+  <section class="bn-box">
+    <h2>금칙어 추가</h2>
+    <p class="h">공백·기호를 빼고 비교합니다(예: '나 쁜.말'도 '나쁜말'로 걸림). 단어 일부가 정상 단어에 들어 있으면 먼저 경고합니다.</p>
+    <form class="bn-add" method="post" action="{{ url_for('admin.banned_add') }}">
+      <input type="hidden" name="kind" value="ban">
+      <input type="text" name="word" maxlength="30" placeholder="금칙어" required>
+      <label style="font-size:12.5px;color:var(--t2)"><input type="checkbox" name="force" value="1"> 그래도 추가</label>
+      <button class="primary">추가</button>
+    </form>
+  </section>
+  <section class="bn-box">
+    <h2>검색어 점검</h2>
+    <p class="h">어떤 검색어가 걸리는지 미리 확인합니다(저장하지 않음).</p>
+    <form class="bn-add" method="get">
+      <input type="text" name="test" value="{{ test }}" placeholder="점검할 검색어">
+      <button>점검</button>
+    </form>
+    {% if test %}<p style="margin:10px 0 0">
+      {% if hit %}<span class="tag st-금칙어">걸림</span> 포함된 금칙어: <b>{{ hit | join(', ') }}</b>
+      {% else %}<span class="tag st-표시중">통과</span> 금칙어가 없습니다.{% endif %}</p>{% endif %}
+  </section>
+</div>
+
+<section class="bn-box">
+  <h2>금칙어 목록 <small style="font-weight:400;color:var(--t3)">{{ words | length }}개 · 파란색은 이 화면에서 추가한 단어</small></h2>
+  <div class="bn-words">
+    {% for w in words %}
+    <span class="bn-w {{ 'added' if w.added }}">{{ w.word }}
+      <form method="post" action="{{ url_for('admin.banned_remove') }}" onsubmit="return confirm('금칙어에서 뺄까요? {{ w.word }}')">
+        <input type="hidden" name="word" value="{{ w.word }}"><input type="hidden" name="kind" value="ban"><button title="삭제">×</button></form></span>
+    {% else %}<span class="sub">금칙어가 없습니다.</span>{% endfor %}
+  </div>
+</section>
+
+<section class="bn-box">
+  <h2>예외 단어 <small style="font-weight:400;color:var(--t3)">{{ allows | length }}개</small></h2>
+  <p class="h">금칙어가 정상 단어의 일부로 들어간 경우를 구해 줍니다. 예외 단어를 먼저 뺀 나머지로 금칙어를 검사합니다(예: 금칙어 '시발'과 예외 '시발점').</p>
+  <form class="bn-add" method="post" action="{{ url_for('admin.banned_add') }}">
+    <input type="hidden" name="kind" value="allow">
+    <input type="text" name="word" maxlength="30" placeholder="예외 단어" required>
+    <button>예외 추가</button>
+  </form>
+  <div class="bn-words">
+    {% for w in allows %}
+    <span class="bn-w {{ 'added' if w.added }}">{{ w.word }}
+      <form method="post" action="{{ url_for('admin.banned_remove') }}" onsubmit="return confirm('예외에서 뺄까요? {{ w.word }}')">
+        <input type="hidden" name="word" value="{{ w.word }}"><input type="hidden" name="kind" value="allow"><button title="삭제">×</button></form></span>
+    {% else %}<span class="sub">예외 단어가 없습니다.</span>{% endfor %}
+  </div>
+</section>
+
+<section class="bn-box">
+  <h2>최근 검색어 <small style="font-weight:400;color:var(--t3)">최근 {{ days }}일 · 많은 순 · 검색 결과가 없었던 검색어와 금칙어도 포함</small></h2>
+  <p class="h">'표시 중'은 수요자 화면의 '많이 찾는 검색어' 후보(결과가 있었던 검색이 {{ min_count }}회 이상)입니다. 부적절한 단어가 보이면 '금칙어로 추가'를 누르세요.</p>
+  <table class="list">
+    <thead><tr><th>검색어</th><th>검색 횟수</th><th>결과 있었던 횟수</th><th>마지막 검색</th><th>상태</th><th></th></tr></thead>
+    <tbody>
+    {% for r in recent %}
+      <tr>
+        <td>{{ r.term }}</td><td>{{ r.count }}</td><td>{{ r.hits }}</td><td class="nowrap">{{ r.last[:16].replace('T', ' ') }}</td>
+        <td><span class="tag st-{{ r.status.replace(' ', '') }}">{{ r.status }}</span></td>
+        <td>{% if r.status != '금칙어' %}
+          <form method="post" action="{{ url_for('admin.banned_add') }}" style="display:inline">
+            <input type="hidden" name="kind" value="ban"><input type="hidden" name="word" value="{{ r.term }}"><input type="hidden" name="force" value="1">
+            <button class="bn-btn" onclick="return confirm('금칙어로 추가할까요? {{ r.term }}')">금칙어로 추가</button></form>{% endif %}</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="6" class="empty">아직 검색어 기록이 없습니다.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

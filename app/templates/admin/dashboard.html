@@ -1,0 +1,65 @@
+{% extends "admin/base.html" %}
+{% from "admin/_charts.html" import chart, periods %}
+{% block title %}통계 · ICT기금 공모사업 AI RADAR{% endblock %}
+{% block content %}
+<div class="ds-head"><h1>운영 통계</h1>{{ periods('admin.dashboard', n, periods_list) }}</div>
+
+{% if not visit_on %}<div class="au-warn">방문 집계가 꺼져 있습니다(<code>VISIT_LOG=0</code>). 방문 수는 새로 쌓이지 않습니다.</div>{% endif %}
+{% if problems.crawl or problems.auto %}
+<div class="ds-alert">최근 7일 동안 확인할 문제가 있습니다 —
+  {% if problems.crawl %}<a href="{{ url_for('admin.logs', t='crawl', f='issue') }}">수집 {{ problems.crawl }}건</a>{% endif %}
+  {% if problems.auto %}<a href="{{ url_for('admin.logs', t='auto') }}">자동 실행 {{ problems.auto }}건</a>{% endif %}
+</div>{% endif %}
+
+<section class="ds-kpi">
+  <div><span>오늘 방문</span><b>{{ today.pv }}<small>회</small></b><em>순방문 {{ today.uniq if uniq_on else '—' }}</em></div>
+  <div><span>최근 7일 방문</span><b>{{ week.pv }}<small>회</small></b><em>순방문 합 {{ week.uniq if uniq_on else '—' }}</em></div>
+  <div><span>최근 {{ n }}일 방문</span><b>{{ total.pv }}<small>회</small></b><em>목록 {{ total.list }} · 상세 {{ total.detail }}</em></div>
+  <div><span>최근 {{ n }}일 검색</span><b>{{ ss.total }}<small>회</small></b><em>결과 없음 {{ (ss.zero_rate * 100)|round|int }}%</em></div>
+  <div><span>수집한 공고</span><b>{{ '{:,}'.format(stats.announcements) }}<small>건</small></b><em>첨부 {{ '{:,}'.format(stats.attachments_saved) }}/{{ '{:,}'.format(stats.attachments) }} 저장</em></div>
+  <div><span>마지막 수집</span><b style="font-size:18px">{{ stats.last_run.ended_at[5:16].replace('T', ' ') if stats.last_run and stats.last_run.ended_at else '—' }}</b><em>{{ stats.last_run.status if stats.last_run else '기록 없음' }}</em></div>
+</section>
+
+<section class="au-card">
+  <h2>일별 방문 <small>막대 = 조회 수(목록+상세), 선 = 순방문</small></h2>
+  {% if total.pv %}{{ chart(ser, 'pv', 'uniq' if uniq_on else None, '최근 ' ~ n ~ '일 일별 방문 수') }}
+  {% else %}<p class="empty">아직 방문 기록이 없습니다. 이 기능을 켠 시점부터 수요자 화면 방문이 쌓입니다.</p>{% endif %}
+  {% set dsum = devices.pc + devices.mobile %}
+  {% if dsum %}<div class="ds-dev"><span>기기</span>
+    <div class="ds-split"><i style="width:{{ (devices.pc / dsum * 100)|round(1) }}%" class="pc"></i><i style="width:{{ (devices.mobile / dsum * 100)|round(1) }}%" class="mo"></i></div>
+    <span>PC {{ (devices.pc / dsum * 100)|round|int }}% · 모바일 {{ (devices.mobile / dsum * 100)|round|int }}%</span></div>{% endif %}
+  <p class="au-hint" style="margin-left:0">개인을 알아볼 수 있는 정보(접속 주소·계정)는 저장하지 않습니다. 순방문은 하루 안에서만 구분하는 값이라, 같은 사람이 여러 날 오면 날마다 한 번씩 셉니다. 검색엔진·점검 도구로 보이는 접속과 관리자 본인의 조회는 세지 않습니다.</p>
+</section>
+
+<div class="ds-two">
+  <section class="au-card">
+    <h2>많이 본 공고 <small>상세 조회 · 최근 {{ n }}일</small></h2>
+    <table class="au-table"><thead><tr><th>공고</th><th class="num">조회</th></tr></thead><tbody>
+    {% for r in top %}<tr><td><a href="{{ url_for('admin.detail', ann_id=r.ann_id) }}">{{ r.title }}</a><div class="sub">{{ r.org }}</div></td><td class="num">{{ r.views }}</td></tr>
+    {% else %}<tr><td colspan="2" class="empty">아직 상세 조회 기록이 없습니다.</td></tr>{% endfor %}
+    </tbody></table>
+  </section>
+  <section class="au-card">
+    <h2>많이 찾은 검색어 <small>최근 {{ n }}일 · <a href="{{ url_for('admin.search_stats', days=n) }}">전체 보기</a></small></h2>
+    <table class="au-table"><thead><tr><th>검색어</th><th class="num">횟수</th></tr></thead><tbody>
+    {% for t in terms %}<tr><td>{{ t.term }}{% if t.banned %} <span class="ds-tag">금칙어</span>{% endif %}</td><td class="num">{{ t.count }}</td></tr>
+    {% else %}<tr><td colspan="2" class="empty">검색 기록이 없습니다.</td></tr>{% endfor %}
+    </tbody></table>
+    <h2 style="margin-top:16px">결과가 없었던 검색어 <small>찾는데 없는 공고·분야의 단서</small></h2>
+    <table class="au-table"><thead><tr><th>검색어</th><th class="num">결과 없음</th></tr></thead><tbody>
+    {% for t in zero_terms %}<tr><td>{{ t.term }}</td><td class="num">{{ t.zero }}</td></tr>
+    {% else %}<tr><td colspan="2" class="empty">결과가 없던 검색어가 없습니다.</td></tr>{% endfor %}
+    </tbody></table>
+  </section>
+</div>
+
+<section class="au-card">
+  <h2>기관별 수집 현황</h2>
+  <table class="au-table"><thead><tr><th>기관</th><th class="num">공고</th><th class="num">본문 있음</th><th class="num">신청기간 있음</th><th class="num">첨부</th><th class="num">저장</th><th class="num">글자 추출</th></tr></thead><tbody>
+  {% for r in cov %}<tr><td>{{ r.org }}</td><td class="num">{{ '{:,}'.format(r.total) }}</td><td class="num">{{ '{:,}'.format(r.with_body) }}</td><td class="num">{{ '{:,}'.format(r.with_period) }}</td><td class="num">{{ '{:,}'.format(r.files) }}</td><td class="num">{{ '{:,}'.format(r.saved) }}</td><td class="num">{{ '{:,}'.format(r.text_ok) }}</td></tr>
+  {% endfor %}
+  <tr class="sum"><td>합계</td><td class="num">{{ '{:,}'.format(cov|sum(attribute='total')) }}</td><td class="num">{{ '{:,}'.format(cov|sum(attribute='with_body')) }}</td><td class="num">{{ '{:,}'.format(cov|sum(attribute='with_period')) }}</td><td class="num">{{ '{:,}'.format(cov|sum(attribute='files')) }}</td><td class="num">{{ '{:,}'.format(cov|sum(attribute='saved')) }}</td><td class="num">{{ '{:,}'.format(cov|sum(attribute='text_ok')) }}</td></tr>
+  </tbody></table>
+  <p class="au-hint" style="margin-left:0">마지막 수집: {{ stats.last_run.ended_at[:16].replace('T', ' ') if stats.last_run and stats.last_run.ended_at else '—' }}{% if stats.last_run %} ({{ stats.last_run.status }}){% endif %} · 자세한 기록은 <a href="{{ url_for('admin.logs') }}">로그</a></p>
+</section>
+{% endblock %}

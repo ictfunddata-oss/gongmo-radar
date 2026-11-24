@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>[안4] 공모사업 분석 리포트</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap" />
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #ffffff; --surface: #fcfcfb; --line: #e6e5e0; --t1: #0b0b0b; --t2: #52514e; --t3: #85847f;
+    --series-1: #2a78d6; --series-hl: #184f95;
+    --s100: #cde2fb; --s200: #9ec5f4; --s300: #6da7ec; --s400: #3987e5; --s500: #256abf; --s600: #184f95; --s700: #0d366b; --s0: #f0efec;
+    --sans: "IBM Plex Sans KR", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #eceae4; color: var(--t1); font-family: var(--sans); font-size: 14px; line-height: 1.6; }
+  .page { max-width: 1120px; margin: 24px auto; background: var(--bg); padding: 48px 56px 56px; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+  .eyebrow { font-size: 13px; color: var(--t3); }
+  h1 { margin: 4px 0 6px; font-size: 30px; font-weight: 700; letter-spacing: -.03em; }
+  .lead { color: var(--t2); margin: 0 0 22px; font-size: 15px; }
+  .filters { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; padding: 12px 0 20px; border-bottom: 2px solid var(--t1); margin-bottom: 26px; }
+  .filters span { font-size: 13px; color: var(--t2); margin-right: 6px; }
+  .filters button { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 5px 13px; font: inherit; font-size: 13px; cursor: pointer; }
+  .filters button.on { background: var(--t1); color: #fff; border-color: var(--t1); }
+  .filters .print { margin-left: auto; border-radius: 4px; }
+
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border: 1px solid var(--line); margin-bottom: 30px; }
+  .tile { padding: 18px 20px; border-right: 1px solid var(--line); }
+  .tile:last-child { border-right: 0; }
+  .tile .l { font-size: 13px; color: var(--t2); }
+  .tile .v { font-size: 34px; font-weight: 600; letter-spacing: -.03em; font-variant-numeric: tabular-nums; line-height: 1.2; margin-top: 4px; }
+  .tile .v small { font-size: 15px; color: var(--t3); font-weight: 400; margin-left: 3px; }
+  .tile .s { font-size: 12.5px; color: var(--t3); }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 34px 40px; }
+  .fig { break-inside: avoid; }
+  .fig.wide { grid-column: 1/-1; }
+  .fig .no { font-size: 12.5px; color: var(--t3); }
+  .fig h2 { margin: 2px 0 2px; font-size: 17px; font-weight: 600; letter-spacing: -.02em; }
+  .fig .take { margin: 0 0 14px; color: var(--t2); font-size: 14px; }
+  .fig .take b { color: var(--t1); }
+  .fig .src { font-size: 12px; color: var(--t3); margin-top: 8px; }
+
+  svg.vbars { width: 100%; height: 220px; display: block; }
+  svg .grid { stroke: var(--line); stroke-width: 1; }
+  svg .axis { fill: var(--t3); font-size: 10.5px; font-family: var(--sans); }
+  svg .val { fill: var(--t2); font-size: 10.5px; font-family: var(--sans); }
+
+  .hbars { display: grid; gap: 8px; }
+  .hbar { display: grid; grid-template-columns: 190px 1fr 46px; gap: 10px; align-items: center; font-size: 13px; }
+  .hbar-label { color: var(--t2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hbar-track { height: 12px; }
+  .hbar-fill { display: block; height: 100%; background: var(--series-1); border-radius: 0 4px 4px 0; min-width: 2px; }
+  .hbar-val { text-align: right; font-variant-numeric: tabular-nums; color: var(--t1); }
+
+  .heat { display: grid; grid-template-columns: 60px repeat(12, 1fr); gap: 2px; font-size: 12px; }
+  .heat .h { color: var(--t3); text-align: center; padding: 2px 0; }
+  .heat .y { color: var(--t2); display: flex; align-items: center; font-variant-numeric: tabular-nums; }
+  .heat .c { height: 30px; border-radius: 3px; display: grid; place-items: center; font-variant-numeric: tabular-nums; font-size: 11.5px; cursor: default; }
+  .scale { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 12px; color: var(--t3); }
+  .scale i { width: 26px; height: 10px; display: inline-block; border-radius: 2px; }
+
+  details.tv { margin-top: 8px; font-size: 12.5px; color: var(--t3); }
+  details.tv summary { cursor: pointer; }
+  details.tv table { border-collapse: collapse; margin-top: 6px; }
+  details.tv td, details.tv th { padding: 3px 12px; border-bottom: 1px solid var(--line); text-align: left; font-weight: 400; }
+  .method { margin-top: 36px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--t3); line-height: 1.8; }
+  .viz-tip { position: fixed; left: 0; top: 0; pointer-events: none; opacity: 0; z-index: 99; background: #0b0b0b; color: #fff; padding: 7px 10px; border-radius: 4px; font-size: 12.5px; max-width: 320px; line-height: 1.5; }
+  .draft { position: fixed; right: 16px; bottom: 16px; font-size: 12px; color: #fff; background: #0b0b0b; padding: 6px 12px; border-radius: 999px; font-weight: 600; }
+  @media print { body { background: #fff; } .page { box-shadow: none; margin: 0; padding: 20px; } .filters button:not(.on), .print, .draft, details.tv { display: none; } }
+  @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } .tiles { grid-template-columns: 1fr 1fr; } .page { padding: 28px 20px; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="eyebrow" id="eyebrow"></div>
+  <h1>공모사업 공고 분석 리포트</h1>
+  <p class="lead">수집한 공고로 언제, 어떤 사업이, 어떤 형태로 공모되는지 정리했습니다. 보고서에 그대로 옮길 수 있게 그림마다 한 줄 해석을 붙였습니다.</p>
+  <div class="filters" id="filters"></div>
+  <section class="tiles" id="tiles"></section>
+  <section class="grid2">
+    <div class="fig wide"><div class="no">그림 1</div><h2>월별 공고 게시 분포</h2><p class="take" id="t1"></p><div id="f1"></div>
+      <div class="scale"><span>적음</span><i style="background:var(--s0)"></i><i style="background:var(--s100)"></i><i style="background:var(--s200)"></i><i style="background:var(--s300)"></i><i style="background:var(--s400)"></i><i style="background:var(--s500)"></i><i style="background:var(--s600)"></i><i style="background:var(--s700)"></i><span>많음</span></div><div id="v1"></div></div>
+    <div class="fig"><div class="no">그림 2</div><h2>연도별 공고 수</h2><p class="take" id="t2"></p><div id="f2"></div><div id="v2"></div></div>
+    <div class="fig"><div class="no">그림 3</div><h2>접수 기간 길이</h2><p class="take" id="t3"></p><div id="f3"></div><div id="v3"></div></div>
+    <div class="fig"><div class="no">그림 4</div><h2>공고가 많은 사업 상위 12개</h2><p class="take" id="t4"></p><div id="f4"></div></div>
+    <div class="fig"><div class="no">그림 5</div><h2>지원 분야별 공고 수</h2><p class="take" id="t5"></p><div id="f5"></div><div class="src">※ 공고 1건이 여러 분야에 걸리면 각 분야에 모두 셉니다. 공고명·사업명 단어로 붙인 임시 분류입니다.</div></div>
+    <div class="fig"><div class="no">그림 6</div><h2>공고 유형 구성</h2><p class="take" id="t6"></p><div id="f6"></div><div class="src">※ 제목 단어 기준 임시 분류. AI 선별 기능을 만들면 대체합니다.</div></div>
+    <div class="fig"><div class="no">그림 7</div><h2>첨부 파일 형식</h2><p class="take" id="t7"></p><div id="f7"></div><div class="src">※ 전체 기간 기준(연도 필터 미적용).</div></div>
+  </section>
+  <div class="method" id="method"></div>
+</div>
+<div class="draft">UI 디자인 [안4]</div>
+
+<script>window.NIPA_DATA = /*__DATA__*/null;</script>
+<script>
+/*__COMMON__*/
+(() => {
+  const years = [...new Set(ITEMS.map((x) => x.year).filter(Boolean))].sort();
+  let yr = "all";
+  const firstP = ITEMS.map((x) => x.posted).filter(Boolean).sort()[0], lastP = ITEMS.map((x) => x.posted).filter(Boolean).sort().pop();
+  $("eyebrow").textContent = `정보통신산업진흥원 사업공고 · ${kdate(firstP)} ~ ${kdate(lastP)} 게시분 · ${kdate(D.generated_at)} 생성`;
+
+  function filters() {
+    $("filters").innerHTML = `<span>분석 기간</span>` + [["all", "전체"]].concat(years.slice().reverse().map((y) => [y, y + "년"]))
+      .map(([k, l]) => `<button class="${k === yr ? "on" : ""}" data-k="${k}">${l}</button>`).join("") + `<button class="print" onclick="print()">인쇄 · PDF 저장</button>`;
+    $("filters").querySelectorAll("button[data-k]").forEach((b) => b.onclick = () => { yr = b.dataset.k; render(); });
+  }
+
+  function render() {
+    filters();
+    const S = ITEMS.filter((x) => yr === "all" || x.year === yr);
+    const label = yr === "all" ? "전체 기간" : yr + "년";
+    const withP = S.filter((x) => x.span != null);
+    const spans = withP.map((x) => x.span).sort((a, b) => a - b), avgSpan = spans.length ? spans[Math.floor(spans.length / 2)] : 0;
+    const bizN = new Set(S.map((x) => x.biz).filter(Boolean)).size;
+    $("tiles").innerHTML = [
+      ["공고 수", fmt(S.length), "건", label],
+      ["사업 수", fmt(bizN), "개", "사업명(사업구분) 기준"],
+      ["접수 기간 중앙값", avgSpan, "일", `신청기간이 있는 ${fmt(withP.length)}건 기준`],
+      ["첨부 파일", fmt(S.reduce((s, x) => s + x.files, 0)), "개", `공고당 평균 ${(S.reduce((s, x) => s + x.files, 0) / Math.max(1, S.length)).toFixed(1)}개`],
+    ].map(([l, v, u, s]) => `<div class="tile"><div class="l">${l}</div><div class="v">${v}<small>${u}</small></div><div class="s">${s}</div></div>`).join("");
+
+    // 그림 1: 연도 × 월 히트맵 (연도 필터와 무관하게 전체, 선택 연도 강조)
+    const grid = {}; let max = 1;
+    ITEMS.forEach((x) => { if (!x.posted) return; const k = x.posted.slice(0, 7); grid[k] = (grid[k] || 0) + 1; max = Math.max(max, grid[k]); });
+    const steps = ["--s0", "--s100", "--s200", "--s300", "--s400", "--s500", "--s600", "--s700"];
+    const col = (v) => (v ? steps[Math.min(7, 1 + Math.floor((v / max) * 6.999))] : "--s0");
+    let h = `<div class="heat"><div></div>` + Array.from({ length: 12 }, (_, i) => `<div class="h">${i + 1}월</div>`).join("");
+    years.forEach((y) => {
+      h += `<div class="y" style="${yr === y ? "font-weight:700;color:var(--t1)" : ""}">${y}년</div>`;
+      for (let m = 1; m <= 12; m++) {
+        const v = grid[`${y}-${pad(m)}`] || 0, c = col(v), dark = steps.indexOf(c) >= 4;
+        h += `<div class="c" style="background:var(${c});color:${dark ? "#fff" : "var(--t2)"};${yr !== "all" && yr !== y ? "opacity:.35" : ""}" data-tip="<b>${y}년 ${m}월</b><br>게시 공고 ${v}건">${v || ""}</div>`;
+      }
+    });
+    $("f1").innerHTML = h + `</div>`;
+    const mTot = Array.from({ length: 12 }, (_, i) => S.filter((x) => x.posted && +x.posted.slice(5, 7) === i + 1).length);
+    const q1 = mTot[0] + mTot[1] + mTot[2];
+    const pm = mTot.indexOf(Math.max(...mTot));
+    $("t1").innerHTML = `${label} 공고의 <b>${pct(q1, S.length)}%</b>가 1~3월에 게시됐고, 가장 많은 달은 <b>${pm + 1}월</b>(${mTot[pm]}건)입니다. 연초 신규 사업 공고 시기에 수집 주기를 촘촘히 할 필요가 있습니다.`;
+    $("v1").innerHTML = tableView(["월", "공고 수"], mTot.map((v, i) => [i + 1 + "월", v + "건"]));
+
+    // 그림 2: 연도별
+    const yRows = years.map((y) => ({ label: y + "년", v: ITEMS.filter((x) => x.year === y).length, hl: y === yr }));
+    yRows.forEach((r) => r.tip = `<b>${r.label}</b><br>공고 ${r.v}건`);
+    $("f2").innerHTML = vbars(yRows, { h: 220 });
+    const last2 = yRows.slice(-2);
+    $("t2").innerHTML = last2.length === 2 ? `${last2[1].label} 공고는 <b>${last2[1].v}건</b>으로 ${last2[0].label}(${last2[0].v}건)보다 <b>${last2[1].v - last2[0].v >= 0 ? "+" : ""}${last2[1].v - last2[0].v}건</b>입니다. 2023~2024년 수치가 낮은 것은 사이트에서 지난 공고가 정리됐기 때문일 수 있습니다.` : "";
+    $("v2").innerHTML = tableView(["연도", "공고 수"], yRows.map((r) => [r.label, r.v + "건"]));
+
+    // 그림 3: 접수 기간 분포
+    const bins = [["7일 이하", 0, 7], ["8~14일", 8, 14], ["15~30일", 15, 30], ["31~60일", 31, 60], ["61일 이상", 61, 1e9]];
+    const bRows = bins.map(([l, a, b]) => { const v = withP.filter((x) => x.span >= a && x.span <= b).length; return { label: l, v, tip: `<b>접수 기간 ${l}</b><br>${v}건 (${pct(v, withP.length)}%)` }; });
+    $("f3").innerHTML = vbars(bRows, { h: 220 });
+    const mode = bRows.reduce((a, b) => (b.v > a.v ? b : a));
+    $("t3").innerHTML = `접수 기간은 <b>${mode.label}</b>이 가장 많고(${pct(mode.v, withP.length)}%), 중앙값은 <b>${avgSpan}일</b>입니다. 접수 기간이 2주 이하인 짧은 공고도 ${pct(bRows[0].v + bRows[1].v, withP.length)}% 있어, 수집이 늦어지면 수요자가 신청 기회를 놓칠 수 있습니다.`;
+    $("v3").innerHTML = tableView(["접수 기간", "공고 수"], bRows.map((r) => [r.label, r.v + "건"]));
+
+    // 그림 4: 사업 상위
+    const bc = {}; S.forEach((x) => { if (x.biz) bc[x.biz] = (bc[x.biz] || 0) + 1; });
+    const bTop = Object.entries(bc).sort((a, b) => b[1] - a[1]).slice(0, 12);
+    $("f4").innerHTML = hbars(bTop);
+    $("t4").innerHTML = bTop.length ? `<b>${esc(bTop[0][0])}</b>(${bTop[0][1]}건)이 가장 많습니다. 사업 하나가 본공고·수정·추가모집·결과로 여러 번 공고되므로, 화면에서는 사업 단위로 묶어 보여 주는 편이 낫습니다.` : "";
+
+    // 그림 5: 분야
+    const fc = {}; S.forEach((x) => x.fields.forEach((f) => fc[f] = (fc[f] || 0) + 1));
+    const fRows = Object.entries(fc).sort((a, b) => b[1] - a[1]);
+    $("f5").innerHTML = hbars(fRows.map(([k, v]) => [k, v, `${label} 공고의 ${pct(v, S.length)}%`]));
+    $("t5").innerHTML = fRows.length ? `<b>${fRows[0][0]}</b> 관련 공고가 ${fRows[0][1]}건(${pct(fRows[0][1], S.length)}%)으로 가장 많고, 다음은 ${fRows[1] ? fRows[1][0] + "(" + fRows[1][1] + "건)" : "—"}입니다.` : "";
+
+    // 그림 6: 유형
+    const kc = {}; S.forEach((x) => kc[x.kind] = (kc[x.kind] || 0) + 1);
+    const kRows = Object.entries(kc).sort((a, b) => b[1] - a[1]);
+    $("f6").innerHTML = hbars(kRows.map(([k, v]) => [k, v, `${pct(v, S.length)}%`]));
+    const nonPub = S.filter((x) => ["입찰·용역", "결과 발표", "설명회·안내"].includes(x.kind)).length;
+    $("t6").innerHTML = `사업공고 게시판에도 입찰·결과·설명회 글이 <b>${nonPub}건(${pct(nonPub, S.length)}%)</b> 섞여 있습니다. 수요자 화면에서는 이 글들을 걸러야 합니다.`;
+
+    // 그림 7: 첨부
+    const ex = Object.entries(D.attach.by_ext).slice(0, 8);
+    $("f7").innerHTML = hbars(ex.map(([k, v]) => [k.toUpperCase() || "기타", v, `${pct(v, D.attach.count)}%`]), { unit: "개" });
+    const hwp = (D.attach.by_ext.hwp || 0) + (D.attach.by_ext.hwpx || 0);
+    $("t7").innerHTML = `첨부 ${fmt(D.attach.count)}개 중 <b>한글(HWP·HWPX)이 ${pct(hwp, D.attach.count)}%</b>입니다. 첨부 내용을 분석하려면 한글 파일 파싱이 꼭 필요합니다.`;
+
+    $("method").innerHTML = `<b>자료</b> 정보통신산업진흥원 사업공고 게시판(www.nipa.kr/home/2-2) 수집 결과, 공고 ${fmt(D.total)}건 · 첨부 ${fmt(D.attach.count)}개.<br>
+      <b>기준</b> 연·월은 상세 페이지 작성일, 접수 기간은 신청 시작~마감 일시 차이(일). 분야·유형은 단어 기준 임시 분류로, AI 분류 기능을 만들면 바뀔 수 있습니다.<br>
+      <b>한계</b> 사이트에서 삭제된 지난 공고는 집계되지 않습니다. 2026년 수치는 ${kdate(lastP)}까지의 값입니다.`;
+  }
+  render();
+})();
+</script>
+</body>
+</html>

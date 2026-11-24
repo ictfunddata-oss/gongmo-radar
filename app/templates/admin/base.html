@@ -1,0 +1,26 @@
+{% from "_brand.html" import brand %}<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}ICT기금 공모사업 AI RADAR · 운영 현황{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='brand.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+</head>
+<body>
+<header class="gnb"><div class="in">
+  {{ brand(url_for('admin.index'), '운영 현황') }}
+  <nav class="nav">{% set ep = request.endpoint %}
+    <a href="{{ url_for('admin.dashboard') }}" class="{{ 'on' if ep == 'admin.dashboard' }}">통계</a>
+    <a href="{{ url_for('admin.index') }}" class="{{ 'on' if ep in ('admin.index', 'admin.detail') }}">전체 목록</a>
+    <a href="{{ url_for('admin.raw') }}" class="{{ 'on' if ep in ('admin.raw', 'admin.raw_detail') }}">원본 데이터</a>
+    <a href="{{ url_for('admin.search_stats') }}" class="{{ 'on' if ep == 'admin.search_stats' }}">검색어</a>
+    <a href="{{ url_for('admin.banned') }}" class="{{ 'on' if ep == 'admin.banned' }}">금칙어 관리</a>
+    <a href="{{ url_for('admin.automation') }}" class="{{ 'on' if ep == 'admin.automation' }}">자동화</a>
+    <a href="{{ url_for('admin.logs') }}" class="{{ 'on' if ep == 'admin.logs' }}">로그</a></nav>
+  <a class="note" href="{{ url_for('public.index') }}" style="color:#fff">수요자 화면 보기 →</a>
+  <form method="post" action="{{ url_for('auth.logout') }}" style="margin:0"><button class="logout">로그아웃</button></form>
+</div></header>
+<main class="wrap">{% for cat, msg in get_flashed_messages(with_categories=true) %}<div class="flash {{ cat }}">{{ msg }}</div>{% endfor %}{% block content %}{% endblock %}</main>
+</body>
+</html>
