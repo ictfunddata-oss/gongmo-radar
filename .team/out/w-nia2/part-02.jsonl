@@ -1,0 +1,100 @@
+{"ann_id":481,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"사전규격 공개, 제안요청서 사전공개 안내"}
+{"ann_id":482,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고(재공고)"}
+{"ann_id":483,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"사전규격 공개, 제안요청서 사전공개 안내"}
+{"ann_id":484,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"입찰공고문, G2B공고번호 명시"}
+{"ann_id":485,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":486,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":487,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"사전규격 공개, 제안요청서 사전공개 안내"}
+{"ann_id":488,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"사전규격 공개, 제안요청서 사전공개 안내"}
+{"ann_id":489,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고(재공고)"}
+{"ann_id":490,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"입찰공고문, G2B공고번호 명시"}
+{"ann_id":491,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":492,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":493,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":494,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":495,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"사전규격 공개, 제안요청서 사전공개 안내"}
+{"ann_id":496,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"사전규격 공개, 제안요청서 사전공개 안내"}
+{"ann_id":497,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"입찰공고문, G2B공고번호 명시"}
+{"ann_id":498,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"사전규격 공개, 제안요청서 사전공개 안내"}
+{"ann_id":499,"class":"공모지원사업","sub":"수행기관","confidence":"mid","reason":"사전공개 말머리이나 대상은 공모안내서·협약 방식의 공모사업(대응 공모 공고 있음)"}
+{"ann_id":500,"class":"공모지원사업","sub":"수행기관","confidence":"mid","reason":"사전공개 말머리이나 대상은 공모안내서·협약 방식의 공모사업(대응 공모 공고 있음)"}
+{"ann_id":501,"class":"공모지원사업","sub":"수행기관","confidence":"mid","reason":"사전공개 말머리이나 대상은 공모안내서·협약 방식의 공모사업(대응 공모 공고 있음)"}
+{"ann_id":502,"class":"공모지원사업","sub":"수행기관","confidence":"mid","reason":"사전공개 말머리이나 대상은 공모안내서·협약 방식의 공모사업(대응 공모 공고 있음)"}
+{"ann_id":503,"class":"공모지원사업","sub":"수행기관","confidence":"high","reason":"정부 공고, 공모·신청 접수 사업"}
+{"ann_id":504,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":505,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"입찰공고문, G2B공고번호 명시(재공고)"}
+{"ann_id":506,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":507,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"입찰공고문, G2B공고번호 명시"}
+{"ann_id":508,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"입찰공고문, G2B공고번호 명시"}
+{"ann_id":509,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고(재공고)"}
+{"ann_id":510,"class":"공모지원사업","sub":"수행기관","confidence":"mid","reason":"사전공개 말머리이나 대상은 공모안내서·협약 방식의 공모사업(대응 공모 공고 있음)"}
+{"ann_id":511,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":512,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":513,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"입찰공고문, G2B공고번호 명시(재공고)"}
+{"ann_id":514,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"입찰공고문, G2B공고번호 명시"}
+{"ann_id":515,"class":"공모지원사업","sub":"수행기관","confidence":"high","reason":"공모공고·공모안내서·신청서식, 협약 체결"}
+{"ann_id":516,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":517,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"입찰공고문, G2B공고번호 명시"}
+{"ann_id":518,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":519,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고(재공고)"}
+{"ann_id":520,"class":"공모지원사업","sub":"변경·취소","confidence":"high","reason":"재공고, 정부 공고, 공모·신청 접수 사업"}
+{"ann_id":521,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":522,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":523,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고(재공고)"}
+{"ann_id":524,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고(재공고)"}
+{"ann_id":525,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"입찰공고문, G2B공고번호 명시"}
+{"ann_id":526,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":527,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"입찰공고문, G2B공고번호 명시"}
+{"ann_id":528,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고(재공고)"}
+{"ann_id":529,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"사전규격 공개, 제안요청서 사전공개 안내"}
+{"ann_id":530,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"사전규격 공개, 제안요청서 사전공개 안내"}
+{"ann_id":531,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":532,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고(재공고)"}
+{"ann_id":533,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":534,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":535,"class":"공모지원사업","sub":"수행기관","confidence":"high","reason":"공모공고·공모안내서·신청서식, 협약 체결"}
+{"ann_id":536,"class":"공모지원사업","sub":"수행기관","confidence":"mid","reason":"사전공개 말머리이나 대상은 공모안내서·협약 방식의 공모사업(대응 공모 공고 있음)"}
+{"ann_id":537,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"사전규격 공개, 제안요청서 사전공개 안내"}
+{"ann_id":538,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"사전규격 공개, 제안요청서 사전공개 안내"}
+{"ann_id":539,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"입찰공고문, G2B공고번호 명시"}
+{"ann_id":540,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"사전규격 공개, 제안요청서 사전공개 안내"}
+{"ann_id":541,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":542,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"입찰공고문, G2B공고번호 명시"}
+{"ann_id":543,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고(재공고)"}
+{"ann_id":544,"class":"공모지원사업","sub":"수행기관","confidence":"high","reason":"공모공고·공모안내서·신청서식, 협약 체결"}
+{"ann_id":545,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"입찰공고문, G2B공고번호 명시"}
+{"ann_id":546,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고(재공고)"}
+{"ann_id":547,"class":"공모지원사업","sub":"수행기관","confidence":"mid","reason":"사전공개 말머리이나 대상은 공모안내서·협약 방식의 공모사업(대응 공모 공고 있음)"}
+{"ann_id":548,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":549,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"입찰공고문, G2B공고번호 명시(재공고)"}
+{"ann_id":550,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":551,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고(재공고)"}
+{"ann_id":552,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"입찰공고문, G2B공고번호 명시"}
+{"ann_id":553,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":554,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"사전규격 공개, 제안요청서 사전공개 안내"}
+{"ann_id":555,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":556,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":557,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"사전규격 공개, 제안요청서 사전공개 안내"}
+{"ann_id":558,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"입찰공고문, G2B공고번호 명시(재공고)"}
+{"ann_id":559,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"입찰공고문, G2B공고번호 명시"}
+{"ann_id":560,"class":"공모지원사업","sub":"수행기관","confidence":"high","reason":"정부 공고, 공모·신청 접수 사업"}
+{"ann_id":561,"class":"공모지원사업","sub":"수행기관","confidence":"high","reason":"정부 공고, 공모·신청 접수 사업"}
+{"ann_id":562,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"사전규격 공개, 제안요청서 사전공개 안내"}
+{"ann_id":563,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고(재공고)"}
+{"ann_id":564,"class":"공모지원사업","sub":"수행기관","confidence":"high","reason":"공모공고·공모안내서·신청서식, 협약 체결"}
+{"ann_id":565,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"사전규격 공개, 제안요청서 사전공개 안내"}
+{"ann_id":566,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":567,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":568,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":569,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"입찰공고문, G2B공고번호 명시(재공고)"}
+{"ann_id":570,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":571,"class":"공모지원사업","sub":"수행기관","confidence":"low","reason":"위탁연구 공고, 협약 체결 방식이나 제안요청서 사용 — 계약·협약 경계"}
+{"ann_id":572,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"사전규격 공개, 제안요청서 사전공개 안내"}
+{"ann_id":573,"class":"공모지원사업","sub":"수행기관","confidence":"high","reason":"공모공고·공모안내서·신청서식, 협약 체결"}
+{"ann_id":574,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":575,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"입찰공고문, G2B공고번호 명시"}
+{"ann_id":576,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":577,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"사전규격 공개, 제안요청서 사전공개 안내"}
+{"ann_id":578,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":579,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"조달입찰공고, 입찰개요·조달청 공고"}
+{"ann_id":580,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"입찰공고문, G2B공고번호 명시"}

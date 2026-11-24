@@ -1,0 +1,60 @@
+{"ann_id":1,"class":"공모지원사업","sub":"지원사업","confidence":"high","reason":"GPU 자원 활용 지원 사업 베타서비스 참여자 모집"}
+{"ann_id":2,"class":"공모지원사업","sub":"수행기관","confidence":"mid","reason":"운영기관 모집, 사업계획서 양식·모집안내서 첨부(입찰 단서 없음)"}
+{"ann_id":3,"class":"공모지원사업","sub":"지원사업","confidence":"high","reason":"첨단 GPU 활용 지원 사업 참여자 모집 공고"}
+{"ann_id":4,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"입찰공고문·제안요청서 첨부, 입찰 절차 잠정 중단 안내"}
+{"ann_id":5,"class":"공모지원사업","sub":"참가·교육","confidence":"high","reason":"입주기업 모집, 사무공간 등 지원 혜택"}
+{"ann_id":6,"class":"공모지원사업","sub":"지원사업","confidence":"mid","reason":"스마트 안전장비 판로지원 품목 등록, 신청서·보조금 안내자료"}
+{"ann_id":7,"class":"공모지원사업","sub":"참가·교육","confidence":"mid","reason":"포럼 전시 부스 참가기업 모집, 참가신청서"}
+{"ann_id":8,"class":"공모지원사업","sub":"참가·교육","confidence":"mid","reason":"전시회 참가 기업 모집, 참가 신청서"}
+{"ann_id":9,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"입찰개요·사업예산·계약기간·제안요청서"}
+{"ann_id":10,"class":"공모지원사업","sub":"수행기관","confidence":"mid","reason":"조성 사업 공모, 공모안내서·수행계획서 양식"}
+{"ann_id":41,"class":"공모지원사업","sub":"참가·교육","confidence":"high","reason":"XR 쇼룸 입주기업 모집, 입주 신청서"}
+{"ann_id":42,"class":"기타","sub":"안내","confidence":"low","reason":"유공자 포상계획 공고, 지원·계약 성격 아님(재연장)"}
+{"ann_id":43,"class":"공모지원사업","sub":"참가·교육","confidence":"high","reason":"해외 전시 참가 지원기업 모집, 참가신청서"}
+{"ann_id":44,"class":"공모지원사업","sub":"참가·교육","confidence":"high","reason":"입주기업 모집, 입주신청서"}
+{"ann_id":45,"class":"공모지원사업","sub":"변경·취소","confidence":"high","reason":"모두의 AI 사업 수정 공고(공모안내서·FAQ 수정)"}
+{"ann_id":46,"class":"공모지원사업","sub":"변경·취소","confidence":"high","reason":"파운데이션 모델 개발 지원 사업 수정 공고"}
+{"ann_id":47,"class":"기타","sub":"안내","confidence":"low","reason":"유공자 포상계획 연장 공고, 지원·계약 성격 아님"}
+{"ann_id":48,"class":"기타","sub":"안내","confidence":"low","reason":"유공자 포상계획 공고, 지원·계약 성격 아님"}
+{"ann_id":49,"class":"공모지원사업","sub":"참가·교육","confidence":"high","reason":"허브 입주기업 모집, 입주신청서"}
+{"ann_id":50,"class":"공모지원사업","sub":"지원사업","confidence":"high","reason":"모델 개발 지원 사업 공고, 사업계획서 양식"}
+{"ann_id":51,"class":"공모지원사업","sub":"지원사업","confidence":"high","reason":"사업 공고, 공모안내서·사업수행계획서 양식"}
+{"ann_id":52,"class":"공모지원사업","sub":"지원사업","confidence":"high","reason":"SaaS 전환 컨설팅 수요기업 모집, 협약, 지원내용"}
+{"ann_id":53,"class":"공모지원사업","sub":"참가·교육","confidence":"high","reason":"센터 연간 입주기업 모집, 사무공간 지원"}
+{"ann_id":54,"class":"공모지원사업","sub":"지원사업","confidence":"mid","reason":"스마트 안전장비 판로지원 품목 등록, 보조금 안내자료"}
+{"ann_id":55,"class":"공모지원사업","sub":"참가·교육","confidence":"low","reason":"오픈소스 개발자 대회, 참가자 모집(시상 혜택 추정)"}
+{"ann_id":56,"class":"공모지원사업","sub":"지원사업","confidence":"high","reason":"고성능 컴퓨팅 자원 사용자 추가 모집, 이용신청서"}
+{"ann_id":57,"class":"공모지원사업","sub":"지원사업","confidence":"high","reason":"AX 원스톱 바우처 수요기업 추가 모집"}
+{"ann_id":58,"class":"공모지원사업","sub":"참가·교육","confidence":"high","reason":"센터 입주기업 모집, 입주신청서·사업계획서"}
+{"ann_id":59,"class":"공모지원사업","sub":"지원사업","confidence":"high","reason":"바우처 지원사업 수요기업 모집"}
+{"ann_id":60,"class":"공모지원사업","sub":"지원사업","confidence":"high","reason":"신규과제 모집, 사업계획서 양식"}
+{"ann_id":61,"class":"공모지원사업","sub":"지원사업","confidence":"high","reason":"수출 유망 기업 육성 지원기업 추가모집"}
+{"ann_id":62,"class":"공모지원사업","sub":"수행기관","confidence":"mid","reason":"바우처 지원사업 운영기관 모집, 사업수행계획서 양식"}
+{"ann_id":63,"class":"공모지원사업","sub":"변경·취소","confidence":"mid","reason":"공급기업 POOL 모집 수정공고(수정사항 표)"}
+{"ann_id":64,"class":"공모지원사업","sub":"지원사업","confidence":"high","reason":"시범사업 공고, 공모안내서·수행계획 양식"}
+{"ann_id":65,"class":"기타","sub":"결과","confidence":"high","reason":"발표평가 결과 및 지원 대상과제 선정 공고"}
+{"ann_id":66,"class":"공모지원사업","sub":"변경·취소","confidence":"high","reason":"쇼케이스 참가 기업 모집 기간연장 공고"}
+{"ann_id":67,"class":"공모지원사업","sub":"참가·교육","confidence":"high","reason":"센터 입주기업 모집, 입주신청서"}
+{"ann_id":68,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"인테리어 용역 입찰개요·사업예산·제안요청서"}
+{"ann_id":69,"class":"기타","sub":"결과","confidence":"high","reason":"서류평가 결과 및 발표평가 대상자 선정 공고"}
+{"ann_id":70,"class":"공모지원사업","sub":"지원사업","confidence":"high","reason":"해외진출 지원 사업 참여기업 모집, 사업계획서 양식"}
+{"ann_id":71,"class":"공모지원사업","sub":"참가·교육","confidence":"high","reason":"센터 입주기업 모집, 사무공간 지원"}
+{"ann_id":72,"class":"공모지원사업","sub":"변경·취소","confidence":"mid","reason":"수행지역·기관 선정 재공고, 신청양식·공모안내서"}
+{"ann_id":73,"class":"공모지원사업","sub":"지원사업","confidence":"mid","reason":"해외 인재·팀 모집, 국내 유입·창업 지원, 공모안내서"}
+{"ann_id":74,"class":"공모지원사업","sub":"지원사업","confidence":"mid","reason":"GPU 사용자 수시 모집, 접수 마감 안내 포함"}
+{"ann_id":75,"class":"공모지원사업","sub":"참가·교육","confidence":"high","reason":"해외 전시 참가 지원기업 모집, 참가신청서"}
+{"ann_id":76,"class":"공모지원사업","sub":"변경·취소","confidence":"high","reason":"AI 통합 바우처 수정공고(Pool 현행화·문의처 변경)"}
+{"ann_id":77,"class":"공모지원사업","sub":"참가·교육","confidence":"high","reason":"XR 쇼룸 입주기업 모집, 입주신청서"}
+{"ann_id":78,"class":"공모지원사업","sub":"수행기관","confidence":"mid","reason":"전문인력 양성기관 신규 지정 공고, 신청양식·공모안내서"}
+{"ann_id":79,"class":"공모지원사업","sub":"지원사업","confidence":"high","reason":"데이터센터 지원 사업 통합 공고, 지원과제 신청양식"}
+{"ann_id":80,"class":"공모지원사업","sub":"참가·교육","confidence":"low","reason":"AI 대회 참가자(팀) 모집, 시상 혜택 추정"}
+{"ann_id":81,"class":"공모지원사업","sub":"참가·교육","confidence":"low","reason":"AI 대회 참가자(팀) 모집, 시상 혜택 추정"}
+{"ann_id":82,"class":"공모지원사업","sub":"참가·교육","confidence":"high","reason":"XR 센터 신규 입주기업 모집, 입주신청서"}
+{"ann_id":83,"class":"공모지원사업","sub":"지원사업","confidence":"high","reason":"고성능 컴퓨팅 지원 사용자 모집, 공모안내서"}
+{"ann_id":84,"class":"공모지원사업","sub":"지원사업","confidence":"high","reason":"신규과제 모집공고, 공모안내서·양식"}
+{"ann_id":85,"class":"공모지원사업","sub":"지원사업","confidence":"high","reason":"창업기업 지원사업 모집, 공모안내서·신청서식"}
+{"ann_id":86,"class":"공모지원사업","sub":"지원사업","confidence":"high","reason":"SaaS 개발·사업화 지원 사업 공고, 신청양식"}
+{"ann_id":87,"class":"공모지원사업","sub":"지원사업","confidence":"high","reason":"해외실증 지원 사업 참여기업 모집, 사업계획서"}
+{"ann_id":88,"class":"공모지원사업","sub":"수행기관","confidence":"mid","reason":"교육 운영기관 모집, 공모안내서·제출양식"}
+{"ann_id":89,"class":"공모지원사업","sub":"수행기관","confidence":"mid","reason":"사업수행기관 모집, 공모 안내문·제출서류"}
+{"ann_id":90,"class":"공모지원사업","sub":"변경·취소","confidence":"high","reason":"AI 바우처 모집 수정공고(공급기업 POOL 최종)"}

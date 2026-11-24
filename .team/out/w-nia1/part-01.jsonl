@@ -1,0 +1,100 @@
+{"ann_id":11,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 입찰공고, G2B 공고번호·입찰참가 안내"}
+{"ann_id":12,"class":"입찰공고","sub":"협상공모","confidence":"high","reason":"협상 계약 방식의 법률자문 법무법인 선정 공모(기준 3), 공모공고서·제안서 접수"}
+{"ann_id":13,"class":"기타","sub":"결과","confidence":"high","reason":"제안서 평가결과 공개, 결과 발표(기준 6)"}
+{"ann_id":14,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 입찰공고, G2B 공고번호·입찰참가 안내"}
+{"ann_id":15,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":16,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":17,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":18,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":19,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"말머리 조달입찰공고(재공고), 재공고·정정·취소 공고(기준 5)"}
+{"ann_id":20,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"말머리 사전규격공개, 제안요청서 사전공개"}
+{"ann_id":91,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"말머리 사전규격공개, 제안요청서 사전공개"}
+{"ann_id":92,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 입찰공고, G2B 공고번호·입찰참가 안내"}
+{"ann_id":93,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":94,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"말머리 사전규격공개, 제안요청서 사전공개"}
+{"ann_id":95,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":96,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 입찰공고, G2B 공고번호·입찰참가 안내"}
+{"ann_id":97,"class":"기타","sub":"안내","confidence":"mid","reason":"제안요청서 미공개 자료 열람 안내, 입찰 자체가 아닌 열람 신청 안내"}
+{"ann_id":98,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":99,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":100,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":101,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":102,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":103,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"말머리 입찰공고, 재공고·정정·취소 공고(기준 5)"}
+{"ann_id":104,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":105,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"말머리 입찰공고, 재공고·정정·취소 공고(기준 5)"}
+{"ann_id":106,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"말머리 사전규격공개, 제안요청서 사전공개"}
+{"ann_id":107,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":108,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":109,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":110,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 입찰공고, G2B 공고번호·입찰참가 안내"}
+{"ann_id":111,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":112,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 입찰공고, G2B 공고번호·입찰참가 안내"}
+{"ann_id":113,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":114,"class":"기타","sub":"결과","confidence":"high","reason":"제안서 평가결과 공개, 결과 발표(기준 6)"}
+{"ann_id":115,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":116,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":117,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 입찰공고, G2B 공고번호·입찰참가 안내"}
+{"ann_id":118,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 입찰공고, G2B 공고번호·입찰참가 안내"}
+{"ann_id":119,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":120,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"말머리 사전규격공개, 제안요청서 사전공개"}
+{"ann_id":121,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"말머리 사전규격공개, 제안요청서 사전공개"}
+{"ann_id":122,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"말머리 사전규격공개, 제안요청서 사전공개"}
+{"ann_id":123,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":124,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":125,"class":"기타","sub":"결과","confidence":"high","reason":"제안서 평가결과 공개, 결과 발표(기준 6)"}
+{"ann_id":126,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"말머리 사전규격공개, 제안요청서 사전공개"}
+{"ann_id":127,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 입찰공고, G2B 공고번호·입찰참가 안내"}
+{"ann_id":128,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"말머리 사전규격공개, 제안요청서 사전공개"}
+{"ann_id":129,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 입찰공고, G2B 공고번호·입찰참가 안내"}
+{"ann_id":130,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 입찰공고, G2B 공고번호·입찰참가 안내"}
+{"ann_id":131,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"말머리 사전규격공개, 제안요청서 사전공개"}
+{"ann_id":132,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":133,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"말머리 사전규격공개, 제안요청서 사전공개"}
+{"ann_id":134,"class":"기타","sub":"결과","confidence":"high","reason":"제안서 평가결과 공개, 결과 발표(기준 6)"}
+{"ann_id":135,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"말머리 조달입찰공고, 재공고·정정·취소 공고(기준 5)"}
+{"ann_id":136,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"말머리 입찰공고(재공고), 재공고·정정·취소 공고(기준 5)"}
+{"ann_id":137,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":138,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"말머리 사전규격공개, 제안요청서 사전공개"}
+{"ann_id":139,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":140,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"말머리 입찰공고(재공고), 재공고·정정·취소 공고(기준 5)"}
+{"ann_id":141,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"말머리 사전규격공개, 제안요청서 사전공개"}
+{"ann_id":142,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 입찰공고, G2B 공고번호·입찰참가 안내"}
+{"ann_id":143,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"말머리 사전규격공개, 제안요청서 사전공개"}
+{"ann_id":144,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":145,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 입찰공고, G2B 공고번호·입찰참가 안내"}
+{"ann_id":146,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"말머리 사전규격공개, 제안요청서 사전공개"}
+{"ann_id":147,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"말머리 사전규격공개, 제안요청서 사전공개"}
+{"ann_id":148,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"말머리 사전규격공개, 제안요청서 사전공개"}
+{"ann_id":149,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":150,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"말머리 입찰공고(재공고), 재공고·정정·취소 공고(기준 5)"}
+{"ann_id":151,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 입찰공고, G2B 공고번호·입찰참가 안내"}
+{"ann_id":152,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 입찰공고, G2B 공고번호·입찰참가 안내"}
+{"ann_id":153,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"말머리 사전규격공개, 제안요청서 사전공개"}
+{"ann_id":154,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"말머리 입찰공고(재공고), 재공고·정정·취소 공고(기준 5)"}
+{"ann_id":155,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"말머리 조달입찰공고, 재공고·정정·취소 공고(기준 5)"}
+{"ann_id":156,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":157,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"말머리 사전규격공개, 제안요청서 사전공개"}
+{"ann_id":158,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":159,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"말머리 조달입찰공고, 재공고·정정·취소 공고(기준 5)"}
+{"ann_id":160,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"말머리 사전규격공개, 제안요청서 사전공개"}
+{"ann_id":161,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 입찰공고, G2B 공고번호·입찰참가 안내"}
+{"ann_id":162,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 입찰공고, G2B 공고번호·입찰참가 안내"}
+{"ann_id":163,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"말머리 입찰공고, 재공고·정정·취소 공고(기준 5)"}
+{"ann_id":164,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"말머리 입찰공고(취소공고), 재공고·정정·취소 공고(기준 5)"}
+{"ann_id":165,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"말머리 입찰공고, 재공고·정정·취소 공고(기준 5)"}
+{"ann_id":166,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 입찰공고, G2B 공고번호·입찰참가 안내"}
+{"ann_id":167,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"말머리 사전규격공개, 제안요청서 사전공개"}
+{"ann_id":168,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"말머리 사전규격공개, 제안요청서 사전공개"}
+{"ann_id":169,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 입찰공고, G2B 공고번호·입찰참가 안내"}
+{"ann_id":170,"class":"기타","sub":"결과","confidence":"mid","reason":"사전규격공개 의견 검토결과 공개, 결과 발표(기준 6)"}
+{"ann_id":171,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 입찰공고, G2B 공고번호·입찰참가 안내"}
+{"ann_id":172,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":173,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":174,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 조달입찰공고, 조달청 입찰공고·제안요청서 첨부"}
+{"ann_id":175,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"말머리 입찰공고(재공고), 재공고·정정·취소 공고(기준 5)"}
+{"ann_id":176,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 입찰공고, G2B 공고번호·입찰참가 안내"}
+{"ann_id":177,"class":"입찰공고","sub":"사전규격","confidence":"high","reason":"말머리 사전규격공개, 제안요청서 사전공개"}
+{"ann_id":178,"class":"입찰공고","sub":"변경·취소","confidence":"high","reason":"말머리 조달입찰공고_재공고, 재공고·정정·취소 공고(기준 5)"}
+{"ann_id":179,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 없으나 제목 입찰 공고, 조달청 입찰공고번호·위탁감리 제안요청서"}
+{"ann_id":180,"class":"입찰공고","sub":"입찰","confidence":"high","reason":"말머리 입찰공고, G2B 공고번호·입찰참가 안내"}
