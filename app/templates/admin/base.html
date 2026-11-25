@@ -13,6 +13,7 @@
   <nav class="nav">{% set ep = request.endpoint %}
     <a href="{{ url_for('admin.dashboard') }}" class="{{ 'on' if ep == 'admin.dashboard' }}">통계</a>
     <a href="{{ url_for('admin.index') }}" class="{{ 'on' if ep in ('admin.index', 'admin.detail') }}">전체 목록</a>
+    <a href="{{ url_for('admin.labels_view') }}" class="{{ 'on' if ep == 'admin.labels_view' }}">분류·정리</a>
     <a href="{{ url_for('admin.raw') }}" class="{{ 'on' if ep in ('admin.raw', 'admin.raw_detail') }}">원본 데이터</a>
     <a href="{{ url_for('admin.search_stats') }}" class="{{ 'on' if ep == 'admin.search_stats' }}">검색어</a>
     <a href="{{ url_for('admin.banned') }}" class="{{ 'on' if ep == 'admin.banned' }}">금칙어 관리</a>

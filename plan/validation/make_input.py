@@ -1,7 +1,8 @@
 """검증 입력 만들기 — DB(읽기 전용)의 공고를 기관별 묶음(JSON Lines)으로 나눈다.
 
 사용: python plan/validation/make_input.py --out data/validation/<실행>/in [--chunk 50] [--org nipa_business ...]
-분류 프롬프트에 넣는 값과 같은 항목(제목·말머리·상태·기간·본문 앞 300자·첨부 이름)만 담는다. 본문 연락처는 가린다.
+분류 프롬프트에 넣는 값과 같은 항목(app.services.classify.build_items: 제목·말머리·상태·기간·본문 앞 300자·첨부 이름)만 담는다.
+본문 연락처는 가린다.
 """
 import argparse
 import json
@@ -11,20 +12,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
-from app.services.mask import mask_contacts  # noqa: E402
+from app.services.classify import build_items  # noqa: E402
 
 ORGS = ["nipa_business", "nia_bid", "kca_bidding", "rapa_notice"]
 
 
 def items(conn, board):
-    rows = conn.execute(
-        "SELECT a.ann_id, a.post_no, a.title, a.biz, a.site_status, a.period_raw, a.posted_at, a.list_date, a.body "
-        "FROM announcements a JOIN boards b ON b.board_id = a.board_id WHERE b.code = ? ORDER BY a.ann_id", (board,)).fetchall()
-    for r in rows:
-        files = [x[0] for x in conn.execute("SELECT name FROM attachments WHERE ann_id = ? ORDER BY seq", (r["ann_id"],))]
-        yield {"ann_id": r["ann_id"], "board": board, "post_no": r["post_no"], "title": r["title"], "biz": r["biz"] or "",
-               "site_status": r["site_status"] or "", "period": r["period_raw"] or "", "posted": r["posted_at"] or r["list_date"],
-               "body": mask_contacts(r["body"] or "")[:300], "files": [n[:60] for n in files[:6]]}
+    ids = [r[0] for r in conn.execute(
+        "SELECT a.ann_id FROM announcements a JOIN boards b ON b.board_id = a.board_id WHERE b.code = ? ORDER BY a.ann_id", (board,))]
+    return build_items(conn, ids)
 
 
 def main():

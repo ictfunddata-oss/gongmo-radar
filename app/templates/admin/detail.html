@@ -10,6 +10,37 @@
   <tr><th>신청 기간</th><td>{{ (item.start_at or '')|replace('T', ' ') }} ~ {{ (item.end_at or '')|replace('T', ' ') }}</td></tr>
 </table>
 
+<h2>유형</h2>
+<table class="kv">
+  {% if label %}
+  <tr><th>유형 · 하위 유형</th><td>{{ label['class'] or '미분류' }} · {{ label.sub or '—' }} <span class="sub">({{ label.status }})</span></td></tr>
+  <tr><th>확신도</th><td>{{ label.confidence or '—' }}</td></tr>
+  <tr><th>근거</th><td>{{ label.reason or '—' }}</td></tr>
+  <tr><th>출처</th><td>{{ '사람이 수정(' ~ (label.labeled_by or '') ~ ')' if label.source == 'manual' else 'API' }}{% if label.model %} · {{ label.model }}{% endif %}{% if label.request_id %} <span class="sub">{{ label.request_id }}</span>{% endif %}</td></tr>
+  <tr><th>프롬프트 · 시각</th><td>{{ label.prompt_version or '—' }} · {{ (label.labeled_at or '')|replace('T', ' ') }}</td></tr>
+  {% else %}<tr><th>유형</th><td>미분류 <span class="sub">(아직 분류하지 않은 공고)</span></td></tr>{% endif %}
+</table>
+<form method="post" action="{{ url_for('admin.label_save', ann_id=item.ann_id) }}" class="filters" style="margin-top:8px">
+  <select name="cls" aria-label="유형">{% for c in subs %}<option{{ ' selected' if label and label['class'] == c }}>{{ c }}</option>{% endfor %}</select>
+  <select name="sub" aria-label="하위 유형">{% for c, ss in subs.items() %}<optgroup label="{{ c }}">{% for s in ss %}<option{{ ' selected' if label and label['class'] == c and label.sub == s }}>{{ s }}</option>{% endfor %}</optgroup>{% endfor %}</select>
+  <button>유형 수정</button>
+</form>
+<p class="sub">고친 값은 자동 분류가 덮어쓰지 않습니다. 하위 유형은 고른 유형에 속한 것이어야 합니다.</p>
+
+<h2>표준 필드</h2>
+{% if flds %}
+<table class="list">
+  <thead><tr><th>칸</th><th>상태</th><th>값</th><th>출처</th><th>근거 · 메모</th><th>방법</th></tr></thead>
+  <tbody>{% for f in flds %}
+  <tr><td class="nowrap">{{ f.field }}</td><td class="nowrap">{{ f.status }}</td>
+    <td>{{ (f.value or '')[:300] }}{% if (f.value or '')|length > 300 %}…{% endif %}{% if f.start_at or f.end_at %}<div class="sub">{{ f.start_at or '' }} ~ {{ f.end_at or '' }}</div>{% endif %}</td>
+    <td>{{ f.source or '—' }}{% if f.source_ref %}<div class="sub">{{ f.source_ref }}</div>{% endif %}</td>
+    <td>{{ f.evidence or '' }}{% if f.note %}<div class="sub">메모: {{ f.note }}</div>{% endif %}</td>
+    <td class="nowrap">{{ f.method }}{% if f.prompt_version %}<div class="sub">{{ f.prompt_version }}</div>{% endif %}</td></tr>
+  {% endfor %}</tbody>
+</table>
+{% else %}<p class="sub">아직 정리하지 않은 공고입니다.</p>{% endif %}
+
 <h2>첨부파일 {{ item.attachments|length }}개</h2>
 <ul class="files">
 {% for f in item.attachments %}

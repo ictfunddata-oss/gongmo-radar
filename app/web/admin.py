@@ -7,7 +7,7 @@ from datetime import datetime
 from flask import Blueprint, Response, abort, current_app, flash, redirect, render_template, request, url_for
 
 from ..db import get_db
-from ..services import admin_stats, audit, raw_view, searches, visits
+from ..services import admin_labels, admin_stats, audit, fields, labels, raw_view, searches, visits
 from ..automation import scheduler as autosch, settings as autos
 from ..automation.pipeline import is_running
 from ..crawler.adapters import ADAPTERS
@@ -68,7 +68,32 @@ def detail(ann_id):
     item = get_announcement(get_db(), ann_id)
     if item is None:
         abort(404)
-    return render_template("admin/detail.html", item=item)
+    return render_template("admin/detail.html", item=item, label=labels.get(get_db(), ann_id), flds=fields.load(get_db(), ann_id),
+                           subs=labels.SUBS)
+
+
+@bp.post("/notice/<int:ann_id>/label")
+def label_save(ann_id):
+    """운영 상세에서 유형을 고친다(source='manual', 운영 이력은 labels.set_manual이 남긴다)."""
+    if get_announcement(get_db(), ann_id) is None:
+        abort(404)
+    try:
+        labels.set_manual(get_db(), ann_id, request.form.get("cls", ""), request.form.get("sub", ""), current_app.config["ADMIN_ID"])
+        flash("유형을 고쳤습니다. 자동 분류는 이 값을 덮어쓰지 않습니다.", "ok")
+    except ValueError as e:
+        flash(str(e), "warn")
+    return redirect(url_for("admin.detail", ann_id=ann_id))
+
+
+# ── 분류·정리(부록 D.3) ──
+@bp.get("/labels")
+def labels_view():
+    """유형 라벨·표준 필드 현황과 API 사용량."""
+    conn = get_db()
+    return render_template("admin/labels.html", types=admin_labels.TYPES, org_types=admin_labels.org_types(conn),
+                           label_status=admin_labels.label_status(conn), pending=admin_labels.pending(conn),
+                           field_statuses=admin_labels.FIELD_STATUSES, field_status=admin_labels.field_status(conn),
+                           conflicts=admin_labels.conflicts(conn), usage=admin_labels.api_usage(conn), calls=admin_labels.recent_calls(conn))
 
 
 # ── 자동화(ADR-038) ──
@@ -99,7 +124,8 @@ def automation_save():
     raw = {
         "enabled": f.get("enabled"), "days": f.getlist("days"), "times": [f.get("t1", ""), f.get("t2", ""), f.get("t3", "")],
         "boards": f.getlist("boards"), "pages": f.get("pages"),
-        **{k: f.get(k) for k in ("attachments", "crawl")},
+        **{k: f.get(k) for k in ("attachments", "crawl", "attach_text", "classify", "fields", "fields_api")},
+        **{k: f.get(k) for k in ("attach_text_max_items", "classify_max_items", "fields_api_max_items") if k in f},
     }
     s, errs = autos.clean(raw, list(ADAPTERS))
     if errs:

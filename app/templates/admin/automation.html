@@ -37,7 +37,17 @@
 
   <div class="au-row"><label class="k">실행 단계</label>
     <label class="au-chk"><input type="checkbox" name="crawl" {{ 'checked' if s.crawl }}> ① 수집</label>
+    <label class="au-chk"><input type="checkbox" name="attach_text" {{ 'checked' if s.attach_text }}> ② 첨부 글자</label>
+    <label class="au-chk"><input type="checkbox" name="classify" {{ 'checked' if s.classify }}> ③ 유형 분류(API)</label>
+    <label class="au-chk"><input type="checkbox" name="fields" {{ 'checked' if s.fields }}> ④ 표준 필드</label>
+    <label class="au-chk"><input type="checkbox" name="fields_api" {{ 'checked' if s.fields_api }}> ④의 API 보완(공모지원사업만)</label>
   </div>
+  <div class="au-row"><label class="k">실행당 상한</label>
+    첨부 글자 <input type="number" name="attach_text_max_items" min="0" max="1000" value="{{ s.attach_text_max_items }}">
+    분류 <input type="number" name="classify_max_items" min="0" max="1000" value="{{ s.classify_max_items }}">
+    API 보완 <input type="number" name="fields_api_max_items" min="0" max="1000" value="{{ s.fields_api_max_items }}"> 건
+  </div>
+  <p class="au-hint">②~④는 수집 뒤에 차례로 실행합니다. API 단계(③, ④의 보완)는 API 키(<code>CLAUDE_API</code>)가 없으면 건너뜁니다.</p>
   <div class="au-row"><label class="k">첨부 파일</label>
     <label class="au-chk"><input type="checkbox" name="attachments" {{ 'checked' if s.attachments }}> 첨부 파일을 내려받아 저장(끄면 파일 이름만 저장)</label></div>
 

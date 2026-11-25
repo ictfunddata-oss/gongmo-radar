@@ -6,6 +6,7 @@ import unittest
 import zipfile
 import zlib
 from pathlib import Path
+from unittest import mock
 
 from app.db import init_schema
 from app.services import attach_text, extract
@@ -155,6 +156,110 @@ class TargetsTest(unittest.TestCase):
         c.execute("UPDATE announcements SET posted_at='2026-02-01' WHERE ann_id=2")
         c.commit()
         self.assertEqual(attach_text.targets(c, CFG, limit=1), [2])
+
+
+class AnyBodyAndPickTest(unittest.TestCase):
+    def test_any_body_ignores_body_length(self):
+        c = mem()
+        ann(c, 1, body="가" * 500)
+        att(c, 1, 1, "공고문.hwp", "hwp")
+        c.commit()
+        self.assertEqual(attach_text.targets(c, CFG), [])
+        self.assertEqual(attach_text.targets(c, CFG, any_body=True), [1])
+
+    def test_pdf_dropped_when_same_name_hwp(self):
+        rows = [{"seq": 1, "name": "모집 공고.pdf", "ext": "pdf"}, {"seq": 2, "name": "모집 공고.hwp", "ext": "hwp"},
+                {"seq": 3, "name": "사업 안내.pdf", "ext": "pdf"}]
+        self.assertEqual([r["seq"] for r in attach_text.pick_files(rows, 3)], [2, 3])
+        rows = [{"seq": 1, "name": "공고문.pdf", "ext": "pdf"}, {"seq": 2, "name": "공고문.HWPX", "ext": "hwpx"}]
+        self.assertEqual([r["seq"] for r in attach_text.pick_files(rows, 3)], [2])
+
+    def test_zip_is_a_candidate(self):
+        rows = [{"seq": 1, "name": "공고문 일체.zip", "ext": "zip"}, {"seq": 2, "name": "포스터.jpg", "ext": "jpg"}]
+        self.assertEqual([r["seq"] for r in attach_text.pick_files(rows, 3)], [1])
+
+
+def cp949_zip(path, entries):
+    """UTF-8 표시 없이 cp949 바이트 이름으로 쓴 zip(국내 압축 프로그램이 만드는 꼴).
+    zipfile 은 ASCII 가 아닌 이름에 UTF-8 표시를 붙이므로, 같은 길이의 자리표시 이름으로 쓴 뒤 바이트를 바꾼다."""
+    swaps = []
+    with zipfile.ZipFile(path, "w") as z:
+        for k, (name, data) in enumerate(entries):
+            raw = name.encode("cp949")
+            hold = (f"@{k}@" + "_" * len(raw))[:len(raw)].encode("ascii")
+            swaps.append((hold, raw))
+            z.writestr(hold.decode("ascii"), data)
+    blob = Path(path).read_bytes()
+    for hold, raw in swaps:
+        blob = blob.replace(hold, raw)
+    Path(path).write_bytes(blob)
+    return path
+
+
+def hwpx_bytes(text):
+    import io
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as z:
+        z.writestr("Contents/section0.xml", f'<s xmlns:hp="p"><hp:p><hp:t>{text}</hp:t></hp:p></s>')
+    return buf.getvalue()
+
+
+LONG = "신청 자격은 중소기업이며 지원 규모는 과제당 최대 3억원이고 접수는 3월 한 달입니다"
+ZCFG = {**CFG, "KORDOC_ENABLED": False, "ATTACH_MAX_MB": 200}
+
+
+class ZipTest(unittest.TestCase):
+    def setUp(self):
+        self.d = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
+        self.p = Path(self.d.name)
+
+    def tearDown(self):
+        self.d.cleanup()
+
+    def test_cp949_names_and_heading(self):
+        z = cp949_zip(self.p / "a.zip", [("신청서 양식.hwpx", hwpx_bytes("양식 " + LONG)), ("모집 공고문.hwpx", hwpx_bytes(LONG)),
+                                         ("포스터.jpg", b"jpg")])
+        text, st, eng = attach_text.read_zip(z, ZCFG)
+        self.assertEqual((st, eng), ("ok", "legacy"))
+        self.assertTrue(text.startswith("### 모집 공고문.hwpx\n"))
+        self.assertIn("과제당 최대 3억원", text)
+
+    def test_path_escape_is_rejected(self):
+        z = self.p / "b.zip"
+        with zipfile.ZipFile(z, "w") as zz:
+            zz.writestr("../../공고문.hwpx", hwpx_bytes(LONG))
+            zz.writestr("/abs/공고문.hwpx", hwpx_bytes(LONG))
+        self.assertEqual(attach_text.read_zip(z, ZCFG)[1], "unsupported")
+        self.assertFalse((self.p.parent / "공고문.hwpx").exists())
+
+    def test_size_cap(self):
+        z = cp949_zip(self.p / "c.zip", [("모집 공고문.hwpx", hwpx_bytes(LONG))])
+        text, st, _ = attach_text.read_zip(z, {**ZCFG, "ATTACH_MAX_MB": 0.0001})
+        self.assertIsNone(text)
+        self.assertEqual(st, "error:zip 크기 상한 초과")
+
+    def test_hwp_preferred_over_same_name_pdf(self):
+        z = cp949_zip(self.p / "d.zip", [("모집 공고문.pdf", b"%PDF-1.4 broken"), ("모집 공고문.hwpx", hwpx_bytes(LONG))])
+        text, st, _ = attach_text.read_zip(z, ZCFG)
+        self.assertEqual(st, "ok")
+        self.assertNotIn(".pdf", text)
+
+    def test_process_saves_engine_and_zip_text(self):
+        c = mem()
+        ann(c, 1)
+        cp949_zip(self.p / "1.zip", [("모집 공고문.hwpx", hwpx_bytes(LONG))])
+        (self.p / "2.hwpx").write_bytes(hwpx_bytes(LONG))
+        att(c, 1, 1, "공고 일체.zip", "zip", file_path="1.zip")
+        att(c, 1, 2, "사업 안내.hwpx", "hwpx", file_path="2.hwpx")
+        c.commit()
+        from app.services import kordoc
+        with mock.patch.object(kordoc, "to_text", return_value=("# 사업 안내\n" + LONG, "ok")):
+            res = attach_text.process(c, {**ZCFG, "KORDOC_ENABLED": True, "ATTACHMENT_DIR": str(self.p)}, [1], download=False)
+        self.assertEqual(res["ok"], 2)
+        rows = {r["seq"]: r for r in c.execute("SELECT seq, text_body, text_status, text_engine FROM attachments")}
+        self.assertEqual((rows[1]["text_status"], rows[1]["text_engine"]), ("ok", "kordoc"))
+        self.assertTrue(rows[1]["text_body"].startswith("### 모집 공고문.hwpx"))
+        self.assertEqual(rows[2]["text_engine"], "kordoc")
 
 
 class MigrationTest(unittest.TestCase):

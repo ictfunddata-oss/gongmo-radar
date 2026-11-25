@@ -187,3 +187,18 @@ def extract_text(path, ext=None):
     if len(text) < MIN_USEFUL:
         return text, "empty"
     return text[:MAX_CHARS], "ok"
+
+
+def read_text(path, ext, cfg):
+    """kordoc을 먼저 쓰고, 실패하면 extract_text 로 읽는다. → (텍스트, 상태, 엔진: kordoc / legacy)"""
+    from . import kordoc
+    try:
+        kind = sniff(Path(path))
+    except OSError:
+        kind = "unknown"
+    if cfg.get("KORDOC_ENABLED") and kind in _READERS:
+        text, status = kordoc.to_text(path, cfg)
+        if status == "ok":
+            return text, status, "kordoc"
+    text, status = extract_text(path, ext)
+    return text, status, "legacy"

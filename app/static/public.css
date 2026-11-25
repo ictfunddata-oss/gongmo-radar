@@ -544,3 +544,17 @@ body { background: var(--bg); color: var(--ink); }
 .sbox input { min-width: 0; flex: 1 1 0; }
 .sbox button { flex: none; }
 @media (max-width: 640px) { .sbox input { padding: 15px 14px; } .sbox button#go { padding: 0 18px; } }
+
+/* 공고 유형 배지(ADR-047·052) — 공모지원사업은 강조색, 입찰공고·기타는 회색, 미분류는 점선 테두리 */
+.bg.ty { background: #eef1f6; border: 1px solid #dde3ec; color: #4a5361; font-weight: 600; box-shadow: none; }
+.bg.ty[data-t="공모지원사업"] { background: var(--brand); border-color: var(--brand); color: #fff; }
+.bg.ty[data-t="미분류"] { background: #fff; border: 1px dashed #9aa5b5; color: #5a6678; }
+.ctop .bg.ty { height: 24px; font-size: 12.5px; } .ctop .tysub { font-size: 12.5px; color: var(--t3); }
+
+/* 공고 표준 정보(ADR-051) */
+.sfields th { width: 130px; }
+.sfields .src { display: block; margin-top: 4px; font-size: 12px; color: var(--t3); }
+.sfields .val { white-space: pre-wrap; }
+.sfields .need { color: #8a5a00; }
+.sfields .conf { display: block; margin-top: 4px; font-size: 12.5px; color: #8a5a00; }
+.sfields tr.na th, .sfields tr.na td { opacity: .45; }
