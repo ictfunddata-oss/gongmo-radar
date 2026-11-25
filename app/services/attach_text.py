@@ -179,5 +179,5 @@ def process(conn, cfg, ann_ids, download=True, echo=True, say=print):
                 conn.execute("UPDATE attachments SET text_body=NULL, text_status=?, text_engine=NULL, text_at=? WHERE ann_id=? AND seq=?",
                              (status, now_iso(), aid, f["seq"]))
             stat[status.split(":")[0]] += 1
-        conn.commit()
+            conn.commit()   # 다음 파일을 읽는 동안(kordoc은 수십 초) 쓰기 잠금을 쥐지 않는다 — 웹의 쓰기가 막히지 않게
     return {"공고": len(plan), "내려받음": got, **dict(stat)}

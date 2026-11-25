@@ -81,6 +81,41 @@ class DownloadLockTest(unittest.TestCase):
             conn.close()
 
 
+class AttachTextLockTest(unittest.TestCase):
+    """1-b. 첨부 글자를 읽는 동안(kordoc은 느리다) DB 쓰기 트랜잭션이 열려 있지 않아야 한다(7단계 화면 확인에서 발견)."""
+
+    def test_other_connection_can_write_while_reading_next_file(self):
+        from app.services import attach_text, extract
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as d:
+            db = Path(d) / "t.db"
+            conn = connect(db)
+            conn.executescript(SCHEMA)
+            add_ann(conn, "공고")
+            for seq in (1, 2):
+                (Path(d) / f"{seq}.hwp").write_bytes(b"x")
+                conn.execute("INSERT INTO attachments(ann_id, seq, name, ext, file_path) VALUES (1,?,?,'hwp',?)", (seq, f"공고문{seq}.hwp", f"{seq}.hwp"))
+            conn.commit()
+            seen = []
+
+            def fake_read(path, ext, cfg):
+                other = sqlite3.connect(db, timeout=0.2)
+                try:
+                    other.execute("INSERT INTO search_logs(term, norm, results, searched_at) VALUES ('a','a',1,'2026-11-01')")
+                    other.commit()
+                    seen.append("ok")
+                except sqlite3.OperationalError as e:
+                    seen.append(str(e))
+                finally:
+                    other.close()
+                return "글자" * 100, "ok", "kordoc"
+
+            cfg = {"ATTACHMENT_DIR": Path(d), "ATTACH_TEXT_FILES": 3}
+            with mock.patch.object(extract, "read_text", side_effect=fake_read):
+                attach_text.process(conn, cfg, [1], download=False, echo=False)
+            self.assertEqual(seen, ["ok", "ok"])
+            conn.close()
+
+
 class HeartbeatTest(unittest.TestCase):
     """2. 한 단계가 오래 걸려도 박동 스레드가 잠금 박동을 갱신해야 한다."""
 
