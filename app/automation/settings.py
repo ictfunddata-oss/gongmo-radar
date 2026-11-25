@@ -21,7 +21,17 @@ DEFAULTS = {
     "pages": 0,                # 0 = 새 글이 없는 쪽에서 멈춤(권장), N = 앞 N쪽까지만
     "attachments": False,      # 첨부 파일 내려받기(기본 끔 — 이름만 저장)
     "crawl": True,             # 수집
+    # 수집 뒤 단계(00 5.3). 모두 기본 꺼짐
+    "attach_text": False,              # ② 첨부 글자
+    "attach_text_max_items": 100,
+    "classify": False,                 # ③ 유형 분류(API)
+    "classify_max_items": 200,
+    "fields": False,                   # ④ 표준 필드 규칙
+    "fields_api": False,               # ④의 API 보완(공모지원사업만)
+    "fields_api_max_items": 50,
 }
+BOOL_KEYS = ("attachments", "crawl", "attach_text", "classify", "fields", "fields_api")
+INT_KEYS = (("pages", 0, 200), ("attach_text_max_items", 0, 1000), ("classify_max_items", 0, 1000), ("fields_api_max_items", 0, 1000))
 
 
 def _hhmm(s):
@@ -49,14 +59,14 @@ def clean(raw, all_boards):
     s["times"] = sorted(times)[:MAX_TIMES]
     boards = [b for b in raw.get("boards", []) if b in all_boards]
     s["boards"] = None if set(boards) == set(all_boards) else boards
-    for k, lo, hi in (("pages", 0, 200),):
+    for k, lo, hi in INT_KEYS:
         try:
             v = int(raw.get(k, DEFAULTS[k]))
         except (TypeError, ValueError):
             errs.append(f"{k} 값이 숫자가 아닙니다.")
             continue
         s[k] = min(hi, max(lo, v))
-    for k in ("attachments", "crawl"):
+    for k in BOOL_KEYS:
         s[k] = bool(raw.get(k))
     if s["enabled"] and not s["days"]:
         errs.append("자동 실행을 켜려면 요일을 하나 이상 선택하세요.")
