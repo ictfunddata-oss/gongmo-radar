@@ -6,6 +6,8 @@
 import json
 import os
 import socket
+import sqlite3
+import threading
 from datetime import datetime, timedelta
 
 from ..crawler import crawl
@@ -15,6 +17,7 @@ from ..db import connect
 from . import settings as cfgmod
 
 LOCK_TTL = timedelta(seconds=180)   # 박동이 이보다 오래 멈춰 있으면 죽은 실행으로 보고 잠금을 넘겨받는다
+HEARTBEAT_SEC = 30                  # 박동 스레드 간격. 한 단계가 오래 걸려도 잠금을 지킨다
 
 
 def owner_id():
@@ -45,22 +48,52 @@ def release(conn, owner):
     conn.commit()
 
 
+class Heartbeat:
+    """잠금을 쥔 동안 자기 DB 연결로 interval초마다 박동을 남기는 스레드."""
+
+    def __init__(self, db_path, owner, interval=HEARTBEAT_SEC):
+        self._stop = threading.Event()
+        self._thread = threading.Thread(target=self._run, args=(db_path, owner, interval), daemon=True, name="automation-heartbeat")
+
+    def _run(self, db_path, owner, interval):
+        conn = connect(db_path)
+        try:
+            while not self._stop.wait(interval):
+                try:
+                    beat(conn, owner)
+                except sqlite3.Error:
+                    conn.rollback()     # 쓰기가 막혀도 다음 박동에서 다시 시도한다
+        finally:
+            conn.close()
+
+    def start(self):
+        self._thread.start()
+        return self
+
+    def stop(self):
+        self._stop.set()
+        self._thread.join()
+
+
 def is_running(conn):
     row = conn.execute("SELECT owner, heartbeat FROM automation_lock WHERE id=1").fetchone()
     return bool(row and row["owner"] and datetime.now() - datetime.fromisoformat(row["heartbeat"]) < LOCK_TTL)
 
 
-def run_pipeline(cfg, trigger, settings=None, conn=None):
+def run_pipeline(cfg, trigger, settings=None, conn=None, heartbeat_sec=HEARTBEAT_SEC):
     """파이프라인을 한 번 실행하고 automation_runs 에 기록한다. → (run_id, 상태, 요약), 이미 실행 중이면 None"""
     own = conn is None
     conn = conn or connect(cfg["DB_PATH"])
     owner = owner_id()
     got = False
     started = None
+    hb = None
     try:
         if not acquire(conn, owner):
             return None
         got = True
+        if cfg.get("DB_PATH"):   # 연결만 넘겨받은 경우(메모리 DB 테스트)는 박동 스레드가 열 DB가 없다
+            hb = Heartbeat(cfg["DB_PATH"], owner, heartbeat_sec).start()
         s = settings or cfgmod.load(conn)
         started = now_iso()
         run_id = conn.execute("INSERT INTO automation_runs (trigger, started_at, status, summary, log) VALUES (?,?,?,?,?)",
@@ -114,6 +147,8 @@ def run_pipeline(cfg, trigger, settings=None, conn=None):
         raise
     finally:
         try:
+            if hb:
+                hb.stop()
             if got:
                 release(conn, owner)
         finally:

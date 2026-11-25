@@ -81,6 +81,7 @@ def download_missing(conn, http, adapter, ann_id, post_no, cfg, log, only_seqs=N
         res = attachments.download(http, dict(att), adapter.code, post_no, cfg["ATTACHMENT_DIR"], cfg["ATTACH_MAX_MB"])
         conn.execute(f"UPDATE attachments SET {', '.join(k + '=?' for k in res)} WHERE ann_id=? AND seq=?",
                      list(res.values()) + [ann_id, att["seq"]])
+        conn.commit()   # 다음 파일을 받는 동안 쓰기 잠금을 쥐고 있지 않게 파일마다 커밋한다
         if res.get("download_error"):
             log.emit("WARN", f"첨부 실패 {post_no}#{att['seq']} · {res['download_error']}")
         else:
@@ -148,6 +149,7 @@ def crawl(conn, cfg, board_code, mode="incremental", pages=None, download=None, 
                 if is_new:
                     log.emit("FETCH", f"{row['post_no']} · {row['title'][:40]}")
                 if download and is_new and det.get("files"):
+                    conn.commit()   # 첨부를 받는 동안(수십 초) 웹의 쓰기가 막히지 않게 공고 저장을 먼저 끝낸다
                     files_n += download_missing(conn, http, adapter, ann_id, row["post_no"], cfg, log)
                 conn.commit()
             except Exception as e:  # 한 건 실패로 전체를 멈추지 않는다
@@ -210,6 +212,7 @@ def fetch_attachments(conn, cfg, board_code, since=None, limit=None, echo=True, 
             det = adapter.fetch_detail(ann["post_no"])
             save_announcement(conn, board_id, adapter, {"post_no": ann["post_no"], **{k: row[k] for k in ("list_no", "site_status", "title", "list_date")}},
                               det, now_iso())
+            conn.commit()   # 첨부를 받는 동안 쓰기 잠금을 쥐지 않는다
             n = download_missing(conn, http, adapter, ann["ann_id"], ann["post_no"], cfg, log,
                                  only_seqs=only[ann["ann_id"]] if only is not None else None)
             conn.commit()

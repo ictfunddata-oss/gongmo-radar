@@ -55,10 +55,16 @@ def index():
 
 @bp.post("/search-log")
 def search_log():
-    """화면이 보낸 검색어를 기록한다(F-SVC-18). 기록할 수 없는 값은 조용히 무시한다."""
+    """화면이 보낸 검색어를 기록한다(F-SVC-18). 기록할 수 없는 값은 조용히 무시한다.
+    결과 수는 화면 값(n)을 쓰지 않고 서버가 다시 세며, 0건이면 기록하지 않는다."""
     data = request.get_json(silent=True) or {}
-    searches.record(get_db(), str(data.get("q", "")), data.get("n", 0),
-                    banned=searches.banned_list(current_app.config["BANNED_TERMS_PATH"]))
+    q = str(data.get("q", ""))
+    if not q.strip() or len(q) > searches.RAW_MAX:
+        return "", 204
+    items, _ = public_items(get_db(), current_app.config)
+    n = searches.count_hits(items, q)
+    if n:
+        searches.record(get_db(), q, n, banned=searches.banned_list(current_app.config["BANNED_TERMS_PATH"]))
     return "", 204
 
 
