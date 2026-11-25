@@ -72,7 +72,7 @@ class SupplementTest(unittest.TestCase):
                          ("확인", "attachment", "붙임1. 공고문.hwpx", "api", "extract_v1", "□ 사업목적"))
         self.assertEqual(got["qualify"].evidence, "| 지원대상 | 국내 중소기업 |")
         p = got["period"]
-        self.assertEqual((p.status, p.start_at, p.end_at), ("확인", "2026-12-01", "2026-12-15 18:00"))
+        self.assertEqual((p.status, p.start_at, p.end_at), ("확인", "2026-12-01", "2026-12-15T18:00"))
         self.assertEqual((got["area"].status, got["area"].method), ("미확인", "api"))
         kw = fc.calls[0]
         self.assertEqual(kw["max_tokens"], 4000)

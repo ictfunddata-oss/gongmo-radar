@@ -147,5 +147,60 @@ class PageTest(unittest.TestCase):
             self.assertEqual(cfgmod.load(db)["times"], ["06:30"])
 
 
+
+
+class PipelineStepsTest(unittest.TestCase):
+    """4단계 — 수집 뒤 단계(첨부 글자·분류·표준 필드): 스위치, 한 단계 실패 뒤 다음 단계, 가짜 클라이언트 분류, 키 없음 건너뛰기."""
+
+    def run_it(self, conn, cfg=None, **kw):
+        from app.automation.pipeline import run_pipeline
+        s = {**cfgmod.DEFAULTS, "crawl": False, **kw}
+        cfg = {"CLAUDE_API": "", **(cfg or {})}
+        return run_pipeline(cfg, "시험", settings=s, conn=conn)
+
+    def test_switches_off_run_nothing(self):
+        from app.automation import pipeline
+        with mock.patch.object(pipeline, "_step_attach_text") as a, mock.patch.object(pipeline, "_step_classify") as b, \
+                mock.patch.object(pipeline, "_step_fields") as f:
+            _, status, summary = self.run_it(mem())
+        self.assertEqual((status, summary), ("정상", {}))
+        for m in (a, b, f):
+            m.assert_not_called()
+
+    def test_failed_step_does_not_stop_next(self):
+        from app.automation import pipeline
+        with mock.patch.object(pipeline, "_step_attach_text", side_effect=RuntimeError("kordoc 없음")), \
+                mock.patch.object(pipeline, "_step_fields", return_value={"done": 3, "errors": 0}) as f:
+            _, status, summary = self.run_it(mem(), attach_text=True, fields=True)
+        f.assert_called_once()
+        self.assertEqual(status, "주의")
+        self.assertIn("kordoc 없음", summary["attach_text"]["error"])
+        self.assertEqual(summary["fields"]["done"], 3)
+
+    def test_classify_without_key_is_skipped(self):
+        _, status, summary = self.run_it(mem(), classify=True)
+        self.assertEqual((status, summary["classify"]), ("정상", {"skipped": "키 없음"}))
+
+    def test_classify_with_fake_client(self):
+        from tests.test_classify import answer
+        from tests.test_llm import CFG, FakeClient
+        from tests.test_llm import mem as mem_anns
+        c = mem_anns(3)
+        with mock.patch("app.services.llm.make_client", return_value=FakeClient([answer(req="req_7")])):
+            run_id, status, summary = self.run_it(c, CFG, classify=True)
+        self.assertEqual(status, "정상")
+        self.assertEqual(summary["classify"]["확정"], 3)
+        self.assertEqual(c.execute("SELECT COUNT(*) FROM announcement_labels WHERE status='확정'").fetchone()[0], 3)
+        self.assertEqual([r[0] for r in c.execute("SELECT run_id FROM llm_calls")], [run_id])
+
+    def test_fields_rules_step(self):
+        from tests.test_llm import mem as mem_anns
+        c = mem_anns(2)
+        _, status, summary = self.run_it(c, fields=True, fields_api=True)
+        self.assertEqual(summary["fields"]["done"], 2)
+        self.assertEqual(summary["fields"]["api"], "키 없음")
+        self.assertEqual(c.execute("SELECT COUNT(*) FROM announcement_fields").fetchone()[0], 10)
+
+
 if __name__ == "__main__":
     unittest.main()

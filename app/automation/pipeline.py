@@ -80,6 +80,37 @@ def is_running(conn):
     return bool(row and row["owner"] and datetime.now() - datetime.fromisoformat(row["heartbeat"]) < LOCK_TTL)
 
 
+def _step_attach_text(conn, cfg, s, run_id, say):
+    from ..services import attach_text
+    ids = attach_text.targets(conn, cfg, limit=s["attach_text_max_items"] or None)
+    res = attach_text.process(conn, cfg, ids, download=True, echo=False, say=lambda *a, **k: None)
+    out = {"items": len(ids), **{k: v for k, v in res.items() if isinstance(v, (int, float, str))}}
+    say(f"첨부 글자: 공고 {len(ids)}건 · " + " · ".join(f"{k} {v}" for k, v in res.items()))
+    return out
+
+
+def _step_classify(conn, cfg, s, run_id, say):
+    if not cfg.get("CLAUDE_API"):
+        say("분류: API 키가 없어 건너뜀")
+        return {"skipped": "키 없음"}
+    from ..services import classify
+    ids = classify.targets(conn, limit=s["classify_max_items"] or None)
+    res = classify.run(conn, cfg, ids, run_id=run_id, say=say)
+    say(f"분류: 대상 {len(ids)}건 · " + " · ".join(f"{k} {v}" for k, v in res.items() if not isinstance(v, (dict, list))))
+    return res
+
+
+def _step_fields(conn, cfg, s, run_id, say):
+    from ..services import fields
+    use_api = bool(s.get("fields_api") and cfg.get("CLAUDE_API"))
+    ids = fields.targets(conn)
+    res = fields.run(conn, cfg, ids, api=use_api, api_max=s["fields_api_max_items"], run_id=run_id, say=say)
+    if s.get("fields_api") and not cfg.get("CLAUDE_API"):
+        res["api"] = "키 없음"
+    say(f"표준 필드: 대상 {len(ids)}건 · 정리 {res['done']}건 · API {res['api_items']}건 · 오류 {res['errors']}건")
+    return res
+
+
 def run_pipeline(cfg, trigger, settings=None, conn=None, heartbeat_sec=HEARTBEAT_SEC):
     """파이프라인을 한 번 실행하고 automation_runs 에 기록한다. → (run_id, 상태, 요약), 이미 실행 중이면 None"""
     own = conn is None
@@ -127,6 +158,18 @@ def run_pipeline(cfg, trigger, settings=None, conn=None, heartbeat_sec=HEARTBEAT
                     say(f"수집 {code} 실패: {type(e).__name__}: {e}")
             summary["crawl"] = res
             problems += res["errors"] > 0
+        # 수집 뒤 단계(00 4장). 단계마다 스위치를 보고, 한 단계가 실패해도 다음 단계는 돈다
+        for key, step in (("attach_text", _step_attach_text), ("classify", _step_classify), ("fields", _step_fields)):
+            if not s.get(key):
+                continue
+            try:
+                summary[key] = step(conn, cfg, s, run_id, say)
+                problems += bool(summary[key].get("errors"))
+            except Exception as e:  # noqa: BLE001
+                conn.rollback()
+                summary[key] = {"errors": 1, "error": f"{type(e).__name__}: {e}"}
+                problems += 1
+                say(f"{key} 실패: {type(e).__name__}: {e}")
         status = "주의" if problems else "정상"
         conn.execute("UPDATE automation_runs SET ended_at=?, status=?, summary=?, log=? WHERE run_id=?",
                      (now_iso(), status, json.dumps(summary, ensure_ascii=False), json.dumps(log[-300:], ensure_ascii=False), run_id))

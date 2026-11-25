@@ -81,12 +81,9 @@ def quote_in(quote, text):
 
 def _dates(quote):
     """period 인용 → (start_at, end_at). 못 읽으면 (None, None)."""
-    from ...crawler.adapters.nia import extract_period
-    s = extract_period(quote)
-    if " ~ " in s:
-        a, b = s.split(" ~ ", 1)
-        return a.strip() or None, b.strip() or None
-    return None, None
+    from .period import find, parse_range     # 규칙 추출(W-rules)과 같은 기간 해석을 쓴다(부록 B.2)
+    got = find(quote) or parse_range(quote)
+    return (got[0], got[1]) if got else (None, None)
 
 
 def _unknown(f, note=None):
@@ -104,9 +101,14 @@ def supplement(conn, cfg, doc, missing, *, run_id=None, client=None):
                         items=1, run_id=run_id, client=client)
     if res.outcome != "ok":
         return {f: _unknown(f, f"API {res.outcome}") for f in want}
+    return interpret(doc, want, res.data)
+
+
+def interpret(doc, want, data):
+    """API(또는 CLI·일괄 처리)가 낸 JSON → {칸: FieldValue}. 인용이 그 출처 원문에 있어야 '확인'이다."""
     src = {sid: (text, kind, ref) for sid, text, kind, ref in sources(doc)}
     out = {}
-    for x in (res.data or {}).get("fields") or []:
+    for x in (data or {}).get("fields") or []:
         f = x.get("field") if isinstance(x, dict) else None
         if f not in want or (f in out and out[f].status == "확인"):
             continue
