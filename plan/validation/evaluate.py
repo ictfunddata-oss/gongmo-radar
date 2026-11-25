@@ -1,6 +1,7 @@
-"""검증 결과 평가 — 형식·누락 검사, 비용·시간 집계, 기준 분류(.team/out/classification.jsonl)와 일치율.
+"""검증 결과 평가 — 형식·누락 검사, 비용·시간 집계, 기준 분류(.team/out/classification.jsonl)와 일치율,
+경계 규칙(B1·B2·B3, 00 부록 E.1) 준수율, 다른 실행과의 일치율(--compare).
 
-사용: python plan/validation/evaluate.py data/validation/<실행> [--ref .team/out/classification.jsonl]
+사용: python plan/validation/evaluate.py data/validation/<실행> [--ref .team/out/classification.jsonl] [--compare data/validation/<다른 실행>]
 결과: <실행>/results.jsonl, <실행>/report.md
 """
 import argparse
@@ -15,6 +16,27 @@ SUB = {"입찰공고": {"입찰", "사전규격", "협상공모", "변경·취�
        "기타": {"결과", "행사·설명회", "안내", "채용", "기타"}}
 
 
+# 경계 규칙(00 부록 E.1). 제목·말머리 기준. 위에서부터 처음 걸린 패턴 하나만 적용한다
+#   (사전공개된 위탁연구는 규칙 4가 우선이라 B2를 B1보다 먼저 본다)
+CHANGE = ("정정", "연장", "취소")
+
+
+def boundary(title, biz):
+    """→ (패턴, 기대 class, 기대 sub) 또는 None"""
+    t = f"{biz or ''} {title or ''}"
+    if "합격자" in t:
+        return "B3", "기타", "채용"
+    if ("사전규격" in t or "사전공개" in t) and not any(w in t for w in ("결과", "검토")):
+        return "B2", "입찰공고", "변경·취소" if any(w in t for w in ("정정", "취소")) else "사전규격"
+    if "위탁연구" in t and not any(w in t for w in ("결과", "선정", "합격")):
+        return "B1", "입찰공고", "변경·취소" if any(w in t for w in CHANGE) else "협상공모"
+    return None
+
+
+def pct(n, d):
+    return f"{n}/{d} ({n / d * 100:.1f}%)" if d else "0/0 (-)"
+
+
 def table(head, rows):
     return "\n".join(["| " + " | ".join(head) + " |", "|" + "---|" * len(head)] + ["| " + " | ".join(map(str, r)) + " |" for r in rows])
 
@@ -23,6 +45,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("run")
     ap.add_argument("--ref", default=str(ROOT / ".team" / "out" / "classification.jsonl"))
+    ap.add_argument("--compare", help="두 실행 비교: 다른 실행 폴더(그 폴더의 results.jsonl)")
     a = ap.parse_args()
     run = Path(a.run)
     ref = {}
@@ -54,6 +77,8 @@ def main():
         got = {r["ann_id"]: r for r in j["structured_output"]["results"]}
         for x in want:
             r = got.get(x["ann_id"])
+            if r is not None:
+                r = {**r, "biz": x.get("biz", "")}
             if r is None:
                 st["missing"] += 1
                 problems.append(f"{org}/{inp.stem}: ann_id {x['ann_id']} 빠짐")
@@ -99,6 +124,56 @@ def main():
     t4 = table(["기준 \\ 이번"] + CL, [[c] + [conf[(c, d)] for d in CL] for c in CL])
     cf = Counter(r["confidence"] for r in res.values())
     diff_rows = [[ORG[o], k, b["class"] + "/" + b["sub"], r["class"] + "/" + r["sub"] + "/" + r["confidence"], r["title"][:45], r["reason"][:60]] for o, k, b, r in sorted(diffs)]
+    # 경계 규칙 준수(B1·B2·B3)와 패턴 밖 공고의 기준 대비 class 일치
+    pat = defaultdict(lambda: [0, 0, 0])        # 건수, class 일치, class+sub 일치
+    pat_bad, out_n, out_ok = [], 0, 0
+    for k, r in sorted(res.items()):
+        hit = boundary(r["title"], r.get("biz"))
+        if hit:
+            p, cl, sb = hit
+            g = pat[p]
+            g[0] += 1
+            g[1] += r["class"] == cl
+            g[2] += r["class"] == cl and r["sub"] == sb
+            if (r["class"], r["sub"]) != (cl, sb):
+                pat_bad.append([p, ORG[r["board"]], k, f"{cl}/{sb}", f"{r['class']}/{r['sub']}", r["title"][:50]])
+        elif k in ref:
+            out_n += 1
+            out_ok += r["class"] == ref[k]["class"]
+    pat_all = [sum(pat[p][i] for p in pat) for i in range(3)]
+    t5 = table(["패턴", "건수", "class 일치", "class+sub 일치(준수)"],
+               [[p, pat[p][0], pct(pat[p][1], pat[p][0]), pct(pat[p][2], pat[p][0])] for p in ("B1", "B2", "B3")]
+               + [["**합계**", pat_all[0], pct(pat_all[1], pat_all[0]), f"**{pct(pat_all[2], pat_all[0])}**"]])
+    t5b = table(["패턴", "기관", "ann_id", "기대", "이번", "제목"], pat_bad) if pat_bad else "없음"
+
+    # 두 실행 비교
+    cmp_md, rep = "", None
+    if a.compare:
+        other = {r["ann_id"]: r for r in map(json.loads, (Path(a.compare) / "results.jsonl").read_text(encoding="utf-8").splitlines()) if r}
+        both = sorted(set(res) & set(other))
+        c1 = sum(res[k]["class"] == other[k]["class"] for k in both)
+        c2 = sum(res[k]["class"] == other[k]["class"] and res[k]["sub"] == other[k]["sub"] for k in both)
+        rep = c1 / len(both) if both else None
+        cdiff = [[ORG[res[k]["board"]], k, other[k]["class"] + "/" + other[k]["sub"], res[k]["class"] + "/" + res[k]["sub"], res[k]["title"][:50]]
+                 for k in both if res[k]["class"] != other[k]["class"]]
+        cmp_md = f"""
+## 8. 다른 실행과 비교 (`{Path(a.compare).name}`)
+
+- 공통 공고 {len(both)}건 · 이번에만 {len(set(res) - set(other))} · 저쪽에만 {len(set(other) - set(res))}
+- class 일치 {pct(c1, len(both))} · class+sub 일치 {pct(c2, len(both))}
+
+{table(["기관", "ann_id", "저쪽", "이번", "제목"], cdiff) if cdiff else "class가 달라진 공고 없음"}
+"""
+
+    # 관문 1(00 8장). 형식은 이 실행 기준, 재현성은 --compare가 있을 때만 판정한다
+    fmt_ok = tot["missing"] == 0 and tot["bad_sub"] == 0 and tot["failed_calls"] == 0
+    gate = [
+        ["형식(빠짐·sub 불일치·실패 0)", "0", f"{tot['missing']}·{tot['bad_sub']}·{tot['failed_calls']}", "통과" if fmt_ok else "미달"],
+        ["경계 규칙 준수", "≥ 95%", pct(pat_all[2], pat_all[0]), "통과" if pat_all[0] and pat_all[2] / pat_all[0] >= 0.95 else "미달"],
+        ["경계 밖 기준 대비 class 일치", "≥ 98.5%", pct(out_ok, out_n), "통과" if out_n and out_ok / out_n >= 0.985 else "미달"],
+        ["재현성(두 실행 class 일치)", "≥ 99%", f"{rep * 100:.1f}%" if rep is not None else "--compare 없음",
+         "-" if rep is None else "통과" if rep >= 0.99 else "미달"],
+    ]
     meta = (run / "meta.txt").read_text(encoding="utf-8") if (run / "meta.txt").exists() else ""
     md = f"""# 분류 프롬프트 검증 결과
 
@@ -131,6 +206,20 @@ def main():
 ## 6. 문제
 
 {chr(10).join("- " + p for p in problems) if problems else "없음"}
+
+## 7. 경계 규칙 (00 부록 E.1)
+
+{t5}
+
+- 패턴 밖 공고의 기준 대비 class 일치: {pct(out_ok, out_n)}
+
+어긋난 공고:
+
+{t5b}
+{cmp_md}
+## 9. 관문 1 판정
+
+{table(["기준", "값", "이번", "판정"], gate)}
 """
     (run / "report.md").write_text(md, encoding="utf-8")
     print(md)
