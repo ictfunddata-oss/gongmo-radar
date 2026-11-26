@@ -1,10 +1,10 @@
-# 공모사업 수집 웹앱 — 이미지 하나(Python 3.12 + Node 20 + kordoc), 서비스 둘(web·worker)은 docker-compose.yml (ADR-046)
-FROM node:20-bookworm-slim AS node
+# 공모사업 수집 웹앱 — 이미지 하나(Python 3.12 + Node 24 LTS + kordoc), 서비스 둘(web·worker)은 docker-compose.yml (ADR-046)
+FROM node:24-bookworm-slim AS node
 
 FROM python:3.12-slim-bookworm
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
 
-# Node 20과 kordoc(첨부 HWP·HWPX·PDF 읽기, ADR-050). 버전을 고정하고 OCR 모델은 넣지 않는다
+# Node 24(LTS, 2028-04까지 지원)와 kordoc(첨부 HWP·HWPX·PDF 읽기, ADR-050). 버전을 고정하고 OCR 모델은 넣지 않는다
 COPY --from=node /usr/local/bin/node /usr/local/bin/node
 COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
 RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
