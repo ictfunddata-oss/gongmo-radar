@@ -79,7 +79,10 @@ def label_save(ann_id):
         abort(404)
     try:
         labels.set_manual(get_db(), ann_id, request.form.get("cls", ""), request.form.get("sub", ""), current_app.config["ADMIN_ID"])
-        flash("유형을 고쳤습니다. 자동 분류는 이 값을 덮어쓰지 않습니다.", "ok")
+        # 유형이 바뀌면 칸 구성('해당 없음')과 라벨이 달라지므로 규칙으로 바로 다시 정리한다(API 보완은 하지 않음)
+        res = fields.run(get_db(), current_app.config, [ann_id], say=current_app.logger.warning)
+        flash("유형을 고쳤습니다. 표준 정보도 새 유형에 맞게 다시 정리했습니다. 자동 분류는 이 값을 덮어쓰지 않습니다." if not res["errors"]
+              else "유형을 고쳤습니다. 표준 정보를 다시 정리하지 못했습니다(다음 자동 실행 때 정리됩니다).", "ok")
     except ValueError as e:
         flash(str(e), "warn")
     return redirect(url_for("admin.detail", ann_id=ann_id))
