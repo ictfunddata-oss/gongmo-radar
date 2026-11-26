@@ -37,7 +37,17 @@
 
   <div class="au-row"><label class="k">실행 단계</label>
     <label class="au-chk"><input type="checkbox" name="crawl" {{ 'checked' if s.crawl }}> ① 수집</label>
+    <label class="au-chk"><input type="checkbox" name="attach_text" {{ 'checked' if s.attach_text }}> ② 첨부 글자</label>
+    <label class="au-chk"><input type="checkbox" name="classify" {{ 'checked' if s.classify }}> ③ 유형 분류(API)</label>
+    <label class="au-chk"><input type="checkbox" name="fields" {{ 'checked' if s.fields }}> ④ 표준 필드</label>
+    <label class="au-chk"><input type="checkbox" name="fields_api" {{ 'checked' if s.fields_api }}> ④의 API 보완(공모지원사업만)</label>
   </div>
+  <div class="au-row"><label class="k">실행당 상한</label>
+    첨부 글자 <input type="number" name="attach_text_max_items" min="0" max="1000" value="{{ s.attach_text_max_items }}">
+    분류 <input type="number" name="classify_max_items" min="0" max="1000" value="{{ s.classify_max_items }}">
+    API 보완 <input type="number" name="fields_api_max_items" min="0" max="1000" value="{{ s.fields_api_max_items }}"> 건
+  </div>
+  <p class="au-hint">②~④는 수집 뒤에 차례로 실행합니다. API 단계(③, ④의 보완)는 API 키(<code>CLAUDE_API</code>)가 없으면 건너뜁니다.</p>
   <div class="au-row"><label class="k">첨부 파일</label>
     <label class="au-chk"><input type="checkbox" name="attachments" {{ 'checked' if s.attachments }}> 첨부 파일을 내려받아 저장(끄면 파일 이름만 저장)</label></div>
 
@@ -64,7 +74,12 @@
         <td>{{ r.trigger }}</td>
         <td><span class="au-s {{ r.status.split()[0] }}">{{ r.status }}</span></td>
         <td>
-          {% if r.summary.crawl %}수집 신규 {{ r.summary.crawl.new }}건{% if r.summary.crawl.errors %} (오류 {{ r.summary.crawl.errors }}){% endif %} · {% endif %}
+          {% set sm = r.summary %}
+          {% if sm.crawl %}수집 신규 {{ sm.crawl.new }}건{% if sm.crawl.errors %} (오류 {{ sm.crawl.errors }}){% endif %} · {% endif %}
+          {% if sm.attach_text %}{% set a = sm.attach_text %}첨부 글자 {% if a.error %}실패{% else %}공고 {{ a['items'] }}건 · 읽음 {{ a.ok or 0 }}개{% endif %} · {% endif %}
+          {% if sm.classify %}{% set c = sm.classify %}분류 {% if c.skipped %}건너뜀({{ c.skipped }}){% elif c.error %}실패{% else %}{{ c['확정'] or 0 }}건 확정{% if c['수동 확인'] %} · 수동 확인 {{ c['수동 확인'] }}{% endif %}{% if c['분류 보류'] %} · 보류 {{ c['분류 보류'] }}{% endif %}{% if c.cost_usd %} · ${{ '%.3f'|format(c.cost_usd) }}{% endif %}{% endif %} · {% endif %}
+          {% if sm.fields %}{% set f = sm.fields %}표준 필드 {% if f.error %}실패{% else %}{{ f.done }}건 정리{% if f.api_items %} · API {{ f.api_items }}건{% endif %}{% if f.api %} · API {{ f.api }}{% endif %}{% endif %} · {% endif %}
+          {% for k in ('crawl', 'attach_text', 'classify', 'fields') %}{% if sm[k] and sm[k].error %}<div class="sub">{{ k }}: {{ sm[k].error }}</div>{% endif %}{% endfor %}
           <details><summary class="sub" style="cursor:pointer">상세 기록</summary><pre class="au-log">{{ r.log|join('\n') }}</pre></details>
         </td>
       </tr>

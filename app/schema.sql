@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS attachments (
     text_body      TEXT,                    -- 첨부에서 뽑은 글자. 이미지·스캔본은 비어 있음
     text_status    TEXT,                    -- ok / empty / encrypted / unsupported / error:...
     text_at        TEXT,
+    text_engine    TEXT,                    -- 글자를 읽은 방법: kordoc / legacy (ADR-050)
     PRIMARY KEY (ann_id, seq)
 );
 
@@ -135,3 +136,63 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     detail  TEXT
 );
 CREATE INDEX IF NOT EXISTS ix_audit_at ON audit_logs(at);
+
+-- 공고 유형 분류(ADR-045·048). 공고당 한 줄. source='manual'은 API·가져오기가 덮어쓰지 않는다
+CREATE TABLE IF NOT EXISTS announcement_labels (
+    ann_id         INTEGER PRIMARY KEY REFERENCES announcements(ann_id) ON DELETE CASCADE,
+    class          TEXT,                  -- 공모지원사업 / 입찰공고 / 기타. 분류 보류면 NULL
+    sub            TEXT,                  -- 5.6 표. 수동 확인이면 NULL일 수 있음
+    confidence     TEXT,                  -- high / mid / low
+    reason         TEXT,
+    status         TEXT NOT NULL,         -- 확정 / 수동 확인 / 분류 보류
+    source         TEXT NOT NULL,         -- api / manual
+    prompt_version TEXT,                  -- classify_v2
+    model          TEXT,                  -- 실제 응답 모델(대체되면 대체 모델)
+    request_id     TEXT,                  -- API 요청 ID, 일괄 처리는 'batch:<id>', CLI 가져오기는 'cli:<실행 이름>'
+    input_hash     TEXT,
+    labeled_at     TEXT NOT NULL,
+    labeled_by     TEXT                   -- manual일 때 관리자 아이디
+);
+CREATE INDEX IF NOT EXISTS ix_label_class ON announcement_labels(class);
+
+-- 상세화면 표준 필드(ADR-045·051). 공고 × 칸 한 줄. 원래 칸(period_raw·start_at·end_at·body)은 덮어쓰지 않는다
+CREATE TABLE IF NOT EXISTS announcement_fields (
+    ann_id         INTEGER NOT NULL REFERENCES announcements(ann_id) ON DELETE CASCADE,
+    field          TEXT NOT NULL,         -- title / content / qualify / area / period
+    value          TEXT,                  -- 원문 발췌(평문, 1,500자 이내). 미확인·해당 없음이면 NULL
+    start_at       TEXT,                  -- period만. announcements.start_at과 같은 형식
+    end_at         TEXT,
+    source         TEXT,                  -- site / body / attachment
+    source_ref     TEXT,                  -- 첨부 파일명(zip이면 'zip이름/안의 이름')
+    evidence       TEXT,                  -- 근거가 된 원문 한 줄(200자 이내, 운영 화면용)
+    status         TEXT NOT NULL,         -- 확인 / 미확인 / 해당 없음 / 충돌
+    note           TEXT,                  -- 충돌일 때 다른 출처의 값, 인용 불일치 등
+    method         TEXT NOT NULL,         -- rule / api
+    prompt_version TEXT,                  -- method=api일 때 extract_v1
+    input_hash     TEXT NOT NULL,
+    extracted_at   TEXT NOT NULL,
+    PRIMARY KEY (ann_id, field)
+);
+
+-- Claude API 호출 기록(비용 실측, I-11)
+CREATE TABLE IF NOT EXISTS llm_calls (
+    call_id            INTEGER PRIMARY KEY,
+    run_id             INTEGER,           -- automation_runs.run_id, 명령으로 돌리면 NULL
+    stage              TEXT NOT NULL,     -- classify / extract
+    mode               TEXT NOT NULL,     -- sync / batch
+    model              TEXT,              -- 요청한 모델
+    served_model       TEXT,              -- 응답한 모델
+    fallback           INTEGER NOT NULL DEFAULT 0,
+    request_id         TEXT,
+    items              INTEGER,           -- 이 호출에 담은 공고 수
+    input_tokens       INTEGER,
+    output_tokens      INTEGER,
+    cache_read_tokens  INTEGER,
+    cache_write_tokens INTEGER,
+    cost_usd           REAL,              -- 단가표로 계산한 추정값. 단가를 모르는 모델이면 NULL
+    outcome            TEXT NOT NULL,     -- ok / refusal / max_tokens / invalid / error
+    error              TEXT,
+    started_at         TEXT NOT NULL,
+    ms                 INTEGER
+);
+CREATE INDEX IF NOT EXISTS ix_llm_at ON llm_calls(started_at);

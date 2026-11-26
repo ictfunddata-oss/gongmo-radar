@@ -6,3 +6,5 @@ lxml>=5.0
 openpyxl>=3.1
 pypdf>=5.0
 olefile>=0.47
+anthropic==1.17.0     # Claude API(분류·표준 필드). 바꿀 때는 llm.py의 호출 형태를 다시 확인
+gunicorn==27.0.1      # 운영 웹 서버(wsgi:app). Windows에서는 돌지 않는다

@@ -1,0 +1,35 @@
+# web(화면·API)과 worker(예약 수집·첨부 글자·분류·표준 필드)를 같은 이미지·같은 볼륨으로 띄운다.
+# SQLite(WAL)라 두 서비스는 같은 호스트에서 같은 볼륨을 써야 한다. 다른 호스트로 나누려면 Postgres로 옮긴다(ADR-046).
+x-app: &app
+  build: .
+  image: gongmo-radar
+  env_file: .env
+  volumes:
+    - gongmo-data:/data
+  restart: unless-stopped
+
+services:
+  web:
+    <<: *app
+    command: ["gunicorn", "-w", "2", "-b", "0.0.0.0:8000", "wsgi:app"]
+    environment:
+      AUTOMATION_SCHEDULER: "0"           # 예약 실행은 worker가 맡는다
+      DATA_DIR: /data
+      ATTACHMENT_DIR: /data/attachments   # .env의 ./data/… 상대경로보다 우선
+      EXPORT_DIR: /data/exports
+      KORDOC_CMD: kordoc
+    ports:
+      - "8000:8000"
+
+  worker:
+    <<: *app
+    command: ["flask", "--app", "run", "automation-daemon"]
+    environment:
+      AUTOMATION_SCHEDULER: "0"
+      DATA_DIR: /data
+      ATTACHMENT_DIR: /data/attachments
+      EXPORT_DIR: /data/exports
+      KORDOC_CMD: kordoc
+
+volumes:
+  gongmo-data:

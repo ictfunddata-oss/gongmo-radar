@@ -1,20 +1,24 @@
 """수요자 화면(UI 시안 안2)용 데이터 — 수집한 원본 공고를 그대로 보여 준다.
 
-- 제목·기관·신청기간·본문 요약·첨부 목록 등 사이트에서 가져온 값만 쓴다. 공고를 분류하거나 숨기는 판단은 하지 않는다.
+- 제목·기관·신청기간·본문 요약·첨부 목록은 사이트에서 가져온 값이다. 공고를 숨기지 않는다.
+- 유형(announcement_labels, ADR-047·052)과 상세의 '공고 표준 정보'(announcement_fields, ADR-051)를 함께 담는다.
+  유형 필터는 브라우저(static/public.js)가 처리한다.
 - 접수 상태(마감 임박·접수 중·접수 예정·상시·마감)는 신청기간으로 계산한다.
 - 작성자(담당자 이름)는 넣지 않고, 본문의 이메일·전화번호는 가린다.
 """
 import re
 from datetime import datetime, timedelta
 
+from . import fields, labels
+from .fields.model import FIELDS, LABELS, applies
 from .mask import mask_contacts
-from .raw_view import attachment_structs
 
 SQL = """
 SELECT a.ann_id, o.name AS org, o.code AS org_code, a.title, a.biz, a.start_at, a.end_at, a.posted_at, a.list_date, a.views,
-       a.attach_count, a.body, a.body_len, a.url
+       a.attach_count, a.body, a.body_len, a.url, l.class, l.sub
 FROM announcements a
 JOIN boards b ON b.board_id = a.board_id JOIN orgs o ON o.org_id = b.org_id
+LEFT JOIN announcement_labels l ON l.ann_id = a.ann_id
 """
 
 # 기관 구분 배지 색 번호(CSS .org[data-c]). 새 기관은 코드 해시로 자리를 받는다
@@ -81,27 +85,39 @@ def build_item(r, now, new_days=7):
     return {
         "id": r["ann_id"], "org": r["org"], "org_c": org_color(r["org_code"]), "title": r["title"], "biz": r["biz"] or "",
         "start": r["start_at"], "end": r["end_at"], "posted": posted, "new": is_new(posted, now, new_days),
-        "views": r["views"] or 0, "files": r["attach_count"] or 0, "url": r["url"],
+        "views": r["views"] or 0, "files": r["attach_count"] or 0, "url": r["url"], "type": labels.public_type(r),
         "summary": mask_contacts(body)[:160] if (r["body_len"] or 0) >= 50 else "",
         **status(r["start_at"], r["end_at"], r["title"], posted, now),
     }
 
 
-def _structs(cfg):
-    """첨부를 읽어 구조화한 결과 {ann_id: dict}. 데이터 폴더가 없거나 읽을 수 없으면 빈 값."""
-    try:
-        return attachment_structs(cfg["DATA_DIR"]) if cfg.get("DATA_DIR") else {}
-    except (OSError, ValueError, KeyError):
-        return {}
+SOURCE_LABEL = {"site": "사이트 칸", "body": "공고 본문"}
+
+
+def _source_text(f):
+    """칸 출처 표시 — '사이트 칸' / '공고 본문' / '첨부: 파일명', API가 찾았으면 '· AI 발췌'."""
+    s = f"첨부: {f['source_ref'] or '파일'}" if f.get("source") == "attachment" else SOURCE_LABEL.get(f.get("source"), "")
+    return (s + " · AI 발췌" if s else "AI 발췌") if f.get("method") == "api" else s
+
+
+def standard_fields(conn, ann_id, ty):
+    """'공고 표준 정보' 다섯 줄(부록 D.2). 아직 정리하지 않은 공고(행 없음)면 []."""
+    saved = {f["field"]: f for f in fields.load(conn, ann_id)}
+    if not saved:
+        return []
+    out = []
+    for name in FIELDS:
+        f = dict(saved.get(name) or {"field": name, "status": "미확인" if applies(ty, name) else "해당 없음"})
+        f["label"] = LABELS[ty][name]
+        f["source_text"] = _source_text(f)
+        out.append(f)
+    return out
 
 
 def public_items(conn, cfg, now=None):
     """→ (보여 줄 공고 목록, 전체 공고 수) — 수집한 공고를 모두 보여 준다."""
     now = now or datetime.now()
     items = [build_item(r, now, cfg["PUBLIC_NEW_DAYS"]) for r in conn.execute(SQL).fetchall()]
-    structs = _structs(cfg)
-    for x in items:
-        x["astruct"] = x["id"] in structs   # 첨부를 읽어 구조화한 결과가 있는 공고
     return items, len(items)
 
 
@@ -110,9 +126,8 @@ def public_item(conn, cfg, ann_id, now=None):
     if r is None:
         return None
     item = build_item(r, now or datetime.now())
-    structs = _structs(cfg)
-    item["astruct"] = ann_id in structs
-    item["astruct_data"] = structs.get(ann_id)
+    item["sub"] = r["sub"] if item["type"] != labels.UNCLASSIFIED else None
+    item["fields"] = standard_fields(conn, ann_id, item["type"])
     item["body"] = mask_contacts(r["body"])
     item["attachments"] = [dict(x) for x in conn.execute(
         "SELECT seq, name, ext, size_text, file_path FROM attachments WHERE ann_id=? ORDER BY seq", (ann_id,))]

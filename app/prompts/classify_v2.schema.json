@@ -1,0 +1,64 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "results"
+  ],
+  "properties": {
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ann_id",
+          "class",
+          "sub",
+          "confidence",
+          "reason"
+        ],
+        "properties": {
+          "ann_id": {
+            "type": "integer"
+          },
+          "class": {
+            "type": "string",
+            "enum": [
+              "입찰공고",
+              "공모지원사업",
+              "기타"
+            ]
+          },
+          "sub": {
+            "type": "string",
+            "enum": [
+              "입찰",
+              "사전규격",
+              "협상공모",
+              "변경·취소",
+              "지원사업",
+              "수행기관",
+              "참가·교육",
+              "결과",
+              "행사·설명회",
+              "안내",
+              "채용",
+              "기타"
+            ]
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "high",
+              "mid",
+              "low"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

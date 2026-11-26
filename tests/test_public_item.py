@@ -1,9 +1,12 @@
 """수요자 화면 항목 — 수집한 값만으로 만든 항목과 NEW 배지, 접수 상태."""
+import sqlite3
 import unittest
 from datetime import datetime
 
+from app.services import labels
 from app.services.mask import mask_contacts
-from app.services.public import build_item, is_new, status
+from app.services.public import build_item, is_new, public_item, public_items, status
+from tests.helpers import SCHEMA
 
 NOW = datetime(2026, 10, 20, 12, 0)
 
@@ -59,6 +62,63 @@ class BuildItemTest(unittest.TestCase):
     def test_mask_contacts(self):
         self.assertEqual(mask_contacts("제 2026-0977 호"), "제 2026-0977 호")      # 공고번호는 건드리지 않는다
         self.assertIn("[전화번호]", mask_contacts("문의 010-1234-5678"))
+
+
+def mem():
+    c = sqlite3.connect(":memory:")
+    c.row_factory = sqlite3.Row
+    c.executescript(SCHEMA)
+    c.execute("INSERT INTO orgs(code, name, kind) VALUES ('nipa','기관','전담기관')")
+    c.execute("INSERT INTO boards(org_id, code, name, list_url) VALUES (1,'nipa_business','사업공고','http://x')")
+    for i in (1, 2):
+        c.execute("INSERT INTO announcements(ann_id, board_id, post_no, title, body, first_seen, last_seen) VALUES (?,1,?,'공고','본문','2026-10-01','2026-10-01')",
+                  (i, str(i)))
+    return c
+
+
+def add_field(c, ann_id, field, status, value=None, source=None, method="rule"):
+    c.execute("INSERT INTO announcement_fields(ann_id, field, value, status, source, method, input_hash, extracted_at) VALUES (?,?,?,?,?,?,'h','t')",
+              (ann_id, field, value, status, source, method))
+
+
+class TypeAndFieldsTest(unittest.TestCase):
+    CFG = {"PUBLIC_NEW_DAYS": 7}
+
+    def test_build_item_type(self):
+        self.assertEqual(build_item(row(), NOW)["type"], "미분류")                    # 라벨이 없으면 미분류
+        self.assertEqual(build_item(row(**{"class": "입찰공고"}), NOW)["type"], "입찰공고")
+        self.assertNotIn("sub", build_item(row(**{"class": "입찰공고", "sub": "입찰"}), NOW))   # 하위 유형은 상세에만
+
+    def test_list_items_have_type(self):
+        c = mem()
+        labels.save_api(c, 1, cls="기타", sub="안내", confidence="high", reason="r", status="확정", prompt_version="v", model="m",
+                        request_id="x", input_hash="h")
+        items, total = public_items(c, self.CFG, NOW)
+        self.assertEqual((total, {x["id"]: x["type"] for x in items}), (2, {1: "기타", 2: "미분류"}))
+        self.assertTrue(all("astruct" not in x for x in items))
+
+    def test_public_item_type_sub_fields(self):
+        c = mem()
+        labels.save_api(c, 1, cls="입찰공고", sub="사전규격", confidence="high", reason="r", status="확정", prompt_version="v", model="m",
+                        request_id="x", input_hash="h")
+        add_field(c, 1, "title", "확인", "공고", source="site")
+        add_field(c, 1, "content", "확인", "개요", source="body", method="api")
+        x = public_item(c, self.CFG, 1, NOW)
+        self.assertEqual((x["type"], x["sub"]), ("입찰공고", "사전규격"))
+        self.assertEqual([f["field"] for f in x["fields"]], ["title", "content", "qualify", "area", "period"])
+        self.assertEqual([f["label"] for f in x["fields"]], ["공고명", "사업 개요", "입찰참가자격", "분야·계약방법", "입찰서 접수기간"])
+        self.assertEqual([f["status"] for f in x["fields"]], ["확인", "확인", "미확인", "미확인", "미확인"])   # 행 없는 칸은 미확인
+        self.assertEqual((x["fields"][0]["source_text"], x["fields"][1]["source_text"]), ("사이트 칸", "공고 본문 · AI 발췌"))
+        self.assertNotIn("astruct_data", x)
+
+    def test_public_item_unprocessed_and_other_type(self):
+        c = mem()
+        x = public_item(c, self.CFG, 2, NOW)
+        self.assertEqual((x["type"], x["sub"], x["fields"]), ("미분류", None, []))      # 아직 정리하지 않은 공고
+        labels.set_manual(c, 2, "기타", "안내", "admin")
+        add_field(c, 2, "title", "확인", "공고", source="site")
+        x = public_item(c, self.CFG, 2, NOW)
+        self.assertEqual([f["status"] for f in x["fields"]][2:], ["해당 없음"] * 3)         # 기타 유형에 없는 칸
 
 
 if __name__ == "__main__":

@@ -7,13 +7,14 @@ from openpyxl.utils import get_column_letter
 
 ANN_SQL = """
 SELECT o.name, b.name, a.post_no, a.title, a.biz, a.start_at, a.end_at, a.posted_at, a.views,
-       a.attach_count, a.url, a.first_seen, a.last_seen
+       a.attach_count, a.url, a.first_seen, a.last_seen, coalesce(l.class, '미분류'), l.sub
 FROM announcements a
 JOIN boards b ON b.board_id = a.board_id JOIN orgs o ON o.org_id = b.org_id
+LEFT JOIN announcement_labels l ON l.ann_id = a.ann_id
 ORDER BY a.posted_at DESC, a.ann_id DESC
 """
 ANN_HEAD = ["기관", "게시판", "게시물번호", "제목", "사업구분", "신청시작", "신청마감", "게시일", "조회수",
-            "첨부수", "원문URL", "최초수집", "최종수집"]
+            "첨부수", "원문URL", "최초수집", "최종수집", "유형", "하위유형"]   # 유형은 기존 열 뒤에 붙여 열 순서를 바꾸지 않는다
 ATT_SQL = """
 SELECT b.name, a.post_no, t.seq, t.name, t.ext, t.size_text, t.file_path, t.downloaded_at, t.download_error
 FROM attachments t JOIN announcements a ON a.ann_id = t.ann_id JOIN boards b ON b.board_id = a.board_id

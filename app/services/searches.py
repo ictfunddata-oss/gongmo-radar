@@ -11,6 +11,7 @@ from pathlib import Path
 from datetime import datetime, timedelta
 
 MIN_LEN, MAX_LEN = 2, 30
+RAW_MAX = 40                          # 화면이 보낸 검색어가 이보다 길면 정리하기 전에 버린다
 KEEP_DAYS = 180                       # 이보다 오래된 기록은 새 기록을 쓸 때 지운다
 _PRIVATE = re.compile(r"@|\d{2,4}[-.\s]?\d{3,4}[-.\s]?\d{4}|https?://|www\.")
 
@@ -75,6 +76,15 @@ def normalize(term):
     if not (MIN_LEN <= len(t) <= MAX_LEN) or _PRIVATE.search(t):
         return ""
     return t
+
+
+def count_hits(items, term):
+    """수요자 목록에서 이 검색어로 나오는 공고 수 — static/public.js 의 text(x)와 같은 칸(기관·제목·사업구분·요약)을 본다.
+    화면이 보낸 결과 수는 믿지 않는다(같은 요청을 반복해 아무 문구나 '많이 찾는 검색어'에 올릴 수 있으므로)."""
+    q = (term or "").strip().lower()
+    if not q:
+        return 0
+    return sum(q in " ".join(str(x.get(k) or "") for k in ("org", "title", "biz", "summary")).lower() for x in items)
 
 
 def record(conn, term, results, now=None, banned=None):

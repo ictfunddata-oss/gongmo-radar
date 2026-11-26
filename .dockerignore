@@ -1,0 +1,9 @@
+data/
+.env
+.venv/
+.team/
+docs/기획/
+archive/
+__pycache__/
+*.pyc
+.git/

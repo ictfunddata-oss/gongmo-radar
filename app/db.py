@@ -17,7 +17,8 @@ def connect(db_path):
     return conn
 
 
-NEW_ATT_COLUMNS = [("text_body", "TEXT"), ("text_status", "TEXT"), ("text_at", "TEXT")]
+NEW_ATT_COLUMNS = [("text_body", "TEXT"), ("text_status", "TEXT"), ("text_at", "TEXT"),
+                   ("text_engine", "TEXT")]   # 첨부 글자를 읽은 방법: kordoc / legacy (ADR-050)
 
 
 def _migrate(conn):

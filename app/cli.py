@@ -68,12 +68,13 @@ def fetch_attachments_cmd(board, since, limit):
 @click.option("--redo", is_flag=True, help="이미 읽어 본 공고도 다시 읽기")
 @click.option("--no-download", is_flag=True, help="새로 받지 않고 이미 저장된 파일에서만 글자를 뽑기")
 @click.option("--dry-run", is_flag=True, help="읽을 공고와 파일 목록만 보여 주고 받거나 저장하지 않음")
-def attach_text_cmd(limit, since, board, ann_id, redo, no_download, dry_run):
+@click.option("--any-body", is_flag=True, help="본문이 긴 공고도 첨부를 읽음(표준 필드용)")
+def attach_text_cmd(limit, since, board, ann_id, redo, no_download, dry_run, any_body):
     """본문이 짧은 공고의 첨부 공고문(HWP·HWPX·PDF·DOCX)을 받아 글자를 뽑아 저장해 둔다. 외부 서비스는 쓰지 않는다."""
     from .services import attach_text
     cfg = current_app.config
     with _conn() as conn:
-        ids = attach_text.targets(conn, cfg, since=since, board_code=board, limit=limit, ann_ids=list(ann_id), redo=redo)
+        ids = attach_text.targets(conn, cfg, since=since, board_code=board, limit=limit, ann_ids=list(ann_id), redo=redo, any_body=any_body)
         click.echo(f"대상 공고 {len(ids)}건{' · dry-run' if dry_run else ''}")
         for aid in ids:
             a = conn.execute("SELECT title, posted_at FROM announcements WHERE ann_id=?", (aid,)).fetchone()
@@ -83,7 +84,7 @@ def attach_text_cmd(limit, since, board, ann_id, redo, no_download, dry_run):
         if dry_run or not ids:
             return
         res = attach_text.process(conn, cfg, ids, download=not no_download)
-        click.echo("결과 — " + " · ".join(f"{k} {v}" for k, v in res.items()))
+        click.echo("결과: " + " · ".join(f"{k} {v}" for k, v in res.items()))   # '—'는 Windows 콘솔(cp949)에서 깨진다
 
 
 @click.command("migrate-legacy")
@@ -171,6 +172,77 @@ def automation_daemon_cmd():
         click.echo("종료")
 
 
+def _echo_res(res):
+    click.echo(json.dumps(res, ensure_ascii=False, default=str))
+
+
+@click.command("classify")
+@click.option("--board", help="게시판 코드로 한정")
+@click.option("--limit", type=int, help="최대 공고 수")
+@click.option("--redo", is_flag=True, help="이미 분류한 공고도 다시(사람이 고친 값은 그대로)")
+@click.option("--dry-run", is_flag=True, help="묶음 수·건수·추정 입력 토큰만 보여 주고 API를 부르지 않음")
+@click.option("--batch", "batch", is_flag=True, help="일괄 처리로 제출(50% 할인, 결과는 --collect로)")
+@click.option("--collect", is_flag=True, help="끝난 일괄 처리를 거둬 저장")
+@click.option("--import-cli", "import_dir", type=click.Path(exists=True, file_okay=False), help="run_cli.sh 결과 폴더를 라벨로 넣음(API 비용 없음)")
+def classify_cmd(board, limit, redo, dry_run, batch, collect, import_dir):
+    """공고 유형을 분류한다(Claude API, classify_v2). 사람이 고친 값은 덮어쓰지 않는다."""
+    from .services import classify
+    cfg = current_app.config
+    with _conn() as conn:
+        if import_dir:
+            return _echo_res(classify.import_cli(conn, Path(import_dir)))
+        try:
+            if collect:
+                return _echo_res(classify.collect(conn, cfg, say=click.echo))
+            ids = classify.targets(conn, board=board, limit=limit, redo=redo)
+            if dry_run:
+                items = classify.build_items(conn, ids)
+                chunks = [items[i:i + classify.CHUNK] for i in range(0, len(items), classify.CHUNK)]
+                chars = sum(len(classify.user_text(c)) for c in chunks) + len(classify.prompt()[0]) * len(chunks)
+                return click.echo(f"대상 {len(items)}건 · 묶음 {len(chunks)}개 · 추정 입력 토큰 약 {chars // 2:,}(글자 수 ÷ 2) · API 호출 안 함")
+            if batch:
+                return click.echo(f"배치 제출: {classify.submit_batch(conn, cfg, ids, say=click.echo) or '대상 없음'}")
+            _echo_res(classify.run(conn, cfg, ids, say=click.echo))
+        except RuntimeError as e:      # make_client: 키 없음
+            raise click.ClickException(str(e)) from None
+
+
+@click.command("extract-fields")
+@click.option("--board", help="게시판 코드로 한정")
+@click.option("--limit", type=int, help="최대 공고 수")
+@click.option("--ann-id", type=int, multiple=True, help="특정 공고만(여러 번)")
+@click.option("--redo", is_flag=True, help="입력이 같아도 다시 정리")
+@click.option("--api", is_flag=True, help="공모지원사업의 미확인 칸을 API로 보완")
+@click.option("--dry-run", is_flag=True, help="대상 건수만 보여 줌")
+@click.option("--batch", "batch", is_flag=True, help="API 보완을 일괄 처리로 제출(규칙 정리를 먼저 돌린 공고)")
+@click.option("--collect", is_flag=True, help="끝난 일괄 처리를 거둬 저장")
+@click.option("--dump-input", "dump_dir", type=click.Path(file_okay=False), help="API에 보낼 입력을 파일로만 씀(CLI 검증용)")
+@click.option("--import-cli", "import_dir", type=click.Path(exists=True, file_okay=False), help="CLI 추출 결과를 넣음")
+def extract_fields_cmd(board, limit, ann_id, redo, api, dry_run, batch, collect, dump_dir, import_dir):
+    """상세화면 표준 다섯 칸을 정리한다. 기본은 규칙만, --api면 공모지원사업의 미확인 칸을 API로 보완한다."""
+    from .services import fields
+    cfg = current_app.config
+    with _conn() as conn:
+        if import_dir:
+            return _echo_res(fields.import_cli(conn, Path(import_dir)))
+        try:
+            if collect:
+                return _echo_res(fields.collect(conn, cfg))
+            ids = list(ann_id) or fields.targets(conn, board=board, limit=limit, redo=redo)
+            if dry_run:
+                return click.echo(f"대상 {len(ids)}건{' · API 보완 대상은 규칙 정리 뒤 정해짐' if api else ''}")
+            if dump_dir:
+                return click.echo(f"입력 {fields.dump_input(conn, list(ann_id) or fields.targets(conn, board=board, limit=limit, redo=True), dump_dir)}건 → {dump_dir}")
+            if batch:
+                return click.echo(f"배치 제출: {fields.submit_batch(conn, cfg, list(ann_id) or fields.targets(conn, board=board, limit=limit, redo=True)) or '대상 없음'}")
+            if api and not cfg.get("CLAUDE_API"):
+                raise click.ClickException("CLAUDE_API 키가 없어 API 보완을 할 수 없습니다(규칙만 돌리려면 --api 없이).")
+            _echo_res(fields.run(conn, cfg, ids, api=api, api_max=limit or 50, redo=redo, say=click.echo))
+        except RuntimeError as e:
+            raise click.ClickException(str(e)) from None
+
+
 def init_app(app):
-    for cmd in (set_admin_password_cmd, init_db_cmd, boards_cmd, crawl_cmd, fetch_attachments_cmd, attach_text_cmd, migrate_legacy_cmd, export_cmd, export_json_cmd, automation_run_cmd, automation_daemon_cmd):
+    for cmd in (set_admin_password_cmd, init_db_cmd, boards_cmd, crawl_cmd, fetch_attachments_cmd, attach_text_cmd, migrate_legacy_cmd, export_cmd, export_json_cmd, automation_run_cmd, automation_daemon_cmd,
+                classify_cmd, extract_fields_cmd):
         app.cli.add_command(cmd)

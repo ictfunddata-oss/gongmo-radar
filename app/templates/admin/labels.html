@@ -1,0 +1,75 @@
+{% extends "admin/base.html" %}
+{% block title %}분류·정리 · ICT기금 공모사업 AI RADAR{% endblock %}
+{% macro num(n) %}{{ '{:,}'.format(n or 0) }}{% endmacro %}
+{% block content %}
+<h1 style="font-size:20px;margin:0 0 14px">분류·정리</h1>
+
+<section class="au-card">
+  <h2>기관 × 유형 <small>라벨이 없거나 분류 보류면 미분류</small></h2>
+  <table class="au-table">
+    <thead><tr><th>기관</th>{% for t in types %}<th class="num">{{ t }}</th>{% endfor %}<th class="num">합계</th></tr></thead>
+    <tbody>{% for r in org_types %}
+      <tr class="{{ 'sum' if loop.last }}"><td>{{ r.org }}</td>{% for t in types %}<td class="num">{{ num(r.counts[t]) }}</td>{% endfor %}<td class="num">{{ num(r.total) }}</td></tr>
+    {% endfor %}</tbody>
+  </table>
+  <p class="au-hint" style="margin-left:0">라벨 상태: {% for s, n in label_status %}{{ s }} {{ num(n) }}건{{ ' · ' if not loop.last }}{% endfor %}</p>
+</section>
+
+<section class="au-card">
+  <h2>수동 확인 · 분류 보류 <small>{{ pending|length }}건 · 운영 상세에서 유형을 고칠 수 있습니다</small></h2>
+  <table class="au-table">
+    <thead><tr><th>상태</th><th>기관</th><th>공고</th><th>유형</th><th>근거</th><th>시각</th></tr></thead>
+    <tbody>{% for r in pending %}
+      <tr><td class="nowrap">{{ r.status }}</td><td class="nowrap">{{ r.org }}</td>
+        <td><a href="{{ url_for('admin.detail', ann_id=r.ann_id) }}">{{ r.title }}</a></td>
+        <td class="nowrap">{{ r['class'] or '—' }} · {{ r.sub or '—' }}</td><td>{{ r.reason or '' }}</td>
+        <td class="nowrap">{{ (r.labeled_at or '')[:16]|replace('T', ' ') }}</td></tr>
+    {% else %}<tr><td colspan="6" class="empty">없습니다.</td></tr>{% endfor %}</tbody>
+  </table>
+</section>
+
+<section class="au-card">
+  <h2>표준 필드 <small>기관 × 칸별 상태 건수</small></h2>
+  <table class="au-table">
+    <thead><tr><th>기관</th><th>칸</th>{% for s in field_statuses %}<th class="num">{{ s }}</th>{% endfor %}</tr></thead>
+    <tbody>{% for r in field_status %}
+      <tr><td>{{ r.org }}</td><td>{{ r.field }}</td>{% for s in field_statuses %}<td class="num">{{ num(r.counts[s]) }}</td>{% endfor %}</tr>
+    {% else %}<tr><td colspan="{{ 2 + field_statuses|length }}" class="empty">아직 정리한 공고가 없습니다.</td></tr>{% endfor %}</tbody>
+  </table>
+  <h2 style="margin-top:16px">충돌 <small>{{ conflicts|length }}건</small></h2>
+  <table class="au-table">
+    <thead><tr><th>기관</th><th>공고</th><th>칸</th><th>값</th><th>다른 출처</th></tr></thead>
+    <tbody>{% for r in conflicts %}
+      <tr><td class="nowrap">{{ r.org }}</td><td><a href="{{ url_for('admin.detail', ann_id=r.ann_id) }}">{{ r.title }}</a></td>
+        <td class="nowrap">{{ r.field }}</td><td>{{ (r.value or '')[:200] }}<div class="sub">{{ r.source or '' }}{% if r.source_ref %} · {{ r.source_ref }}{% endif %}</div></td>
+        <td>{{ r.note or '' }}</td></tr>
+    {% else %}<tr><td colspan="5" class="empty">없습니다.</td></tr>{% endfor %}</tbody>
+  </table>
+</section>
+
+<section class="au-card">
+  <h2>API 사용 <small>비용은 단가표로 계산한 추정값(USD)</small></h2>
+  <table class="au-table">
+    <thead><tr><th>월</th><th>단계</th><th class="num">호출</th><th class="num">공고</th><th class="num">입력 토큰</th><th class="num">출력 토큰</th>
+      <th class="num">캐시 읽기·쓰기</th><th class="num">비용</th><th class="num">대체</th><th class="num">실패</th></tr></thead>
+    <tbody>{% for month, rows in usage %}{% for r in rows %}
+      <tr><td class="nowrap">{{ month }}</td><td>{{ r.stage }}</td><td class="num">{{ num(r.calls) }}</td><td class="num">{{ num(r['items']) }}</td>
+        <td class="num">{{ num(r.input_tokens) }}</td><td class="num">{{ num(r.output_tokens) }}</td>
+        <td class="num">{{ num(r.cache_read_tokens) }} · {{ num(r.cache_write_tokens) }}</td>
+        <td class="num">{{ '%.2f'|format(r.cost_usd) if r.cost_usd is not none else '—' }}</td>
+        <td class="num">{{ num(r.fallbacks) }}</td><td class="num {{ 'warn' if r.failed }}">{{ num(r.failed) }}</td></tr>
+    {% else %}<tr><td class="nowrap">{{ month }}</td><td colspan="9" class="sub">호출 없음</td></tr>{% endfor %}{% endfor %}</tbody>
+  </table>
+  <h2 style="margin-top:16px">최근 호출 <small>20건</small></h2>
+  <table class="au-table">
+    <thead><tr><th>시각</th><th>단계</th><th>방식</th><th>모델</th><th class="num">공고</th><th class="num">입력·출력 토큰</th><th class="num">비용</th><th>결과</th></tr></thead>
+    <tbody>{% for c in calls %}
+      <tr><td class="nowrap">{{ (c.started_at or '')[:16]|replace('T', ' ') }}</td><td>{{ c.stage }}</td><td>{{ c.mode }}</td>
+        <td>{{ c.served_model or c.model or '—' }}{% if c.fallback %} <span class="sub">(대체)</span>{% endif %}</td><td class="num">{{ num(c['items']) }}</td>
+        <td class="num">{{ num(c.input_tokens) }} · {{ num(c.output_tokens) }}</td>
+        <td class="num">{{ '%.4f'|format(c.cost_usd) if c.cost_usd is not none else '—' }}</td>
+        <td class="{{ 'warn' if c.outcome != 'ok' }}">{{ c.outcome }}{% if c.error %}<div class="sub">{{ c.error[:200] }}</div>{% endif %}</td></tr>
+    {% else %}<tr><td colspan="8" class="empty">아직 호출 기록이 없습니다.</td></tr>{% endfor %}</tbody>
+  </table>
+</section>
+{% endblock %}

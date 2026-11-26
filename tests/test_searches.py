@@ -7,6 +7,7 @@ from pathlib import Path
 
 from app import create_app
 from app.services import searches
+from tests.test_predeploy import add_ann
 
 SCHEMA = (Path(__file__).resolve().parent.parent / "app" / "schema.sql").read_text(encoding="utf-8")
 NOW = datetime(2026, 10, 16, 12, 0)
@@ -63,6 +64,9 @@ class RouteTest(unittest.TestCase):
     def test_post_and_display(self):
         with tempfile.TemporaryDirectory() as d:
             app = create_app({"DB_PATH": Path(d) / "t.db", "DATA_DIR": Path(d), "ATTACHMENT_DIR": Path(d) / "a", "EXPORT_DIR": Path(d) / "e"})
+            with app.app_context():   # 결과 수는 서버가 다시 세므로 검색어에 맞는 공고를 넣어 둔다
+                from app.db import get_db
+                add_ann(get_db(), "2027 인공지능 바우처 공고")
             c = app.test_client()
             self.assertNotIn("많이 찾는 검색어", c.get("/").get_data(as_text=True))      # 기록이 없으면 숨김
             for _ in range(2):
@@ -132,10 +136,15 @@ class BannedTest(unittest.TestCase):
             f.write_text("나쁜말\n", encoding="utf-8")
             app = create_app({"DB_PATH": Path(d) / "t.db", "DATA_DIR": Path(d), "ATTACHMENT_DIR": Path(d) / "a",
                               "EXPORT_DIR": Path(d) / "e", "BANNED_TERMS_PATH": f})
+            with app.app_context():
+                from app.db import get_db
+                add_ann(get_db(), "클라우드 바우처 공고", "1")
+                add_ann(get_db(), "나쁜 말 검색 공고", "2")
             c = app.test_client()
             for _ in range(3):
                 c.post("/search-log", json={"q": "나쁜 말 검색", "n": 4})
                 c.post("/search-log", json={"q": "클라우드 바우처", "n": 4})
             html = c.get("/").get_data(as_text=True)
-            self.assertIn("클라우드 바우처", html)
-            self.assertNotIn("나쁜 말 검색", html)
+            tags = html[html.index('class="qtags"'):].split("</div>", 1)[0]      # 공고 목록 JSON에는 제목이 들어 있으므로 검색어 띠만 본다
+            self.assertIn("클라우드 바우처", tags)
+            self.assertNotIn("나쁜 말 검색", tags)

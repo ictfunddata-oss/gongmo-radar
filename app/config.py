@@ -19,6 +19,17 @@ def _bool(name, default):
     return default if raw is None or raw.strip() == "" else raw.strip().lower() in ("1", "true", "yes", "y", "on")
 
 
+WEAK_SECRETS = {"", "dev-only-change-me", "change-me"}
+
+
+def check_secret(cfg):
+    """운영 진입점(wsgi.py)용 — SECRET_KEY가 비었거나 공개된 기본값이거나 32자보다 짧으면 멈춘다."""
+    key = cfg.get("SECRET_KEY") or ""
+    if key in WEAK_SECRETS or len(key) < 32:
+        raise RuntimeError("SECRET_KEY가 비었거나 기본값이거나 32자보다 짧습니다. 운영 환경에는 임의의 긴 값을 넣으세요 "
+                           "(예: python -c \"import secrets; print(secrets.token_hex(32))\").")
+
+
 def load_config():
     data_dir = _path("DATA_DIR", "data")
     return {
@@ -30,6 +41,17 @@ def load_config():
         "SESSION_COOKIE_HTTPONLY": True,
         "SESSION_COOKIE_SAMESITE": "Lax",                                # 다른 사이트에서 온 POST 요청에는 쿠키를 보내지 않음
         "SESSION_COOKIE_SECURE": _bool("ADMIN_COOKIE_SECURE", False),   # https 로 배포할 때 켠다
+        # 앞단 프록시(로드밸런서·nginx) 수. 0보다 크면 X-Forwarded-* 를 그만큼 믿어 접속 주소를 정한다
+        "TRUSTED_PROXY_HOPS": int(os.getenv("TRUSTED_PROXY_HOPS", "0")),
+        # Claude API(ADR-045·049) — 키가 비었으면 API 단계는 '키 없음'으로 건너뛴다
+        "CLAUDE_API": os.getenv("CLAUDE_API", "").strip(),
+        "CLAUDE_MODEL": os.getenv("CLAUDE_MODEL", "claude-sonnet-5-5").strip() or "claude-sonnet-5-5",
+        "CLAUDE_MODEL_EFFORT": os.getenv("CLAUDE_MODEL_EFFORT", "low").strip() or "low",
+        "CLAUDE_FALLBACKS": _bool("CLAUDE_FALLBACKS", True),      # 동기 호출의 서버 측 대체 모델
+        # 첨부 글자 읽기(ADR-050) — kordoc CLI를 먼저 쓰고 실패하면 기존 추출기
+        "KORDOC_ENABLED": _bool("KORDOC_ENABLED", True),
+        "KORDOC_CMD": os.getenv("KORDOC_CMD", "npx -y kordoc@4.24.59").strip() or "npx -y kordoc@4.24.59",
+        "KORDOC_TIMEOUT": int(os.getenv("KORDOC_TIMEOUT", "60")),
         "DATA_DIR": data_dir,
         "DB_PATH": _path("DB_PATH", data_dir / "gongmo.db"),
         # 첨부 저장 경로 — 사용자가 .env 의 ATTACHMENT_DIR 로 임시 지정

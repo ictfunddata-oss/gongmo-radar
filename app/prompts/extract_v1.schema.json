@@ -1,0 +1,50 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fields"
+  ],
+  "properties": {
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "field",
+          "status",
+          "source_id",
+          "quote",
+          "evidence"
+        ],
+        "properties": {
+          "field": {
+            "type": "string",
+            "enum": [
+              "content",
+              "qualify",
+              "area",
+              "period"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "확인",
+              "미확인"
+            ]
+          },
+          "source_id": {
+            "type": "string"
+          },
+          "quote": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

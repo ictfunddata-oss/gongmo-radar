@@ -9,14 +9,19 @@
   const ktime = (s) => (s && s.length > 10 ? s.slice(11, 16) : "");
   const detailUrl = (id) => D.detail.replace(/0$/, String(id));
   const ST = [["urgent", "마감 임박(7일 이내)"], ["open", "접수 중"], ["upcoming", "접수 예정"], ["always", "상시 모집"], ["ended", "접수 마감"]];
+  // 공고 유형(ADR-047·052) — 버튼 값 → 보여 줄 유형. '공모지원사업' 버튼은 미분류도 함께 보여 준다(기본 상태)
+  const TY = { "공모지원사업": ["공모지원사업", "미분류"], "입찰공고": ["입찰공고"], "기타": ["기타"], "미분류": ["미분류"] };
+  const TY_DEF = "공모지원사업";
   const uniq = (get) => [...new Set(ITEMS.flatMap(get))].sort((a, b) => a.localeCompare(b, "ko"));
 
   const GROUPS = [
+    ["ty", "공고 유형", Object.keys(TY).map((k) => [k, k]), (x) => [x.type]],
     ["st", "접수 상태", ST, (x) => [x.st]],
     ["org", "기관", uniq((x) => [x.org]).length > 1 ? uniq((x) => [x.org]).map((k) => [k, k]) : [], (x) => [x.org]],   // 기관이 하나뿐이면 숨긴다
   ];
   // 접수 마감 포함 여부는 서버 설정(PUBLIC_SHOW_ENDED)을 따른다
   const fresh = () => ({
+    ty: new Set(TY[TY_DEF]),
     st: new Set(["urgent", "open", "upcoming", "always", ...(D.showEnded ? ["ended"] : [])]),
     org: new Set(),
   });
@@ -39,18 +44,19 @@
   function side() {
     const defSt = [...fresh().st].sort().join(",");
     const cur = (k) => {
+      if (k === "ty") return Object.keys(TY).find((v) => TY[v].length === sel.ty.size && TY[v].every((t) => sel.ty.has(t))) || "";
       if (k !== "st") return [...sel[k]][0] || "";
       const v = [...sel.st].sort().join(",");
       return v === defSt ? "" : v === "open,urgent" ? "now" : sel.st.size === 1 ? [...sel.st][0] : "";
     };
-    const active = GROUPS.filter(([k]) => cur(k) !== "").length;
+    const active = GROUPS.filter(([k]) => cur(k) !== "" && !(k === "ty" && cur(k) === TY_DEF)).length;   // 기본 유형은 세지 않는다
     $("fn").textContent = active; $("fn").hidden = !active;
     $("fopen").setAttribute("aria-expanded", String(panelOpen));
     $("side").hidden = !panelOpen;
     $("side").innerHTML = `<div class="fgrid">` + GROUPS.map(([k, title, opts, get]) => {
       if (!opts.length) return "";
       const all = k === "st" ? [["now", "지금 신청 가능"], ...opts] : opts;
-      const n = (v) => ITEMS.filter((x) => pass(x, k) && (k === "st" && v === "now" ? ["urgent", "open"].includes(x.st) : get(x).includes(v))).length;
+      const n = (v) => ITEMS.filter((x) => pass(x, k) && (k === "st" && v === "now" ? ["urgent", "open"].includes(x.st) : k === "ty" ? TY[v].includes(x.type) : get(x).includes(v))).length;
       const c = cur(k);
       const btn = (v, l, cnt) => `<button type="button" class="fo${c === v ? " sel" : ""}" data-g="${k}" data-v="${esc(v)}" aria-pressed="${c === v}">${esc(l)}${cnt === null ? "" : ` <em>${fmt(cnt)}</em>`}</button>`;
       return `<div class="fg"><h4>${title}</h4><div class="fopts">${btn("", "전체", null)}${all.map(([v, l]) => btn(v, l, n(v))).join("")}</div></div>`;
@@ -58,6 +64,7 @@
     $("side").querySelectorAll(".fo").forEach((el) => el.onclick = () => {
       const k = el.dataset.g, v = el.dataset.v;
       if (k === "st") sel.st = v === "" ? fresh().st : v === "now" ? new Set(["urgent", "open"]) : new Set([v]);
+      else if (k === "ty") sel.ty = new Set(v ? TY[v] : []);
       else sel[k] = v ? new Set([v]) : new Set();
       page = 1; render();
     });
@@ -76,8 +83,8 @@
     return `<article class="card st-${x.st}">
       <div class="cmain">
         <div class="rbadges">
-          <span class="bg org" data-c="${x.org_c}">${esc(x.org)}</span><span class="bg dd ${x.st}">${esc(x.label)}</span>
-          ${x.new ? `<span class="newb" title="최근 게시된 공고">NEW</span>` : ""}${x.astruct ? `<span class="prep att" title="첨부 공고문까지 읽어 정리한 공고">첨부 구조화</span>` : ""}
+          <span class="bg org" data-c="${x.org_c}">${esc(x.org)}</span><span class="bg ty" data-t="${esc(x.type)}">${esc(x.type)}</span><span class="bg dd ${x.st}">${esc(x.label)}</span>
+          ${x.new ? `<span class="newb" title="최근 게시된 공고">NEW</span>` : ""}
         </div>
         <h4><a href="${detailUrl(x.id)}">${esc(x.title)}</a></h4>
         <div class="sum">${sum}</div>

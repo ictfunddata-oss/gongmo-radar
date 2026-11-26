@@ -9,6 +9,7 @@ from werkzeug.security import generate_password_hash
 
 from app import create_app
 from app.services import searches
+from tests.test_predeploy import add_ann
 
 SCHEMA = (Path(__file__).resolve().parent.parent / "app" / "schema.sql").read_text(encoding="utf-8")
 NOW = datetime(2026, 10, 16, 12, 0)
@@ -114,6 +115,9 @@ class AdminPageTest(unittest.TestCase):
 
     def test_recent_terms_table_and_empty(self):
         self.assertIn("아직 검색어 기록이 없습니다", self.c.get("/admin/banned").get_data(as_text=True))
+        with self.c.application.app_context():   # 결과 수는 서버가 다시 세므로 검색어에 맞는 공고를 넣어 둔다
+            from app.db import get_db
+            add_ann(get_db(), "인공지능 바우처 지원사업")
         for _ in range(2):
             self.c.post("/search-log", json={"q": "인공지능 바우처", "n": 3})
         html = self.c.get("/admin/banned").get_data(as_text=True)
